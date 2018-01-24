@@ -1,3 +1,26 @@
+#!/bin/bash
+#SBATCH --account=rrg-wyeth
+## Mail Options
+#SBATCH --mail-user=prichmond@cmmt.ubc.ca
+#SBATCH --mail-type=ALL
+## CPU Usage
+#SBATCH --mem=30G
+#SBATCH --cpus-per-task=8
+#SBATCH --time=2-0:00
+#SBATCH --nodes=1
+## Output and Stderr
+#SBATCH --output=%x-%j.out
+#SBATCH --error=%x-%j.error
+
+
+
+# Load Modules
+
+cd /home/richmonp/scratch/DATABASES/
+
+
+
+
 # Get the data from online
 nohup wget https://storage.googleapis.com/gnomad-public/release-170228/vcf/genomes/gnomad.genomes.r2.0.1.sites.1.vcf.gz
 nohup wget https://storage.googleapis.com/gnomad-public/release-170228/vcf/genomes/gnomad.genomes.r2.0.1.sites.2.vcf.gz
@@ -33,10 +56,10 @@ do
 	
 	zless $VCFGZ  \
 	   | sed 's/ID=AD,Number=./ID=AD,Number=R/' \
-	   | /opt/tools/vt/vt decompose -s - \
-	   | /opt/tools/vt/vt normalize -r $REF - \
+	   | vt decompose -s - \
+	   | vt normalize -r $REF - \
 	   | bgzip -c > $NORMVCF 
-	/opt/tools/tabix/tabix -p vcf $NORMVCF
+	tabix -p vcf $NORMVCF
 done
 
 VCFGZ='gnomad.genomes.r2.0.1.sites.X.vcf.gz'
