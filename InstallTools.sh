@@ -12,7 +12,7 @@ http://linuxbrew.sh/
 conda install -c bioconda vcftools
 conda install -c bioconda htslib
 conda install -c bioconda vcfanno 
-
+conda install -c bioconda vt
 
 ## Other tools you need:
 

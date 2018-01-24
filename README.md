@@ -17,7 +17,7 @@ This is a pipeline for variant annotation in the diagnosis of rare genetic disor
 *THERE IS A LOT OF SETTING UP TO DO!*  
 But, once you get set up, then things run nice and smooth.
 
-1. Install Necessary software
+1. Install Necessary software, details in InstallTools.sh
 + bgzip and tabix
 + vt
 + vcftools/bcftools
@@ -26,12 +26,12 @@ But, once you get set up, then things run nice and smooth.
 + vcf2db
 + gemini
 
-2. Prepare Third-party Datasets/databases  
+2. Prepare Third-party Datasets/databases, There are scripts to help do this 
 + All the gemini databases
 + Polyphen2  https://github.com/quinlan-lab/pathoscore/blob/master/score-sets/GRCh37/polyphen2/make.sh
 + CADD  http://krishna.gs.washington.edu/download/CADD/v1.3/whole_genome_SNVs.tsv.gz 
 + ReMM  http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
-+ gnomAD 
++ gnomAD http://gnomad.broadinstitute.org/downloads
 
 
 
