@@ -14,6 +14,6 @@
 # Load Modules
 cd /home/richmonp/scratch/DATABASES/
 
-nohup wget http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
-md5sum ReMM.v0.3.1.tsv.gz > ReMM.v0.3.1.tsv.gz.md5sum
-
+#nohup wget http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
+#md5sum ReMM.v0.3.1.tsv.gz > ReMM.v0.3.1.tsv.gz.md5sum
+tabix -s 1 -b 2 ReMM.v0.3.1.tsv.gz
