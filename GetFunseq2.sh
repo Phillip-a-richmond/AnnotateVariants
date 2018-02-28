@@ -14,6 +14,8 @@
 # Load Modules
 cd /home/richmonp/scratch/DATABASES/
 
-nohup wget http://archive.gersteinlab.org/funseq2.1.2/hg19_NCscore_funseq216.tsv.bgz
-md5sum hg19_NCscore_funseq216.tsv.bgz > hg19_NCscore_funseq216.tsv.bgz.md5sum
+#nohup wget http://archive.gersteinlab.org/funseq2.1.2/hg19_NCscore_funseq216.tsv.bgz
+#md5sum hg19_NCscore_funseq216.tsv.bgz > hg19_NCscore_funseq216.tsv.bgz.md5sum
+wget http://archive.gersteinlab.org/funseq2.1.2/hg19_NCscore_funseq216.tsv.bgz.tbi
+md5sum hg19_NCscore_funseq216.tsv.bgz.tbi > hg19_NCscore_funseq216.tsv.bgz.tbi.md5sum
 
