@@ -24,9 +24,9 @@ mkdir $TMPDIR
 
 cd $WORKING_DIR
 
-vcfanno -p 16 \
+vcfanno -p 8 \
 	-lua ${ANNOTATE_VARIANTS_DIR}custom.lua \
 	${ANNOTATE_VARIANTS_DIR}VCFANNO_Config_Cedar.toml \
-	$VCF > $ANNOVCF 
+	$VCF > $ANNOVCF.Try2 
 
 

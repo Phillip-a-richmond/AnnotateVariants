@@ -4,16 +4,9 @@
 # I have made new annotations here at the top of this file, while the ones that I took from Brent Pedersen are usually pointing to GEMINI databases
 
 
-#TraP Score, Added by Phil Richmond, this is problematic at the moment, need to figure out how to better merge these scores
-#[[annotation]]
-#file="/scratch/richmonp/DATABASES//GEMINI/TrAP/FullTraPv2.txt.gz"
-#names=["TraP_gene","TraP_score"]
-#columns=[4,5]
-#ops=["self","self"]
-
 # GeneHancer
 [[annotation]]
-file='/scratch/richmonp/DATABASES/GeneHancer_hg19_fixed.bed.gz'
+file="/scratch/richmonp/DATABASES/GeneHancer_hg19_fixed.bed.gz"
 columns = [5]
 names = ["GeneHancer"]
 ops = ["self"]
@@ -25,98 +18,6 @@ fields = ["AF","Hom"]
 names = ["aaf_gnomAD_genome_all","gnomAD_genome_num_hom_alt"]
 ops = ["self","self"]
 
-# FATHMM-XF Noncoding
-[[annotation]]
-file = "/scratch/richmonp/DATABASES/fathmm_xf_noncoding.vcf.gz"
-columns = [5]
-names = ["FATHMM-XF"]
-ops = ["self"]
-
-## ReMM
-#[[annotation]]
-#file = "/scratch/richmonp/DATABASES/ReMM.v0.3.1.tsv.gz"
-#columns = [3]
-#names = ["ReMM"]
-#ops = ["self"]
-
-## FunSeq
-[[annotation]]
-file = "/scratch/richmonp/DATABASES/hg19_NCscore_funseq216.tsv.bgz"
-columns = [5]
-names = ["FunSeq2"]
-ops = ["self"]
-
-
-#Count from in-house database, added by Phil Richmond
-#[[annotation]]
-#file="/scratch/richmonp/DATABASES/"
-#fields = ["AC"]
-#names = ["InHouseDB_AC"]
-#ops = ["self"]
-
-# ExAC 
-[[annotation]]
-file="/home/richmonp/scratch/TOOLS/gemini_data/gemini_data/ExAC.r0.3.sites.vep.tidy.vcf.gz"
-fields = ["AC_Adj", "AN_Adj", "AC_AFR", "AN_AFR", "AC_AMR", "AN_AMR", "AC_EAS", "AN_EAS", "AC_FIN", "AN_FIN", "AC_NFE", "AN_NFE", "AC_OTH", "AN_OTH", "AC_SAS", "AN_SAS", 
-          "AC_Het", "AC_Hom"]
-names = ["ac_exac_all", "an_exac_all", "ac_adj_exac_afr", "an_adj_exac_afr", "ac_adj_exac_amr", "an_adj_exac_amr", "ac_adj_exac_eas", "an_adj_exac_eas", "ac_adj_exac_fin", "an_adj_exac_fin", "ac_adj_exac_nfe", "an_adj_exac_nfe", "ac_adj_exac_oth", "an_adj_exac_oth", "ac_adj_exac_sas", "an_adj_exac_sas",
-          "num_exac_Het", "num_exac_Hom"]
-ops=["max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "self", "self"] 
-
-# calculate allele frequencies for all populations.
-[[postannotation]]
-fields=["ac_exac_all", "an_exac_all"]
-name="af_exac_all"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_afr", "an_adj_exac_afr"]
-name="af_adj_exac_afr"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_amr", "an_adj_exac_amr"]
-name="af_adj_exac_amr"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_eas", "an_adj_exac_eas"]
-name="af_adj_exac_eas"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_fin", "an_adj_exac_fin"]
-name="af_adj_exac_fin"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_nfe", "an_adj_exac_nfe"]
-name="af_adj_exac_nfe"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_oth", "an_adj_exac_oth"]
-name="af_adj_exac_oth"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_exac_sas", "an_adj_exac_sas"]
-name="af_adj_exac_sas"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=['af_adj_exac_afr', 'af_adj_exac_amr', 'af_adj_exac_eas', 'af_adj_exac_fin', 'af_adj_exac_nfe', 'af_adj_exac_oth', 'af_adj_exac_sas', "af_esp_ea", "af_esp_aa", "af_esp_all", "af_1kg_amr", "af_1kg_eas", "af_1kg_sas", "af_1kg_afr", "af_1kg_eur", "af_1kg_all"]
-op="max"
-name="max_aaf_all"
-type="Float"
 
 # Exome Sequencing Project
 [[annotation]]
@@ -176,29 +77,25 @@ columns=[4]
 names=["fitcons_float"]
 ops=["mean"]
 
+# FATHMM-XF Noncoding
+[[annotation]]
+file = "/scratch/richmonp/DATABASES/fathmm_xf_noncoding.vcf.gz"
+columns = [5]
+names = ["FATHMM-XF"]
+ops = ["self"]
 
 
-#[[annotation]]
-#file="/home/richmonp/scratch/TOOLS/gemini_data/gemini_data/LCR-hs37d5.bed.gz"
-#names=["LCR"]
-#columns=[2]
-#ops=["flag"]
-#
-#[[annotation]]
-#http://humanparalogy.gs.washington.edu/build37/build37.htm
-#  wget -O - http://humanparalogy.gs.washington.edu/build37/data/GRCh37GenomicSuperDup.tab \
-#      | tail -n+2 \
-#      | grep -Pv "_gl00|_random|chrUn" | sort -k1,1V -k2,2n | bgzip -c > GRCh37GenomicSuperDup.tab.gz
-#file="GRCh37GenomicSuperDup.tab.gz"
-#names=["superdup"]
-#columns=[2]
-#ops=["flag"]
+## FunSeq
+[[annotation]]
+file = "/scratch/richmonp/DATABASES/hg19_NCscore_funseq216.tsv.bgz"
+columns = [5]
+names = ["FunSeq2"]
+ops = ["self"]
 
 
 # not sure what these are, encode I guess?
 [[annotation]]
 file="/home/richmonp/scratch/TOOLS/gemini_data/gemini_data/encode.6celltypes.consensus.bedg.gz"
-#chrom   start   end     gm12878 h1hesc  helas3  hepg2   huvec   k562
 columns=[4,5,6,7,8,9]
 ops=["concat","concat", "concat", "concat", "concat", "concat"]
 names=[ "encode_consensus_gm12878", "encode_consensus_h1hesc", "encode_consensus_helas3", "encode_consensus_hepg2", "encode_consensus_huvec", "encode_consensus_k562"]
@@ -286,4 +183,86 @@ file="/scratch/richmonp/DATABASES/polyphen2/polyphen2.txt.gz"
 names=["pp2hdiv", "pp2hvar"]
 columns=[5, 6]
 ops=["max", "max"]
+
+
+# ExAC 
+[[annotation]]
+file="/home/richmonp/scratch/TOOLS/gemini_data/gemini_data/ExAC.r0.3.sites.vep.tidy.vcf.gz"
+fields = ["AC_Adj", "AN_Adj", "AC_AFR", "AN_AFR", "AC_AMR", "AN_AMR", "AC_EAS", "AN_EAS", "AC_FIN", "AN_FIN", "AC_NFE", "AN_NFE", "AC_OTH", "AN_OTH", "AC_SAS", "AN_SAS", 
+          "AC_Het", "AC_Hom"]
+names = ["ac_exac_all", "an_exac_all", "ac_adj_exac_afr", "an_adj_exac_afr", "ac_adj_exac_amr", "an_adj_exac_amr", "ac_adj_exac_eas", "an_adj_exac_eas", "ac_adj_exac_fin", "an_adj_exac_fin", "ac_adj_exac_nfe", "an_adj_exac_nfe", "ac_adj_exac_oth", "an_adj_exac_oth", "ac_adj_exac_sas", "an_adj_exac_sas",
+          "num_exac_Het", "num_exac_Hom"]
+ops=["max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "self", "self"] 
+
+# calculate allele frequencies for all populations.
+[[postannotation]]
+fields=["ac_exac_all", "an_exac_all"]
+name="af_exac_all"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_afr", "an_adj_exac_afr"]
+name="af_adj_exac_afr"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_amr", "an_adj_exac_amr"]
+name="af_adj_exac_amr"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_eas", "an_adj_exac_eas"]
+name="af_adj_exac_eas"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_fin", "an_adj_exac_fin"]
+name="af_adj_exac_fin"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_nfe", "an_adj_exac_nfe"]
+name="af_adj_exac_nfe"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_oth", "an_adj_exac_oth"]
+name="af_adj_exac_oth"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=["ac_adj_exac_sas", "an_adj_exac_sas"]
+name="af_adj_exac_sas"
+op="div2"
+type="Float"
+
+[[postannotation]]
+fields=['af_adj_exac_afr', 'af_adj_exac_amr', 'af_adj_exac_eas', 'af_adj_exac_fin', 'af_adj_exac_nfe', 'af_adj_exac_oth', 'af_adj_exac_sas', "af_esp_ea", "af_esp_aa", "af_esp_all", "af_1kg_amr", "af_1kg_eas", "af_1kg_sas", "af_1kg_afr", "af_1kg_eur", "af_1kg_all"]
+op="max"
+name="max_aaf_all"
+type="Float"
+
+
+#[[annotation]]
+#file="/home/richmonp/scratch/TOOLS/gemini_data/gemini_data/LCR-hs37d5.bed.gz"
+#names=["LCR"]
+#columns=[2]
+#ops=["flag"]
+#
+#[[annotation]]
+#http://humanparalogy.gs.washington.edu/build37/build37.htm
+#  wget -O - http://humanparalogy.gs.washington.edu/build37/data/GRCh37GenomicSuperDup.tab \
+#      | tail -n+2 \
+#      | grep -Pv "_gl00|_random|chrUn" | sort -k1,1V -k2,2n | bgzip -c > GRCh37GenomicSuperDup.tab.gz
+#file="GRCh37GenomicSuperDup.tab.gz"
+#names=["superdup"]
+#columns=[2]
+#ops=["flag"]
 
