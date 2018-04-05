@@ -25,6 +25,8 @@ But, once you get set up, then things run nice and smooth.
 + vcfanno
 + vcf2db
 + gemini
++ In-house Scripts 
+
 
 2. Prepare Third-party Datasets/databases, There are scripts to help do this 
 + All the gemini databases
