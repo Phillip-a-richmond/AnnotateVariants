@@ -14,8 +14,8 @@
 #SBATCH --error=%x-%j.error
 
 
-WORKING_DIR=/scratch/PROCESS/Platinum/
-VCF=NA12892_BWAmem_dupremoved_realigned_HaplotypeCaller_norm_filter.vcf
+WORKING_DIR=/scratch/richmonp/PROCESS/Platinum/
+VCF=NA12892_BWAmem_dupremoved_realigned_HaplotypeCaller_norm_filter.vcf.gz
 ANNOVCF=NA12892_BWAmem_dupremoved_realigned_HaplotypeCaller_norm_filter_Annotated.vcf
 TMPDIR=$WORKING_DIR/tmp
 ANNOTATE_VARIANTS_DIR=/home/richmonp/scratch/AnnotateVariants/
@@ -24,8 +24,8 @@ mkdir $TMPDIR
 
 cd $WORKING_DIR
 
-vcfanno -p 8 \
-	-lua ${ANNOTATE_VARIANTS_DIR}rare-disease.lua \
+vcfanno -p 16 \
+	-lua ${ANNOTATE_VARIANTS_DIR}custom.lua \
 	${ANNOTATE_VARIANTS_DIR}VCFANNO_Config_Cedar.toml \
 	$VCF > $ANNOVCF 
 

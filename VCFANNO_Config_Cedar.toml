@@ -13,7 +13,7 @@ ops = ["self"]
 
 #gnomAD Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
 [[annotation]]
-file="/scratch/richmonp/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.bgz"
+file="/scratch/richmonp/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz"
 fields = ["AF","Hom"]
 names = ["aaf_gnomAD_genome_all","gnomAD_genome_num_hom_alt"]
 ops = ["self","self"]
