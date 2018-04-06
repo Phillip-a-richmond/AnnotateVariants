@@ -26,16 +26,20 @@ mkdir $TMPDIR
 
 cd $WORKING_DIR
 
+# Get ClinVar Summary
+wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
+gunzip -c ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
 
-wget -c ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar*.vcf.gz
-rm *papu*
-rm *.vcf._*
-gunzip -c clinvar_20171231.vcf.gz > clinvar_20171231.vcf
-python AddCHRtoVCF.py clinvar_20171231.vcf clinvar_20171231_chromfix.vcf 
-grep -v "NW_003" clinvar_20171231_chromfix.vcf > clinvar_20171231_fixed.vcf 
-bgzip clinvar_20171231_fixed.vcf
-tabix clinvar_20171231_fixed.vcf
-VCF=clinvar_20171231_fixed.vcf
+
+# Get ClinVar
+wget -c ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz
+gunzip -c clinvar.vcf.gz > clinvar.vcf
+# Fix ClinVar
+python AddCHRtoVCF.py clinvar.vcf clinvar_chromfix.vcf 
+grep -v "NW_003" clinvar_chromfix.vcf > clinvar_fixed.vcf 
+bgzip clinvar_fixed.vcf
+tabix clinvar_fixed.vcf.gz
+VCF=clinvar_fixed.vcf
 
 zless $VCF \
 	| vt decompose -s - \
