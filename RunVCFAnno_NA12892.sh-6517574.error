@@ -1,0 +1,10 @@
+mkdir: cannot create directory ‘/scratch/PROCESS/Platinum//tmp’: No such file or directory
+/var/spool/slurmd/job6517574/slurm_script: line 25: cd: /scratch/PROCESS/Platinum/: No such file or directory
+
+=============================================
+vcfanno version 0.2.8 [built with go1.8]
+
+see: https://github.com/brentp/vcfanno
+=============================================
+
+ERROR: can't find query file: NA12892_BWAmem_dupremoved_realigned_HaplotypeCaller_norm_filter.vcf
