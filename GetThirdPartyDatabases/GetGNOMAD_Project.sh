@@ -4,7 +4,7 @@
 #SBATCH --mail-user=prichmond@cmmt.ubc.ca
 #SBATCH --mail-type=ALL
 ## CPU Usage
-#SBATCH --mem=128G
+#SBATCH --mem=256G
 #SBATCH --cpus-per-task=32
 #SBATCH --time=3-0:00
 #SBATCH --nodes=1
@@ -14,7 +14,7 @@
 
 
 # Set your working directory
-WORKING_DIR=/home/richmonp/scratch/DATABASES/GNOMAD/RAW/
+WORKING_DIR=/project/projects/def-wyeth/DATABASES/GNOMAD/RAW/
 cd $WORKING_DIR
 
 ## 1) Get the data from online

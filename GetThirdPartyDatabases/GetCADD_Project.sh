@@ -12,8 +12,9 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
 # Load Modules
-cd /home/richmonp/scratch/DATABASES/
+cd /project/projects/def-wyeth/DATABASES/
 
-wget http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
-md5sum ReMM.v0.3.1.tsv.gz > ReMM.v0.3.1.tsv.gz.md5sum
-tabix -s 1 -b 2 ReMM.v0.3.1.tsv.gz
+wget http://krishna.gs.washington.edu/download/CADD/v1.3/whole_genome_SNVs.tsv.gz
+md5sum whole_genome_SNVs.tsv.gz > whole_genome_SNVs.tsv.gz.md5sum
+wget http://krishna.gs.washington.edu/download/CADD/v1.3/whole_genome_SNVs.tsv.gz.tbi
+

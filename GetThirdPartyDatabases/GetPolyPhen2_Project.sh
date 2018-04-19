@@ -12,7 +12,7 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
 # Load Modules
-cd /home/richmonp/scratch/DATABASES/
+cd /project/projects/def-wyeth/DATABASES/
 
 wget ftp://genetics.bwh.harvard.edu/pph2/whess/polyphen-2.2.2-whess-2011_12.tab.tar.bz2
 mkdir -p polyphen2

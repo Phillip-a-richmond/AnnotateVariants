@@ -12,8 +12,7 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
 # Load Modules
-cd /home/richmonp/scratch/DATABASES/
+cd /project/projects/def-wyeth/DATABASES/
 
-wget http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
-md5sum ReMM.v0.3.1.tsv.gz > ReMM.v0.3.1.tsv.gz.md5sum
-tabix -s 1 -b 2 ReMM.v0.3.1.tsv.gz
+wget --recursive --no-parent https://xioniti01.u.hpc.mssm.edu/v1.1/
+

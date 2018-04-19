@@ -12,9 +12,9 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
 # Load Modules
-cd /home/richmonp/scratch/DATABASES/
+cd /project/projects/def-wyeth/DATABASES/
 
-nohup wget http://archive.gersteinlab.org/funseq2.1.2/hg19_NCscore_funseq216.tsv.bgz
+wget http://archive.gersteinlab.org/funseq2.1.2/hg19_NCscore_funseq216.tsv.bgz
 md5sum hg19_NCscore_funseq216.tsv.bgz > hg19_NCscore_funseq216.tsv.bgz.md5sum
 wget http://archive.gersteinlab.org/funseq2.1.2/hg19_NCscore_funseq216.tsv.bgz.tbi
 md5sum hg19_NCscore_funseq216.tsv.bgz.tbi > hg19_NCscore_funseq216.tsv.bgz.tbi.md5sum

@@ -1,8 +1,0 @@
-
-=============================================
-vcfanno version 0.2.8 [built with go1.8]
-
-see: https://github.com/brentp/vcfanno
-=============================================
-vcfanno.go:115: found 59 sources from 24 files
-api.go:741: bix: error on opening /scratch/richmonp/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz.tbi: open /scratch/richmonp/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz.tbi: no such file or directory
