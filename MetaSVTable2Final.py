@@ -144,16 +144,7 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		else:
 			gene_summary='.'
 
-		# Fix some formatting stuff for Excel
-		# Exon number
-		cols[6]="\'%s"%cols[6]
-		# Gene name
-		#cols[5]="\'%s"%cols[5]
-
-		# join the cols
-		newline = "\t".join(cols)
-
-		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(newline,omim_pheno,omim_hyperlink,rvis_score,rvis_pct,pLI_score,pLI_pct,gene_summary))
+		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(line,omim_pheno,omim_hyperlink,rvis_score,rvis_pct,pLI_score,pLI_pct,gene_summary))
 
 		#reset variables
 		gene_summary = '.'

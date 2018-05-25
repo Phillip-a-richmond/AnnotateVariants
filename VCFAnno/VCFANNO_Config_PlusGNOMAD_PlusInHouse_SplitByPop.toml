@@ -29,68 +29,9 @@ ops = ["self"]
 #gnomAD Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
 [[annotation]]
 file="/mnt/causes-data01/data/Databases/GNOMAD/gnomad.genomes.r2.0.1.sites.wholeGenome.norm.vcf.gz"
-fields = ["AF","Hom"]
-names = ["aaf_gnomAD_genome_all","gnomAD_genome_num_hom_alt"]
-ops = ["self","self"]
-
-#gnomAD Allele Frequency Split By Population
-fields = ["AC_Adj", "AN_Adj", "AC_AFR", "AN_AFR", "AC_AMR", "AN_AMR", "AC_EAS", "AN_EAS", "AC_FIN", "AN_FIN", "AC_NFE", "AN_NFE", "AC_OTH", "AN_OTH", "AC_SAS", "AN_SAS",
-          "AC_Het", "AC_Hom"]
-names = ["ac_exac_all", "an_exac_all", "ac_adj_exac_afr", "an_adj_exac_afr", "ac_adj_exac_amr", "an_adj_exac_amr", "ac_adj_exac_eas", "an_adj_exac_eas", "ac_adj_exac_fin", "an_adj_exac_fin", "ac_adj_exac_nfe", "an_adj_exac_nfe", "ac_adj_exac_oth", "an_adj_exac_oth", "ac_adj_exac_sas", "an_adj_exac_sas",
-          "num_exac_Het", "num_exac_Hom"]
-ops=["max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "max", "self", "self", "self"]
-
-# calculate allele frequencies for all populations.
-
-[[postannotation]]
-fields=["ac_gnomAD_all", "an_gnomAD_all"]
-name="af_gnomAD_all"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_afr", "an_adj_gnomAD_afr"]
-name="af_adj_gnomAD_afr"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_amr", "an_adj_gnomAD_amr"]
-name="af_adj_gnomAD_amr"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_eas", "an_adj_gnomAD_eas"]
-name="af_adj_gnomAD_eas"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_fin", "an_adj_gnomAD_fin"]
-name="af_adj_gnomAD_fin"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_nfe", "an_adj_gnomAD_nfe"]
-name="af_adj_gnomAD_nfe"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_oth", "an_adj_gnomAD_oth"]
-name="af_adj_gnomAD_oth"
-op="div2"
-type="Float"
-
-[[postannotation]]
-fields=["ac_adj_gnomAD_sas", "an_adj_gnomAD_sas"]
-name="af_adj_gnomAD_sas"
-op="div2"
-type="Float"
-
-
+fields = ["AF","Hom","AF_AFR","Hom_AFR","AF_AMR","Hom_AMR","AF_ASJ","Hom_ASJ","AF_EAS","Hom_EAS","AF_FIN","Hom_FIN","AF_NFE","Hom_NFE","AF_OTH","Hom_OTH"]
+names = ["aaf_gnomad_genome_all","gnomad_genome_num_hom_alt","gnomad_af_afr","gnomad_hom_afr","gnomad_af_amr","gnomad_hom_amr","gnomad_af_asj","gnomad_hom_asj","gnomad_af_eas","gnomad_hom_eas","gnomad_af_fin","gnomad_hom_fin","gnomad_af_nfe","gnomad_hom_nfe","gnomad_af_oth","gnomad_hom_oth"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self","self","self","self","self","self"]
 
 
 #Count from in-house database, added by Phil Richmond
@@ -185,26 +126,32 @@ fields=["AMR_AF", "EAS_AF", "SAS_AF", "AFR_AF", "EUR_AF", "AF"]
 names=["af_1kg_amr", "af_1kg_eas", "af_1kg_sas", "af_1kg_afr", "af_1kg_eur", "af_1kg_all"]
 ops=["max", "max", "max", "max", "max", "max"]
 
-# ClinVar (Version from end of 2017)
+# ClinVar (Auto-updating)
 [[annotation]]
-file="/mnt/causes-data01/data/Databases/GEMINI/clinvar_20171231.vcf.gz"
+file="/mnt/causes-data01/data/Databases/clinvar.vcf.gz"
 fields=["CLNSIG", "CLNDN","CLNDISDB"]
-names=["clinvar_pathogenic", "clinvar_disease_name","clinvar_dbInfo"]
-ops=["self", "self", "self"]
+names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+
+# ClinVar (Version from end of 2017)
+#[[annotation]]
+#file="/mnt/causes-data01/data/Databases/GEMINI/clinvar_20171231.vcf.gz"
+#fields=["CLNSIG", "CLNDN","CLNDISDB"]
+#names=["clinvar_pathogenic", "clinvar_disease_name","clinvar_dbInfo"]
+#ops=["self", "self", "self"]
 
 # convert 5 to 'pathogenic', 255 to 'unknown', etc.
-[[postannotation]]
-fields=["clinvar_pathogenic"]
-op="lua:clinvar_sig(clinvar_pathogenic)"
-name="clinvar_sig"
-type="String"
+#[[postannotation]]
+#fields=["clinvar_pathogenic"]
+#op="lua:clinvar_sig(clinvar_pathogenic)"
+#name="clinvar_sig"
+#type="String"
 
 # Check for common, pathogenic variants
-[[postannotation]]
-fields=["clinvar_sig", "max_aaf_all"]
-op="lua:check_clinvar_aaf(clinvar_sig, max_aaf_all, 0.005)"
-name="common_pathogenic"
-type="Flag"
+#[[postannotation]]
+#fields=["clinvar_sig", "max_aaf_all"]
+#op="lua:check_clinvar_aaf(clinvar_sig, max_aaf_all, 0.005)"
+#name="common_pathogenic"
+#type="Flag"
 
 # Cosmic variants
 [[annotation]]
@@ -219,24 +166,6 @@ file="/opt/tools/gemini-0.19.1/thirdparty/gemini_data/hg19_fitcons_fc-i6-0_V1-01
 columns=[4]
 names=["fitcons_float"]
 ops=["mean"]
-
-
-
-#[[annotation]]
-#file="/opt/tools/gemini-0.19.1/thirdparty/gemini_data/LCR-hs37d5.bed.gz"
-#names=["LCR"]
-#columns=[2]
-#ops=["flag"]
-#
-#[[annotation]]
-#http://humanparalogy.gs.washington.edu/build37/build37.htm
-#  wget -O - http://humanparalogy.gs.washington.edu/build37/data/GRCh37GenomicSuperDup.tab \
-#      | tail -n+2 \
-#      | grep -Pv "_gl00|_random|chrUn" | sort -k1,1V -k2,2n | bgzip -c > GRCh37GenomicSuperDup.tab.gz
-#file="GRCh37GenomicSuperDup.tab.gz"
-#names=["superdup"]
-#columns=[2]
-#ops=["flag"]
 
 
 # not sure what these are, encode I guess?
