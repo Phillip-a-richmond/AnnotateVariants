@@ -100,14 +100,41 @@ def GetPLIDict(PLIFILE):
 	print Gene2PLI
 	return Gene2PLI
 
+def GetHPODict(HPOFILE):
+	infile = open(HPOFILE,'r')
+	Gene2HPO={}
+	headerline = infile.readline()
+	for line in infile:
+		entrez,gene,pheno,hpo = line.strip('\n').split('\t')
+		if Gene2HPO.has_key(gene):
+			Gene2HPO[gene].append("%s|%s"%(pheno,hpo))
+		else:
+			Gene2HPO[gene]=["%s|%s"%(pheno,hpo)]
+	print Gene2HPO
+	return Gene2HPO
+
+def GetMESHOPDict(MESHOPFILE):
+        infile = open(MESHOPFILE,'r')
+        Gene2MESHOP={}
+        for line in infile:
+                gene,meshop = line.strip('\n').split('\t')
+                if Gene2MESHOP.has_key(gene):
+                        Gene2MESHOP[gene].append(meshop)
+                else:
+                        Gene2MESHOP[gene]=[meshop]
+        print Gene2MESHOP
+        return Gene2MESHOP	
+
+
+
 
 # This function takes in the dictionaries desribed above, reads in the gemini infile, and outputs the gemini outfile
-def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS):
+def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP):
 	infile = open(GeminiInFileName,'r')
 	outfile = open(GeminiOutFileName,'w')
 	header = infile.readline()
 	header = header.strip('\n')
-	outfile.write("%s\tOMIM_Entry\tOMIM_Phenotypes\tRVIS_Score\tRVIS_Pct\tpLI_Score\tpLI_Pct\tGeneSummary\n"%header)
+	outfile.write("%s\tOMIM_Entry\tOMIM_Phenotypes\tRVIS_Score\tRVIS_Pct\tpLI_Score\tpLI_Pct\tHPO\tMeSHOP\tGeneSummary\n"%header)
 	for line in infile:
 		line = line.strip('\n')
 		cols = line.split("\t")
@@ -123,7 +150,14 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 			omim_hyperlink='=HYPERLINK(\"http://www.omim.org/entry/%s\")'%omim_key
 		else:
 			omim_hyperlink='.'
-	
+
+		# HPO		
+		if Gene2HPO.has_key(gene):
+			hpo=";".join(Gene2HPO[gene])
+		else:
+			hpo = '.'	
+		
+		# PLI
 		if Gene2PLI.has_key(gene):
 			pLI_score = Gene2PLI[gene][0]
 			pLI_pct = Gene2PLI[gene][1]
@@ -131,12 +165,19 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 			pLI_score = '.'
 			pLI_pct = '.'		
 		
+		# RVIS	
 		if Gene2RVIS.has_key(gene):
 			rvis_score = Gene2RVIS[gene][0]
 			rvis_pct = Gene2RVIS[gene][1]
 		else:
 			rvis_score = '.'
 			rvis_pct = '.'			
+
+		# MESHOP
+		if Gene2MESHOP.has_key(gene):
+                        meshop=";".join(Gene2MESHOP[gene])
+                else:
+                        meshop = '.'	
 
  		# Check for gene summary, if there, add it, if not, make it '.' 
 		if GeneSummary.has_key(gene):
@@ -153,7 +194,7 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		# join the cols
 		newline = "\t".join(cols)
 
-		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(newline,omim_pheno,omim_hyperlink,rvis_score,rvis_pct,pLI_score,pLI_pct,gene_summary))
+		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(newline,omim_pheno,omim_hyperlink,rvis_score,rvis_pct,pLI_score,pLI_pct,hpo,meshop,gene_summary))
 
 		#reset variables
 		gene_summary = '.'
@@ -163,6 +204,8 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		rvis_pct = '.'
 		pLI_score = '.'
 		pLI_pct = '.'			
+		hpo = '.'
+		meshop = '.'
 
 #-------------#
 # Main        #
@@ -177,7 +220,8 @@ if __name__ == "__main__":
     Gene2Disease = '/mnt/causes-data01/data/Databases/OMIM_phenotype_genelist'
     PLI = '/mnt/causes-data01/data/Databases/TOLERANCE/PLI_March2016.txt'
     RVIS = '/mnt/causes-data01/data/Databases/TOLERANCE/RVIS_March2016.txt'
-
+    MESHOP = '/mnt/causes-data01/data/Databases/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
+    HPO = '/mnt/causes-data01/data/Databases/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
 
     # Read in the annotations
     GeneSummaries = GetSummaryDict(SummaryFileName)
@@ -185,13 +229,14 @@ if __name__ == "__main__":
     Gene2Pheno = GetOMIM_Gene2PhenoDict(Gene2Disease)
     Gene2PLI = GetPLIDict(PLI)
     Gene2RVIS = GetRVISDict(RVIS)
-
+    Gene2HPO = GetHPODict(HPO)
+    Gene2MESHOP = GetMESHOPDict(MESHOP)
 	
     GeminiInfile,GeminiOutfile=GetOptions()
     #GeminiInfile='/mnt/causes-data01/data/RICHMOND/AnnotateVariants/T008_compoundHet.txt'
     #GeminiOutfile='/mnt/causes-data01/data/RICHMOND/AnnotateVariants/T008_compoundHet_annotated.txt'
  
-    AddColumnsToTable(GeminiInfile,GeminiOutfile,Gene2Pheno,Gene2Mim,GeneSummaries,Gene2PLI,Gene2RVIS)
+    AddColumnsToTable(GeminiInfile,GeminiOutfile,Gene2Pheno,Gene2Mim,GeneSummaries,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP)
 
 
 
