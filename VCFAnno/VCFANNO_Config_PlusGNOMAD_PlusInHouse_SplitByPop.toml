@@ -131,6 +131,7 @@ ops=["max", "max", "max", "max", "max", "max"]
 file="/mnt/causes-data01/data/Databases/clinvar.vcf.gz"
 fields=["CLNSIG", "CLNDN","CLNDISDB"]
 names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+ops=["self","self","self"]
 
 # ClinVar (Version from end of 2017)
 #[[annotation]]

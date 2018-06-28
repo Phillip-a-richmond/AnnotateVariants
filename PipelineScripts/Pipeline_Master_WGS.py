@@ -1,0 +1,577 @@
+import sys, os, argparse
+
+#####################################
+# Author:   Phillip Richmond        #
+# Contact:  prichmond@cmmt.ubc.ca   #
+# Modified: David Arenillas (DJA)   #
+#           dave@cmmt.ubc.ca        #
+# Open source GNU licensing         #
+#####################################
+
+#####################
+#Pipeline Master WGS#
+#####################
+
+#This is the revised pipeline for analysis of Whole Genome Sequencing data.  I will maintain two pipelines within this script: One for BWA-GATK HC, and the old pipeline: Bowtie2-Samtools0.1.19
+# Something to note, is that the SAMPLE ID now has the version of the pipeline you ran
+# Added CNV calling on Mar 20, 2017
+# Added SV calling with LUMPY+CNVnator, Pindel, and merged with MetaSV September 2017
+# Added ERDS in January 2018
+# Added Jill's GATK-HC pipeline March 2018
+# Added GSC- genome OR hg19 genome selection in April 2018
+# Added MosDepth June 2018
+
+
+##################
+### Initialize ###
+##################
+
+if len(sys.argv) < 2:
+	print "Re-run with the -h option"
+	print "Typical Running Command:"
+	print "python Pipeline_Master_WGS.py -v new -d /mnt/causes-data04/ -s TDX-468 -1 /mnt/causes-data04/data2/RAW/EXOME_TIDEX/Family121/TIDEX468_CAGATC_L001_R1_001.fastq.gz -2 /mnt/causes-data04/data2/RAW/EXOME_TIDEX/Family121/TIDEX468_CAGATC_L001_R1_001.fastq.gz -p 16 -m 100G"
+	sys.exit()
+
+
+# Redone with Argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("-v","--version",help="Choose which pipeline version: old or new\nold: Bowtie2-Samtools\nnew:BWA-Platypus\nIf you put down 'neither', then it will not run the primary pipeline")
+parser.add_argument("-d","--workingDir",help="Working directory on your filesystem")
+parser.add_argument("-s","--sampleID",help="What is the sample ID for these input files")
+parser.add_argument("-p","--processors",help="Choose the number of processors for this job",type=int)
+parser.add_argument("-m","--memory",help="Choose the memory needed for this job")
+parser.add_argument("-1","--inputR1",help="The R1 fastq file")
+parser.add_argument("-2","--inputR2",help="The R2 fastq file")
+parser.add_argument("-n","--nodeName",help="Name of the node you want to submit to, options are: cfricauseshpc02,cfricauseshpc03,cfricauseshpc04,cfricauseshpc06")
+parser.add_argument("-a","--annotate",help="Produce annotation header",action='store_true',default=False)
+parser.add_argument("--cnv",help="Run CNV calling and annotation",action='store_true',default=False)
+parser.add_argument("-R","--readlength",help="The length of the reads in integer form",default=100)
+# This masked argument is no longer functional since I'm maintaining both hg19 and GSC genomes
+# Plus it wasn't ever really useful
+parser.add_argument("-M","--masked",help="If set, the pipeline will be run in masked mode",action='store_true',default=False)
+parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
+parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
+parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
+args = parser.parse_args()
+
+sampleID = args.sampleID
+workingDir = args.workingDir
+R1fastq = args.inputR1
+R2fastq = args.inputR2
+print "The working directory is: %s"%workingDir
+print "The sample ID is: %s"%sampleID
+print "The fastq files you're working with are: \n%s\n%s\n"%(R1fastq,R2fastq)
+
+numProcessors = args.processors
+Memory = args.memory
+runTime = "200:00:00"
+
+
+# Adding in a header file to be added to /mnt/data/PipelineControl/processingpipeline/AnnotationPipeline_Template.sh, and that'll be the final annotation pipeline to be run, I'm making the file, but it won't be a part of anything that gets qsubbed.  Only run this for the child
+
+if args.annotate:
+	HeaderForAnnoFile = open("%s%s_AnnotationHeader.txt"%(workingDir,sampleID),'w')
+	HeaderForAnnoFile.write("FAMILY_ID='%s'\n"%sampleID[:-2])
+	HeaderForAnnoFile.write("SAMPLE_ID_1='%s-1'\n"%sampleID[:-2])
+	HeaderForAnnoFile.write("SAMPLE_ID_2='%s-2'\n"%sampleID[:-2])
+	HeaderForAnnoFile.write("SAMPLE_ID_3='%s-3'\n"%sampleID[:-2])
+	HeaderForAnnoFile.write("WORKING_DIR='%s'\n"%workingDir)
+	HeaderForAnnoFile.write("SCRIPTDIR='/opt/tools/VariantAnnotation/'\n")	
+	if args.version == 'new':
+		HeaderForAnnoFile.write("BAM1='%s%s-1_BWAmem_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
+		HeaderForAnnoFile.write("BAM2='%s%s-2_BWAmem_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
+		HeaderForAnnoFile.write("BAM3='%s%s-3_BWAmem_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
+	elif args.version == 'old':
+		HeaderForAnnoFile.write("BAM1='%s%s-1_bowtie2_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
+                HeaderForAnnoFile.write("BAM2='%s%s-2_bowtie2_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
+                HeaderForAnnoFile.write("BAM3='%s%s-3_bowtie2_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
+#This isn't playing nicely for some reason
+	os.system("cat %s%s_AnnotationHeader.txt /mnt/causes-data01/data/PipelineControl/processingpipeline/AnnotationTemplate.sh > %s%s_AnnotationPipeline.sh"%(workingDir,sampleID,workingDir,sampleID))
+
+
+
+#######################
+### Write the Script###
+#######################
+
+#This is where we'll begin writing the script, starting with the header information
+shellScriptFile = open('%s%s_FullPipeline_%s.sh'%(workingDir,sampleID,args.version),'w')
+shellScriptFile.write('#!/bin/bash\n')
+
+# These will be different for SGE (old cluster) and PBS (new cluster)
+if args.scheduler=='SGE':
+	#Job name
+	shellScriptFile.write('#$ -N %s_%s_PrimaryPipeline\n'%(sampleID,args.version))
+	#Export environment variables
+	shellScriptFile.write('#$ -V\n')
+	#set location for log files
+	shellScriptFile.write('#$ -o %s%s.o\n'%(workingDir,sampleID))
+	shellScriptFile.write('#$ -e %s%s.e\n'%(workingDir,sampleID))
+	#email on job abort
+	shellScriptFile.write('#$ -m bea\n#$ -M prichmond@cmmt.ubc.ca\n')
+	#SGE resource requirements
+	shellScriptFile.write('#$ -l h_rt=%s,h_vmem=%s\n'%(runTime,Memory))
+	#Specific node being submitted to, only if it's specified
+	if args.nodeName is not None:
+		shellScriptFile.write("#$ -l h=%s\n"%args.nodeName)
+	#Parallel processing
+	shellScriptFile.write('#$ -pe smp %d\n'%numProcessors)
+	shellScriptFile.write('\n\nexport PARALLEL=$NSLOTS\nexport OMP_NUM_THREADS=$NSLOTS\n')
+	
+elif args.scheduler == 'PBS':
+	#Job name
+	shellScriptFile.write('#PBS -N %s_%s_PrimaryPipeline\n'%(sampleID,args.version))
+	#Export environment variables
+	shellScriptFile.write('#PBS -V\n')
+	#set location for log files
+	shellScriptFile.write('#PBS -o %s%s%s.o\n'%(workingDir,sampleID,args.version))
+	shellScriptFile.write('#PBS -e %s%s%s.e\n'%(workingDir,sampleID,args.version))
+	#email on job abort
+	shellScriptFile.write('#PBS -m bea\n#PBS -M prichmond@cmmt.ubc.ca\n')
+	#SGE resource requirements
+	shellScriptFile.write("## Set the total memory for the job\n")
+	shellScriptFile.write('#PBS -l mem=%s\n'%Memory)
+	shellScriptFile.write("## Set the max walltime for the job\n")
+	shellScriptFile.write('#PBS -l walltime=%s\n'%runTime)
+	#Specific node being submitted to, only if it's specified
+	if args.nodeName is not None:
+		shellScriptFile.write("## Not sure we want to specify nodes on new cluster yet\n##PBS -l h=%s\n"%args.nodeName)
+	#Parallel processing
+	shellScriptFile.write("## Set the total number of processors for the job\n")
+	shellScriptFile.write('#PBS -l nodes=1:ppn=%s\n'%numProcessors)
+	shellScriptFile.write('NSLOTS=$PBS_NUM_PPN\n')
+	shellScriptFile.write('umask 0002\n')
+	shellScriptFile.write("source /opt/tools/hpcenv.sh\n\n")
+
+
+	
+#Set the variables for working directory, sampleID, and fastq full filepath
+if args.version=='new':
+	if args.masked:
+		shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem_masked\'\n"%sampleID)
+	else:
+		shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem\'\n"%sampleID)
+		
+elif args.version=='old':
+	if args.masked:
+		shellScriptFile.write("\nSAMPLE_ID=\'%s_bowtie2_masked\'\n"%sampleID)
+	else:
+		shellScriptFile.write("\nSAMPLE_ID=\'%s_bowtie2\'\n"%sampleID)
+	shellScriptFile.write("BOWTIE2_INDEX=\'/mnt/causes-data01/data/GENOMES/hg19/hg19\'\n")
+
+else:
+	print "You have specified a wronge value for version.  Must be either old or new"	
+	print "Unless you're running with 'neither'"
+	shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem\'\n"%sampleID)
+
+if args.GENOME=='hg19':
+        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa.fa\'\n")
+        shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa\'\n")
+        shellScriptFile.write("GENOMEFILE=\'/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa.genome\'\n")
+        shellScriptFile.write("CHROM=\'/mnt/causes-data01/data/GENOMES/hg19/FASTA/\'\n")
+	
+elif args.GENOME=='GSC':
+        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
+	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
+	shellScriptFile.write("CHROM=\'/mnt/causes-data01/data/GENOMES/GSC/SplitByChrom/\'\n")
+	shellScriptFile.write("GENOMEFILE=/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.genome\n\n")
+else:
+        print "You did not choose a viable genome version, choose either GSC or hg19"
+        sys.exit()
+
+
+
+shellScriptFile.write("WORKING_DIR=\'%s\'\n"%workingDir)
+shellScriptFile.write("FASTQR1=\'%s\'\n"%R1fastq)
+shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
+#if args.masked:
+#	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
+#	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
+#	shellScriptFile.write("CHROM='/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/'\n")
+#        shellScriptFile.write("GENOMEFILE=/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/hg19_masked.genome\n\n")	
+#else:
+#	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
+#        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
+#        shellScriptFile.write("CHROM='/mnt/causes-data01/data/GENOMES/hg19/FASTA/'\n")
+#        shellScriptFile.write("GENOMEFILE=/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa.genome\n\n")
+
+
+
+
+#########################################################################################
+
+
+# Now define these functions, which when called, they will write out the command to the shell
+# script.  This is an easy way to control what goes into the script, so if I have to run
+# only fastQC on all the files, then I can just specify that, and call that command
+
+def FastQC():
+	#Initial FastQC
+	shellScriptFile.write("\n#FastQC\n")
+	shellScriptFile.write("#/opt/tools/FastQC/fastqc --extract $FASTQR1 $FASTQR2 -o $WORKING_DIR\n")
+
+# Part of the old pipeline
+def Bowtie2():
+	#Map with Bowtie2
+	shellScriptFile.write("\n#Map with Bowtie2\n")
+	shellScriptFile.write("/opt/tools/bowtie2-2.2.6/bowtie2  -x $BOWTIE2_INDEX -1 $FASTQR1 -2 $FASTQR2 -S $WORKING_DIR${SAMPLE_ID}.sam  -p $NSLOTS --very-sensitive -X 1000 --met-stderr --rg-id $SAMPLE_ID --rg \"SM:$SAMPLE_ID\tPL:illumina\" 2> $WORKING_DIR${SAMPLE_ID}.stderr\n\n")
+
+	shellScriptFile.write("\n#Fix Read Names\n")
+	shellScriptFile.write("#python /mnt/causes-data01/data/PipelineControl/FixSamReadNames.py $WORKING_DIR${SAMPLE_ID}.sam $WORKING_DIR${SAMPLE_ID}fixed.sam\n")
+	shellScriptFile.write("#mv $WORKING_DIR$SAMPLE_ID\'fixed.sam\' $WORKING_DIR${SAMPLE_ID}.sam\n")
+
+def BWA():
+	#Map with BWA
+	shellScriptFile.write("\n#Map with BWA\n")
+	shellScriptFile.write("/opt/tools/bwa-0.7.12/bwa mem $BWA_INDEX -t $NSLOTS -R \"@RG\\tID:$SAMPLE_ID\\tSM:$SAMPLE_ID\\tPL:illumina\" -M $FASTQR1 $FASTQR2 > $WORKING_DIR$SAMPLE_ID'.sam'\n\n")
+
+# Added in the -@ $NSLOTS for parallelization of samtools commands
+def Sam2Bam():
+	#Convert to binary, sort, and index
+	shellScriptFile.write("#Convert to binary, sort, and index\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools view -@ $NSLOTS -u -bS $WORKING_DIR$SAMPLE_ID\'.sam\' | /opt/tools/samtools-1.2/samtools sort -@ $NSLOTS -m 3G - $WORKING_DIR$SAMPLE_ID\'.sorted\'\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools index $WORKING_DIR$SAMPLE_ID\'.sorted.bam\'\n")
+
+# Is just duplicate marking
+def DupRemove():
+	#Remove duplicates
+	shellScriptFile.write("\n#Remove Duplicates\n")
+	shellScriptFile.write("TMPDIR=$WORKING_DIR'picardtmp/'\n")
+	shellScriptFile.write("mkdir $TMPDIR\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar MarkDuplicates I=$WORKING_DIR$SAMPLE_ID\'.sorted.bam\' O=$WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\' REMOVE_DUPLICATES=false TMP_DIR=$TMPDIR M=$WORKING_DIR$SAMPLE_ID\'_DuplicateResults.txt\'\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools index $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\'\n")
+
+
+def Realign():
+	#Realign
+	shellScriptFile.write("\n#Realign\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T RealignerTargetCreator -nt $NSLOTS -R $GENOME_FASTA -minReads 5 -I $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_indelsites.intervals\' \n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T IndelRealigner -model USE_READS -R $GENOME_FASTA -targetIntervals $WORKING_DIR$SAMPLE_ID\'_indelsites.intervals\' -I $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\'\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools index $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\'\n")
+
+
+def VarCall():
+	#SNP calling mpileup
+	shellScriptFile.write("\n#SNPcalling Mpileup\n")
+	shellScriptFile.write("#/opt/tools/samtools-1.2/samtools mpileup -Bgf $GENOME_FASTA $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' | /opt/tools/bcftools-1.2/bcftools call -vc - > $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.bcf\'\n")
+	shellScriptFile.write("#/opt/tools/bcftools-1.2/vcfutils.pl varFilter -Q 30 -a 2 $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.bcf\' | awk \'(match ($1, \"##\") || $6 > 30)\' > $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.vcf\'\n")
+
+#SNP calling old mpileup
+	shellScriptFile.write("\n#SNP calling Mpileupv0.1.19\n")
+	shellScriptFile.write("/opt/tools/samtools-0.1.19/samtools mpileup -Bgf $GENOME_FASTA $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam' | /opt/tools/samtools-0.1.19/bcftools/bcftools view -gvc - > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.bcf'")
+	shellScriptFile.write("\n/opt/tools/samtools-0.1.19/bcftools/vcfutils.pl varFilter -Q20 -a 3 $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.bcf' | awk '(match ($1,\"##\") || $6 > 30)' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf'\n")
+
+# Part of the old pipeline
+def IndelRemoval():
+	shellScriptFile.write("\n#Indel Removal\n")
+	shellScriptFile.write("/opt/tools/tabix-0.2.6/bgzip -c $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz' \n")
+	shellScriptFile.write("/opt/tools/tabix-0.2.6/tabix $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz'\n")
+	shellScriptFile.write("/opt/tools/bcftools-1.2/bcftools filter -e \"TYPE='indel' && IS=1\"  $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf' \n")
+
+# Added DJA 2016/06/15
+def ReadMetrics():
+	shellScriptFile.write("\n#Read Metrics\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar CollectMultipleMetrics INPUT=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' OUTPUT=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted\' REFERENCE_SEQUENCE=$GENOME_FASTA\n")
+
+# Added DJA 2016/06/15
+def SNVMetrics():
+	shellScriptFile.write("\n#SNV Metrics\n")
+	shellScriptFile.write("java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T VariantEval --eval $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf\' --out $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf_metrics\' --dbsnp /opt/tools/GATK-3.4-46/resources/dbsnp_138.hg19_noM.vcf --intervals /mnt/causes-data01/data/mwenifumbo/ExomeCapture/hg19_RefSeq_050116_CodingExons_nohap.interval_list -R $GENOME_FASTA \n")
+
+def ValidateSAM():
+	shellScriptFile.write("\n#Picard Validate BAM\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar  /opt/tools/picard-tools-1.139/picard.jar ValidateSamFile M=VERBOSE MO=10000000 I=$WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam' O=$WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam_PicardSAMValidate.txt'\n")
+
+def SummaryStats():
+	#Parse Stats
+	shellScriptFile.write("\n#Parse Stats\n")
+	shellScriptFile.write("python /mnt/causes-data01/data/PipelineControl/ParseStats.py %s %s %s %s > $WORKING_DIR$SAMPLE_ID'_summaryStats.txt'\n"%(sampleID,workingDir,R1fastq,R2fastq))
+
+def CleanUp():
+	#Clean Up
+	shellScriptFile.write("\n#Clean Up\n")
+	shellScriptFile.write("ValidateOutput=`cat $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam_PicardSAMValidate.txt'`\n")
+	shellScriptFile.write("rm $WORKING_DIR$SAMPLE_ID\'.sam\'\n")
+	shellScriptFile.write("rm $WORKING_DIR$SAMPLE_ID\'.sorted.bam\'\n")
+	shellScriptFile.write("rm $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\'\n")
+	shellScriptFile.write("zip $WORKING_DIR$SAMPLE_ID\'_R1_chastitypassed_fastqc.zip\' $WORKING_DIR$SAMPLE_ID\'_R1_chastitypassed_fastqc\'\n")
+	shellScriptFile.write("rm $WORKING_DIR$SAMPLE_ID\'_R1_chastitypassed_fastqc\'\n")
+	shellScriptFile.write("zip $WORKING_DIR$SAMPLE_ID\'_R2_chastitypassed_fastqc.zip\' $WORKING_DIR$SAMPLE_ID\'_R2_chastitypassed_fastqc\'\n")
+	shellScriptFile.write("rm $WORKING_DIR$SAMPLE_ID\'_R2_chastitypassed_fastqc\'\n")
+
+def Platypus():
+	shellScriptFile.write("\n#SNP Calling Platypus\n")
+	shellScriptFile.write("python /opt/tools/Platypus-0.8.1/Platypus.py callVariants --nCPU=$NSLOTS --refFile=$GENOME_FASTA --bamFiles=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' --output=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_Platypus.vcf\'\n")
+	shellScriptFile.write("\n#Sort platypus file\n")
+	shellScriptFile.write("mkdir $WORKING_DIR'tmp/' \n")
+	shellScriptFile.write("/opt/tools/vcftools-0.1.14/bin/vcf-sort -c -p $NSLOTS -t $WORKING_DIR'tmp/' $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus_sorted.vcf'\n")
+	shellScriptFile.write("mv $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus_sorted.vcf'  $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf'\n")
+
+
+def GATK_HaplotypeCaller():
+#SNP calling
+	shellScriptFile.write("\n#SNP Calling HaplotypeCaller\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T HaplotypeCaller \\\n")
+	shellScriptFile.write("	-nct 4 --never_trim_vcf_format_field \\\n")
+	shellScriptFile.write("	--genotyping_mode DISCOVERY \\\n")
+	shellScriptFile.write("	--standard_min_confidence_threshold_for_calling 10 \\\n")
+	shellScriptFile.write(" --standard_min_confidence_threshold_for_emitting 10 \\\n")
+	shellScriptFile.write("	--min_mapping_quality_score 0 \\\n")
+	shellScriptFile.write("	--min_base_quality_score 10 \\\n")
+	shellScriptFile.write("	--minReadsPerAlignmentStart 5 \\\n")
+	shellScriptFile.write(" --minPruning 2 \\\n")
+	shellScriptFile.write("	--pcr_indel_model NONE \\\n")
+	shellScriptFile.write("	--dbsnp /opt/tools/GATK-3.5-0-g36282e4/resources/dbsnp_138.b37.excluding_sites_after_129.vcf \\\n")
+	shellScriptFile.write("	-R $GENOME_FASTA \\\n")
+	shellScriptFile.write("	-I $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+	shellScriptFile.write("	-o $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf\n")
+	shellScriptFile.write("\n# Fix the header for this VCF, and pipe into a bgzip then Tabix\n")
+	shellScriptFile.write("sed 's/AD,Number=./AD,Number=R/g' $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf | \\\n")
+	shellScriptFile.write(" /opt/tools/htslib-1.5/bin/bgzip > $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf.gz \n")
+	shellScriptFile.write("/opt/tools/htslib-1.5/bin/tabix $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf.gz \n")
+	shellScriptFile.write("\n#NormBcftools \n")
+	shellScriptFile.write("/opt/tools/bcftools-1.5/bin/bcftools norm \\\n")
+	shellScriptFile.write(" --fasta-ref $GENOME_FASTA \\\n")
+	shellScriptFile.write(" --multiallelics -both \\\n")
+	shellScriptFile.write(" $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf.gz \\\n")
+	shellScriptFile.write(" --output-type z \\\n")
+	shellScriptFile.write(" $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.norm.vcf.gz \n\n")
+	shellScriptFile.write("/opt/tools/htslib-1.5/bin/tabix $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.norm.vcf.gz \n\n")
+	shellScriptFile.write("\n#Filter\n")
+	shellScriptFile.write("/opt/tools/bcftools-1.5/bin/bcftools filter \\\n")
+	shellScriptFile.write("--include 'FORMAT/AD[1]>=3 && INFO/MQ>=20 && %QUAL>=20' \\\n")
+	shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.norm.vcf.gz \\\n")
+	shellScriptFile.write("--output-type z \\\n")
+	shellScriptFile.write("--output $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.norm.filter.vcf.gz \n")
+
+def GATK_HaplotypeCallerGVCF():
+#SNP calling
+	shellScriptFile.write("\n#SNP Calling HaplotypeCaller GVCFmode\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar \\\n")
+	shellScriptFile.write(" -T HaplotypeCaller -nct 4 --emitRefConfidence GVCF \\\n")
+        shellScriptFile.write(" --standard_min_confidence_threshold_for_calling 10 \\\n")
+        shellScriptFile.write(" --standard_min_confidence_threshold_for_emitting 10 \\\n")
+        shellScriptFile.write(" --min_mapping_quality_score 0 \\\n")
+        shellScriptFile.write(" --min_base_quality_score 10 \\\n")
+        shellScriptFile.write(" --minReadsPerAlignmentStart 5 \\\n")
+        shellScriptFile.write(" --minPruning 2 \\\n")
+        shellScriptFile.write(" --pcr_indel_model NONE \\\n")
+        shellScriptFile.write(" --dbsnp /opt/tools/GATK-3.5-0-g36282e4/resources/dbsnp_138.b37.excluding_sites_after_129.vcf \\\n")
+	shellScriptFile.write(" -R $GENOME_FASTA -I $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+	shellScriptFile.write(" -o $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.g.vcf\n")
+
+def GATK_Coverage():
+	shellScriptFile.write("\n#GATK Depth Of Coverage\n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $GENOME_FASTA -I $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_Coverage'\n")
+
+def Lumpy():
+	shellScriptFile.write("\n\n#Lumpy CNV Caller\n")
+	shellScriptFile.write("\n##PreProcess\n")
+	shellScriptFile.write("BAM_FILE=$SAMPLE_ID'_dupremoved_realigned'\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2//samtools view -@ $NSLOTS -b -F 1294 $WORKING_DIR$BAM_FILE'.sorted.bam' > $WORKING_DIR$BAM_FILE'_discordants.bam'\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools view -@ $NSLOTS -h $WORKING_DIR$BAM_FILE'.sorted.bam' | python /opt/tools/lumpy/extractSplitReads_BwaMem.py -i stdin | /opt/tools/samtools-1.2/samtools view -@ $NSLOTS -Sb - > $WORKING_DIR$BAM_FILE'_splitters.bam'\n")
+	shellScriptFile.write("\n##Sort the splitters and discordants\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools sort -@ $NSLOTS $WORKING_DIR$BAM_FILE'_discordants.bam' $WORKING_DIR$BAM_FILE'_discordants.sorted'\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools sort -@ $NSLOTS $WORKING_DIR$BAM_FILE'_splitters.bam' $WORKING_DIR$BAM_FILE'_splitters.sorted'\n")
+	shellScriptFile.write("\n##Generate Empirical insert size stats\n")
+	shellScriptFile.write("/opt/tools/samtools-1.2/samtools view -r $SAMPLE_ID $WORKING_DIR$BAM_FILE'.sorted.bam' | tail -n+1000000 | python /opt/tools/lumpy/pairend_distro.py -r %s -X 4 -N 1000000 -o $WORKING_DIR$BAM_FILE'.histo' > $WORKING_DIR$BAM_FILE'.insertStats'\n"%args.readlength)
+	shellScriptFile.write("MEAN=`cat $WORKING_DIR$BAM_FILE'.insertStats' | sed -E 's/\s+/,/' | cut -d, -f1 | sed -E 's/mean://' | xargs printf \"%.0f\"`\n")
+	shellScriptFile.write("STDEV=`cat $WORKING_DIR$BAM_FILE'.insertStats' | sed -E 's/\s+/,/' | cut -d, -f2 | sed -E 's/stdev://' | xargs printf \"%.0f\"`\n")
+	shellScriptFile.write("echo \"$STDEV\"\n")
+	shellScriptFile.write("echo \"$MEAN\"\n")
+	shellScriptFile.write("\n##Run LUMPY\n")
+	shellScriptFile.write("/opt/tools/lumpy/lumpy -mw 4 -tt 1.0 \\\n")
+	shellScriptFile.write("-bedpe bedpe_file:$WORKING_DIR${SAMPLE_ID}.dup.100.sorted.bedpe,weight:3,id:DUP \\\n")
+	shellScriptFile.write("-bedpe bedpe_file:$WORKING_DIR${SAMPLE_ID}.del.100.sorted.bedpe,weight:3,id:DEL \\\n")
+	shellScriptFile.write(" -pe  bam_file:$WORKING_DIR$BAM_FILE'.sorted.bam',id:$SAMPLE_ID,histo_file:$WORKING_DIR$BAM_FILE'.histo',read_length:%s,min_non_overlap:100,discordant_z:5,back_distance:10,weight:1,min_mapping_threshold:40,mean:$MEAN,stdev:$STDEV \\\n"%args.readlength)
+	shellScriptFile.write(" -sr id:$SAMPLE_ID,bam_file:$WORKING_DIR$BAM_FILE'_splitters.sorted.bam',back_distance:10,weight:1,min_mapping_threshold:40 > $WORKING_DIR$SAMPLE_ID'_Lumpy.vcf'\n")
+
+def LumpyFilterAnnotate():
+	shellScriptFile.write("\n#Genotype,Filter,Annotate\n##Run SVtyper\n")
+	shellScriptFile.write("/opt/tools/svtyper-0.1.0/svtyper -B $WORKING_DIR$BAM_FILE'.sorted.bam' -i $WORKING_DIR$SAMPLE_ID'_Lumpy.vcf' -o $WORKING_DIR$SAMPLE_ID'_Lumpy_genotyped.vcf'\n")
+	shellScriptFile.write("\n##Filter genotyped Lumpy (Custom script)\n")
+	shellScriptFile.write("python /opt/tools/VariantAnnotation/FilterLumpyGenotyped.py $WORKING_DIR$SAMPLE_ID'_Lumpy_genotyped.vcf'\\\n")
+	shellScriptFile.write(" $WORKING_DIR$SAMPLE_ID'_Lumpy_genotyped_filtered.vcf' $WORKING_DIR$SAMPLE_ID'_Lumpy_DelDup.bed' \\\n")
+	shellScriptFile.write(" $WORKING_DIR$SAMPLE_ID'_Lumpy_DelDup.vcf' 0 3000000 \n")
+	shellScriptFile.write("\n##Convert to ANNOVAR AVinput\n")
+	shellScriptFile.write("perl /opt/tools/annovar/convert2annovar.pl -format vcf4 -allsample --comment --includeinfo -withfreq $WORKING_DIR$SAMPLE_ID'_Lumpy_genotyped_filtered.vcf' > $WORKING_DIR$SAMPLE_ID'_Lumpy.avinput'\n")
+	shellScriptFile.write("\n##Run ANNOVAR DGV\n")
+	shellScriptFile.write("/mnt/causes-data01/data/Databases/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
+	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID'_Lumpy.avinput' /mnt/causes-data01/data/Databases/annovar/humandb -out $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar' \n")
+	shellScriptFile.write("python /opt/tools/VariantAnnotation/PruneAnnotatedCNVs.py  $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.txt' $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.txt' \n")
+	shellScriptFile.write("python /opt/tools/VariantAnnotation/AddSummaryToAnnovar_CNV.py $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.txt' $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.omimAndSummary.txt' \n")
+
+def CNVNATOR():
+	shellScriptFile.write("#Running CNVNATOR Windowsize 100\n\n")
+	shellScriptFile.write("#Defining Variables\n")
+	shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+	shellScriptFile.write("WIN=100\n")
+	shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR${BAM}.root -genome $GENOME_FASTA -tree $WORKING_DIR$BAM \n")
+	shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -his $WIN -d $CHROM \n")
+	shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -stat $WIN \n")
+	shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -partition $WIN \n")
+	shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
+
+	shellScriptFile.write("# Preparing for use within Lumpy\n")
+	shellScriptFile.write("/opt/tools/lumpy-0.2.11/scripts/cnvanator_to_bedpes.py -c $WORKING_DIR${SAMPLE_ID}_CNVnatorCall_$WIN -b 600 --del_o $WORKING_DIR${SAMPLE_ID}.del.$WIN.bedpe --dup_o $WORKING_DIR${SAMPLE_ID}.dup.$WIN.bedpe \n")
+	shellScriptFile.write("/opt/tools/lumpy-0.2.11/scripts/bedpe_sort.py -b $WORKING_DIR${SAMPLE_ID}.del.$WIN.bedpe -g $GENOMEFILE > $WORKING_DIR${SAMPLE_ID}.del.$WIN.sorted.bedpe \n")
+	shellScriptFile.write("/opt/tools/lumpy-0.2.11/scripts/bedpe_sort.py -b $WORKING_DIR${SAMPLE_ID}.dup.$WIN.bedpe -g $GENOMEFILE > $WORKING_DIR${SAMPLE_ID}.dup.$WIN.sorted.bedpe \n")
+
+	shellScriptFile.write("#Running CNVNATOR Windowsize 1000\n\n")
+        shellScriptFile.write("WIN=1000\n")
+        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -his $WIN -d $CHROM \n")
+        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -stat $WIN \n")
+        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -partition $WIN \n")
+        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
+
+
+def Pindel():
+	shellScriptFile.write("# Running Pindel \n\n")
+	shellScriptFile.write("#Defining Variables\n")
+        shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+	shellScriptFile.write("\n##Generate Empirical insert size stats\n")
+        shellScriptFile.write("/opt/tools/samtools-1.2/samtools view -r $SAMPLE_ID $WORKING_DIR$BAM | tail -n+1000000 | python /opt/tools/lumpy/pairend_distro.py -r %s -X 4 -N 1000000 -o $WORKING_DIR${BAM}.histo > $WORKING_DIR${BAM}.insertStats\n"%args.readlength)
+        shellScriptFile.write("MEAN=`cat $WORKING_DIR${BAM}.insertStats | sed -E 's/\s+/,/' | cut -d, -f1 | sed -E 's/mean://' | xargs printf \"%.0f\"`\n")
+	shellScriptFile.write("python /mnt/causes-data01/data/PipelineControl/processingpipeline/pindel_config.py $WORKING_DIR$BAM $MEAN $WORKING_DIR$SAMPLE_ID \n")
+	shellScriptFile.write("/opt/tools/pindel-0.2.5b6/pindel --number_of_threads $NSLOTS \\\n")
+	shellScriptFile.write("-f $GENOME_FASTA \\\n")
+	shellScriptFile.write("-i $WORKING_DIR${BAM}_config.txt \\\n")
+	shellScriptFile.write("-c ALL -o $WORKING_DIR$SAMPLE_ID \\\n")
+	shellScriptFile.write("-M 4 \\\n")
+	shellScriptFile.write("-N -x 3 \\\n")
+	shellScriptFile.write("-I false -t false -r false \\\n")
+	shellScriptFile.write("-J /mnt/causes-data01/data/Databases/hg19_centromeres_telomeres.bed  \n\n")
+
+def CANVAS():
+	shellScriptFile.write("#Running CANVAS\n#Redefining Variables\n")
+	shellScriptFile.write("BAMFILE=$SAMPLE_ID'_dupremoved_realigned'\n")
+	shellScriptFile.write("VCFFILE=$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf'\n")
+	shellScriptFile.write("CANVAS_DIR=$WORKING_DIR$SAMPLE_ID'_CANVAS/'\n")
+	shellScriptFile.write("CANVAS_VCFGZ='CNV.vcf.gz'\n")
+	shellScriptFile.write("CANVAS_VCF=$SAMPLE_ID'_CANVAS_CNV.vcf'\n")
+	shellScriptFile.write("CANVAS_VCF_FILTERED=$SAMPLE_ID'_CANVAS_CNV_filtered.vcf'\n")
+	shellScriptFile.write("CANVAS_AVINPUT=$SAMPLE_ID'_CANVAS.avinput'\n")
+	shellScriptFile.write("CANVAS_LOH_AVINPUT=$SAMPLE_ID'_CANVAS_LOH.avinput'\n")
+	shellScriptFile.write("CANVAS_ANNOTATED=$SAMPLE_ID'_CANVAS_annovar'\n")
+	shellScriptFile.write("CANVAS_BED=$SAMPLE_ID'_CANVAS_CNV.bed'\n")
+
+	shellScriptFile.write("\n#Make the working directory for CANVAS\n")
+	shellScriptFile.write("mkdir $CANVAS_DIR\n")
+	shellScriptFile.write("#Run CANVAS\n")
+	shellScriptFile.write("mono /opt/tools/Canvas/Canvas.exe Germline-WGS -b $WORKING_DIR$BAMFILE --b-allele-vcf=$WORKING_DIR$VCFFILE -o $CANVAS_DIR -r /mnt/causes-data01/data/GENOMES/hg19/hg19_CANVAS_kmer.fa -g /mnt/causes-data01/data/GENOMES/hg19/ -f /mnt/causes-data01/data/GENOMES/hg19/hg19_CANVAS_Filter13.bed -n $SAMPLE_ID\n\n")
+	
+	shellScriptFile.write("#Get rid of the reference calls (also unzips)\n")
+	shellScriptFile.write("zcat $CANVAS_DIR$CANVAS_VCFGZ | grep -v ':REF:' > $CANVAS_DIR$CANVAS_VCF\n")
+	shellScriptFile.write("#Filter using custom script\n")
+	shellScriptFile.write("python /opt/tools/VariantAnnotation/FilterCanvas.py $CANVAS_DIR$CANVAS_VCF $CANVAS_DIR$CANVAS_VCF_FILTERED $CANVAS_DIR$CANVAS_AVINPUT $CANVAS_DIR$CANVAS_LOH_AVINPUT\n\n")
+	shellScriptFile.write("#Copy to a bed file (nothing special)\n")
+	shellScriptFile.write("cp $CANVAS_DIR$CANVAS_AVINPUT $CANVAS_DIR$CANVAS_BED\n\n")
+	shellScriptFile.write("#Run annovar\n")
+	shellScriptFile.write("/mnt/causes-data01/data/Databases/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
+	shellScriptFile.write("$CANVAS_DIR$CANVAS_AVINPUT /mnt/causes-data01/data/Databases/annovar/humandb -out $WORKING_DIR$CANVAS_ANNOTATED\n")
+
+def MetaSV():
+	shellScriptFile.write("\n# MetaSV \n\n")
+	shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+	shellScriptFile.write("run_metasv.py --bam $WORKING_DIR/$BAM --reference $GENOME_FASTA \\\n")
+	shellScriptFile.write("--enable_per_tools_output \\\n")
+	shellScriptFile.write("--pindel_native $WORKING_DIR/${SAMPLE_ID}_D $WORKING_DIR/${SAMPLE_ID}_TD \\\n")
+	shellScriptFile.write("--lumpy_vcf $WORKING_DIR${SAMPLE_ID}_Lumpy.vcf \\\n")
+	shellScriptFile.write("--cnvnator_native ${SAMPLE_ID}_CNVnatorCall_1000 \\\n")
+	shellScriptFile.write("--filter_gaps --sample $WORKING_DIR$SAMPLE_ID --num_threads $NSLOTS \\\n")
+	shellScriptFile.write("--outdir $WORKING_DIR${SAMPLE_ID}MetaSVout \\\n")
+	shellScriptFile.write("--workdir $WORKING_DIR${SAMPLE_ID}MetaSVwork \\\n")
+	shellScriptFile.write("--spades /opt/tools/SPAdes-3.10.1/bin/spades.py \\\n")
+	shellScriptFile.write("--age /opt/tools/AGE/age_align \\\n")
+
+def ERDS():
+	shellScriptFile.write("\n# ERDS \n\n")
+	shellScriptFile.write("perl /opt/tools/erds1.1/erds_pipeline.pl \\\n")
+	shellScriptFile.write("\t-b $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+	shellScriptFile.write("\t-v $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf \\\n")
+	shellScriptFile.write("\t-o $WORKING_DIR${SAMPLE_ID}_ERDS/ \\\n")
+	shellScriptFile.write("\t-r $GENOME_FASTA \\\n")
+
+
+def MosDepth():
+	shellScriptFile.write("\n#MosDepth \n\n")
+	shellScriptFile.write("/opt/tools/mosdepth-0.2.2/mosdepth -n -q 0:1:10:20:40:60:100: -t $NSLOTS \\\n")
+	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+	shellScriptFile.write("\n#Plot output \n\n")
+	shellScriptFile.write("python /mnt/causes-data01/data/RICHMOND/mosdepth/scripts/plot-dist.py \\\n")
+	shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}.mosdepth.global.dist.txt \\\n")
+	shellScriptFile.write("-o $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.html \\\n")
+	shellScriptFile.write("> $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.summary.txt \n\n")
+
+
+def SVANNOTATE():
+	shellScriptFile.write("\n# Get variants in proband \n")
+	shellScriptFile.write("# Convert to bed using annovar \n")
+	shellScriptFile.write("perl /mnt/causes-data01/data/Databases/annovar/convert2annovar.pl $WORKDIR/${SAMPLE}.DEL.preformat \\\n")
+	shellScriptFile.write("\t -format vcf4 \\\n")
+	shellScriptFile.write("\t -outfile $WORKING_DIR/${SAMPLE}.DEL \\\n")
+	shellScriptFile.write("\t -includeinfo \n")
+
+
+#Now that we've defined those parts of the script, I'll parse out what's necessary to run, and add it to the script sequentially
+
+if args.version == 'new':
+	shellScriptFile.write("\n echo \"Primary Analysis Started\"\n")
+	shellScriptFile.write("date\n")	
+	#FastQC()
+        BWA()
+	Sam2Bam()
+        DupRemove()
+        Realign()
+        #VarCall()
+        CleanUp()
+        #ReadMetrics()
+        #Platypus()
+        GATK_HaplotypeCaller()
+        GATK_HaplotypeCallerGVCF()
+        #SNVMetrics()
+        ValidateSAM()
+	MosDepth()	
+	#GATK_Coverage()	
+        # Summary stats needs to be fixed for this pipeline version (Mar20,2017)
+	#SummaryStats()
+	
+	shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
+	shellScriptFile.write("date\n")	
+
+
+elif args.version == 'old':
+	FastQC()
+	Bowtie2()
+	Sam2Bam()
+	DupRemove()
+        Realign()
+        VarCall()
+        SummaryStats()
+        IndelRemoval()
+	ReadMetrics()
+	SNVMetrics()
+	CleanUp()
+	ValidateSAM()
+	GATK_Coverage()
+	
+elif args.version == 'neither':
+	print "Not putting down the primary analysis"
+
+if args.cnv:
+	shellScriptFile.write("\necho \"CNV Analysis Started\"\n")
+        shellScriptFile.write("date\n")
+	CNVNATOR()
+	ERDS()
+
+# Splitting out SV from CNV, improve speed
+if args.sv:
+	if not args.cnv:
+		CNVNATOR()
+	Lumpy()
+#	LumpyFilterAnnotate()
+	Pindel()
+	MetaSV()
+	shellScriptFile.write("\necho \"CNV Analysis Finished\"\n")
+        shellScriptFile.write("date\n")
+
