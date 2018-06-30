@@ -62,7 +62,7 @@ But, once you get set up, then things run nice and smooth.
 + In-house Scripts 
 
 
-2. Prepare Third-party Datasets/databases, There are scripts to help do this 
+2. Prepare Third-party Datasets/databases, there are a few scripts to help do this within [here](https://github.com/Phillip-a-richmond/AnnotateVariants/tree/master/GetThirdPartyDatabases):
 + All the gemini databases
 + Polyphen2  https://github.com/quinlan-lab/pathoscore/blob/master/score-sets/GRCh37/polyphen2/make.sh
 + CADD  http://krishna.gs.washington.edu/download/CADD/v1.3/whole_genome_SNVs.tsv.gz 
