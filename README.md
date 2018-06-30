@@ -4,18 +4,18 @@
 > This is a pipeline for variant annotation in the diagnosis of rare genetic disorders. It relies on open source data and has instructions for software installs.
 
 ## Overview
-1. [Pipeline Summary & Diagram](###Pipeline-Summary-&-Diagram)
+1. [Pipeline Summary & Diagram](#Pipeline-summary-and-diagram)
 
-2. [Set-up](###Set-Up) 
+2. [Set-up](#Set-Up) 
 	- Prepare Datasets and databases
 	- Install Necessary Tools
 
-3. [Run Test](###Run-Test)
+3. [Run Test](#Run-Test)
 
-4. [Run Sample](###Run-Sample)
+4. [Run Sample](#Run-Sample)
 
 
-### Pipeline Summary & Diagram
+### Pipeline Summary And Diagram
 This pipeline was designed by Phillip Richmond in order to analyze & prioritize variants in rare genetic disease cases. Currently, the pipeline uses the following list of software in order to accomplish this task, much to the thanks of tools produced and maintained by the lab of Aaron Quinlan:
 + GEMINI
 + VCFAnno
