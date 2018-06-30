@@ -69,5 +69,10 @@ But, once you get set up, then things run nice and smooth.
 + ReMM  http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
 + gnomAD http://gnomad.broadinstitute.org/downloads
 
+## Run Test
+You can run a test analysis by following the instructions within the [Test](https://github.com/Phillip-a-richmond/AnnotateVariants/tree/master/Test) directory.
+
+## Run Sample
+
 
 
