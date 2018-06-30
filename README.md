@@ -1,23 +1,21 @@
 # AnnotateVariants
-### Phillip Richmond
-### Contact: Phillip.A.Richmond@gmail.com
-
+#### Phillip Richmond (Phillip.A.Richmond@gmail.com)
 
 > This is a pipeline for variant annotation in the diagnosis of rare genetic disorders. It relies on open source data and has instructions for software installs.
 
 ## Overview
-1. Pipeline Summary & Diagram
+1. [Pipeline Summary & Diagram](#Pipeline-Summary-&-Diagram)
 
-2. Set-up 
+2. [Set-up](#Set-Up) 
 	- Prepare Datasets and databases
 	- Install Necessary Tools
 
-3. Run Test
+3. [Run Test](#Run-Test)
 
-4. Run Sample
+4. [Run Sample](#Run-Sample)
 
 
-## Pipeline Summary & Diagram
+### Pipeline Summary & Diagram
 This pipeline was designed by Phillip Richmond in order to analyze & prioritize variants in rare genetic disease cases. Currently, the pipeline uses the following list of software in order to accomplish this task, much to the thanks of tools produced and maintained by the lab of Aaron Quinlan:
 + GEMINI
 + VCFAnno
@@ -49,7 +47,7 @@ Currently, the pipeline is hard coded for a specific cluster that uses the Torqu
 
 
 
-## Set-up
+### Set-up
 *THERE IS A LOT OF SETTING UP TO DO!*  
 But, once you get set up, then things run nice and smooth.
 
@@ -72,9 +70,7 @@ But, once you get set up, then things run nice and smooth.
 + gnomAD http://gnomad.broadinstitute.org/downloads
 
 
-
-
-1) PolyPhen2
+##### A) PolyPhen2
 GetPolyPhen2.sh is a script I got from Brent Pedersen to set up my Polyphen.
 
 https://github.com/quinlan-lab/pathoscore/blob/master/score-sets/GRCh37/polyphen2/make.sh
@@ -82,16 +78,16 @@ https://github.com/quinlan-lab/pathoscore/blob/master/score-sets/GRCh37/polyphen
 The file I use inside of the polyphen2 directory is the polyphen2.txt.gz
 whole_genome_SNVs.tsv.gz is the entire genome CADD score, and comes from:
 
-2) CADD
+##### B) CADD
 whole_genome_SNVs.tsv.gz is the entire genome CADD score, and comes from:
 http://krishna.gs.washington.edu/download/CADD/v1.3/
 
 
-3) Genomiser ReMM score 
+##### C) Genomiser ReMM score 
 ReMM.v0.3.1.tsv.gz
 Downloaded from http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
 
-9) FATHMM
+##### D) FATHMM
 The FATHMM file comes from the annovar download (/mnt/causes-data01/data/Databases/annovar/humandb/hg19_fathmm.txt)
 Which I then bgzipped and copied here.
 bgzip -s1 -b2 hg19_fathmm.txt > hg19_fathmm_fromAnnovar.txt.gz
@@ -108,7 +104,7 @@ wget http://fathmm.biocompute.org.uk/fathmm-xf/fathmm_xf_noncoding.vcf.gz
 wget http://fathmm.biocompute.org.uk/fathmm-xf/fathmm_xf_noncoding.vcf.gz.tbi
 
 
-7) Eigen
+##### E) Eigen
 wget --recursive --no-parent https://xioniti01.u.hpc.mssm.edu/v1.1/
 Also, downloaded the training datasets.
 https://xioniti01.u.hpc.mssm.edu/TrainingTestingDatasets/TrainingDatasets_Noncoding.zip
@@ -118,9 +114,7 @@ python BuildSubsetShell.py -T Eigen -B xioniti01.u.hpc.mssm.edu/v1.1/VISTA_posit
 sh ExtractEigen.sh
 Then moved them all to Eigen_VISTA_Enhancers
 
-
-
-11) GeneHancer
+##### F) GeneHancer
 I downloaded the GeneHancer data dump from here:
 https://genecards.weizmann.ac.il/geneloc_prev/index.shtml
 Selected version 4.5 for NCBI Build 37
@@ -148,10 +142,7 @@ sortBed -i GeneHancer_hg19.bed > GeneHancer_hg19.sorted.bed
 
 And then bgzip and tabix index
 
-
-
-
-LINSIGHT
+##### G) LINSIGHT
 Downloaded the LINSIGHT precomputed .bw file from here:
 https://github.com/CshlSiepelLab/LINSIGHT
 wget http://compgen.cshl.edu/%7Eyihuang/tracks/LINSIGHT.bw
@@ -161,7 +152,7 @@ Found here:
 wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToBedGraph
 
 
-3. Prepare in-house variant database
+H) Prepare in-house variant database
 + For instructions see: https://github.com/Phillip-a-richmond/BuildInHouseDB
 
 
