@@ -4,15 +4,15 @@
 > This is a pipeline for variant annotation in the diagnosis of rare genetic disorders. It relies on open source data and has instructions for software installs.
 
 ## Overview
-1. [Pipeline Summary & Diagram](#Pipeline-Summary-&-Diagram)
+1. [Pipeline Summary & Diagram](###Pipeline-Summary-&-Diagram)
 
-2. [Set-up](#Set-Up) 
+2. [Set-up](###Set-Up) 
 	- Prepare Datasets and databases
 	- Install Necessary Tools
 
-3. [Run Test](#Run-Test)
+3. [Run Test](###Run-Test)
 
-4. [Run Sample](#Run-Sample)
+4. [Run Sample](###Run-Sample)
 
 
 ### Pipeline Summary & Diagram
