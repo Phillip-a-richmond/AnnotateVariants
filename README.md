@@ -1,19 +1,51 @@
 # AnnotateVariants
-## Phillip Richmond
-
+### Phillip Richmond
+### Contact: Phillip.A.Richmond@gmail.com
 
 
 > This is a pipeline for variant annotation in the diagnosis of rare genetic disorders. It relies on open source data and has instructions for software installs.
 
 ## Overview
-1. Set-up 
+1. Pipeline Summary & Diagram
+
+2. Set-up 
 	- Prepare Datasets and databases
 	- Install Necessary Tools
 
-2. Run Test
+3. Run Test
 
-3. Run Sample
+4. Run Sample
 
+
+## Pipeline Summary & Diagram
+This pipeline was designed by Phillip Richmond in order to analyze & prioritize variants in rare genetic disease cases. Currently, the pipeline uses the following list of software in order to accomplish this task, much to the thanks of tools produced and maintained by the lab of Aaron Quinlan:
++ GEMINI
++ VCFAnno
++ VCF2DB
+
+Furthermore, this pipeline utilizes open source datasets within it's annotation framework, including:
++ CADD 
++ gnomAD
++ OMIM*
++ ClinVar
++ UCSC RefGene
++ Entrez Gene Summary
++ HPO Term Mapping
++ MeSHOPs
++ pLI
++ RVIS
++ FATHMM-XF
++ Eigen
++ FunSeq2
++ Platinum Genomes ConfidentRegions
++ UCSC Segmental Duplications
+
+* OMIM requires a license for use of the API/downloadable databases, which must be applied for through their website.
+
+Currently, the pipeline is hard coded for a specific cluster that uses the Torque-Moab scheduler. However, I will expand upon this to include other schedulers such as SLURM. Also, generalizing for software install locations, or developing a single install-script via bioconda will also be performed later in 2018.
+
+
+![](https://github.com/Phillip-a-richmond/AnnotateVariants/blob/master/Figure3-NewInterpretationPipeline.png)
 
 
 
