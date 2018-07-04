@@ -146,10 +146,18 @@ def Bam2GVCF():
 	shellScriptFile.write("# Step 1: Generate gVCFs\n\n")
 	# Here I'm going to write out a Bam2gVCF for each of the bam files listed.  I'll just add a HC.g.vcf tag to the bam file names
 	for i in range(1,len(BAMS)+1,1):
-		shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -nct $NSLOTS  -T HaplotypeCaller --emitRefConfidence GVCF \\\n")
-		shellScriptFile.write("-R $GENOME_FASTA -I $WORKING_DIR$SAMPLE%d_BAM \\\n"%(i))
-		shellScriptFile.write("-o $WORKING_DIR${SAMPLE%d_BAM}.HC.g.vcf \n"%i)
-
+	        shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar \\\n")
+	        shellScriptFile.write(" -T HaplotypeCaller -nct 4 --emitRefConfidence GVCF \\\n")
+		shellScriptFile.write(" -R $GENOME_FASTA -I $WORKING_DIR$SAMPLE%d_BAM \\\n"%(i))
+	        shellScriptFile.write(" --standard_min_confidence_threshold_for_calling 10 \\\n")
+	        shellScriptFile.write(" --standard_min_confidence_threshold_for_emitting 10 \\\n")
+	        shellScriptFile.write(" --min_mapping_quality_score 0 \\\n")
+	        shellScriptFile.write(" --min_base_quality_score 10 \\\n")
+	        shellScriptFile.write(" --minReadsPerAlignmentStart 5 \\\n")
+	        shellScriptFile.write(" --minPruning 2 \\\n")
+	        shellScriptFile.write(" --pcr_indel_model NONE \\\n")
+	        shellScriptFile.write(" --dbsnp /opt/tools/GATK-3.5-0-g36282e4/resources/dbsnp_138.b37.excluding_sites_after_129.vcf \\\n")
+		shellScriptFile.write(" -o $WORKING_DIR${SAMPLE%d_BAM}.HC.g.vcf \n"%i)
 # Generate VCFs from BAM files
 def Bam2VCF():
 	shellScriptFile.write("\n echo \"Primary Analysis Started\"\n")
