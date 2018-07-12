@@ -14,8 +14,8 @@ If you are starting with GVCF for multiple files, then it will run GATK Genotype
 
 Running Bam2Gemini.py:
 ```
-python Bam2Gemini.py \
-	-d /mnt/causes-data01/data/RICHMOND/AnnotateVariants/Test/ \
+python ../PipelineScipts/Bam2Gemini.py \
+	-d /mnt/causes-vnx1/Pipelines/AnnotateVariants/Test/ \
 	-p 16 -m 40G \
 	-P NA12878_Trio.ped \
 	-F NA12878_Trio \
@@ -26,7 +26,7 @@ python Bam2Gemini.py \
 If you don't already have a PED file, you can make one with MakePED.py:
 
 ```
-python MakePED.py \
+python ../PipelineScripts/MakePED.py \
 	--proband NA12878_BWAmem,female,affected \
 	--father NA12892_BWAmem,male,unaffected \
 	--mother NA12891_BWAmem,female,unaffected \
