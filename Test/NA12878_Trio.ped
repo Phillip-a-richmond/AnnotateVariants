@@ -1,0 +1,4 @@
+#family_id	sample_id	paternal_id	maternal_id	sex	phenotype	ethnicity
+NA12878_Trio	NA12892_BWAmem	-9	-9	1	1	-9
+NA12878_Trio	NA12891_BWAmem	-9	-9	2	1	-9
+NA12878_Trio	NA12878_BWAmem	NA12892_BWAmem	NA12891_BWAmem	2	2	-9

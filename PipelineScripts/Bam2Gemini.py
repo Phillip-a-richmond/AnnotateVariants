@@ -266,9 +266,8 @@ def VCF2DB():
 	shellScriptFile.write("\n# Step 6: VCF2DB - Turn your annotated VCF file into a GEMINI DB\n\n")
 	shellScriptFile.write('python /opt/tools/vcf2db/vcf2db.py \\\n')
 	shellScriptFile.write('--expand gt_quals --expand gt_depths --expand gt_alt_depths --expand gt_ref_depths --expand gt_types \\\n')
-	shellScriptFile.write(' --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF --a-ok gnomad_genome_num_hom_alt --a-ok gnomad_hom_afr --a-ok gnomad_hom_amr --a-ok gnomad_hom_asj --a-ok gnomad_hom_eas --a-ok gnomad_hom_fin --a-ok gnomad_hom_nfe --a-ok gnomad_hom_oth --a-ok num_exac_Het --a-ok num_exac_Hom --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \\\n')
+	shellScriptFile.write(' --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF --a-ok gnomad_genome_hom_all --a-ok gnomad_genome_hom_afr --a-ok gnomad_genome_hom_amr --a-ok gnomad_genome_hom_asj --a-ok gnomad_genome_hom_eas --a-ok gnomad_genome_hom_fin --a-ok gnomad_genome_hom_nfe --a-ok gnomad_genome_hom_oth --a-ok gnomad_exome_hom_all --a-ok gnomad_exome_hom_afr --a-ok gnomad_exome_hom_amr --a-ok gnomad_exome_hom_asj --a-ok gnomad_exome_hom_eas --a-ok gnomad_exome_hom_fin --a-ok gnomad_exome_hom_nfe --a-ok gnomad_exome_hom_oth --a-ok num_exac_Het --a-ok num_exac_Hom --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \\\n')
 	shellScriptFile.write('$ANNOVCF $PED_FILE $GEMINIDB \n')
-
 
 # This function will add the gemini build command from a merged haplo vcf
 # This is deprecated now 
@@ -287,8 +286,8 @@ def AddGNOMAD2GeminiDB():
 # Run in either VCF or BAM mode
 if args.VCFLIST:
 	if args.vcftype == 'GVCF':
-	#	MergeGVCF_withVCFLIST()
-	#	MergedVCF2NormVCF()
+		MergeGVCF_withVCFLIST()
+		MergedVCF2NormVCF()
 		FilterVCF()
 		RunVCFAnno()
 		VCF2DB()
