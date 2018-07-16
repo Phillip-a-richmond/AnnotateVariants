@@ -49,34 +49,34 @@ SNPEFFJAR=/opt/tools/snpEff/snpEff.jar
 GEMINIDB=$WORKING_DIR${FAMILY_ID}.db
 VCF=$WORKING_DIR${FAMILY_ID}.merged.hc.vcf
 NORMVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcf.gz
-#zless $VCF \
-#	| sed 's/ID=AD,Number=./ID=AD,Number=R/' \
-#	| /opt/tools/vt/vt decompose -s - \
-#	| /opt/tools/vt/vt normalize -r $GENOME_FASTA - \
-#	| java -Xmx10g -jar $SNPEFFJAR GRCh37.75 \
-#	| /opt/tools/tabix/bgzip -c > $NORMVCF 
-#/opt/tools/tabix/tabix -p vcf $NORMVCF
-#
+zless $VCF \
+	| sed 's/ID=AD,Number=./ID=AD,Number=R/' \
+	| /opt/tools/vt/vt decompose -s - \
+	| /opt/tools/vt/vt normalize -r $GENOME_FASTA - \
+	| java -Xmx10g -jar $SNPEFFJAR GRCh37.75 \
+	| /opt/tools/tabix/bgzip -c > $NORMVCF 
+/opt/tools/tabix/tabix -p vcf $NORMVCF
+
 ## Step 4: Filter Merged, normalized VCF
-#
+
 NORMFILTERVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.filter.vcf.gz
-#/opt/tools/bcftools-1.8/bin/bcftools filter \
-#	 --include 'FORMAT/AD[0:1]>=10 && FORMAT/DP[0] < 300' \
-#	 -m + \
-#	 -s + \
-#	 -O z \
-#	 --output $NORMFILTERVCF \
-#	 $NORMVCF 
-#
-#/opt/tools/tabix/tabix $NORMFILTERVCF \
+/opt/tools/bcftools-1.8/bin/bcftools filter \
+	 --include 'FORMAT/AD[0:1]>=10 && FORMAT/DP[0] < 300' \
+	 -m + \
+	 -s + \
+	 -O z \
+	 --output $NORMFILTERVCF \
+	 $NORMVCF 
+
+/opt/tools/tabix/tabix $NORMFILTERVCF \
 
 
 # Step 5: VCFAnno - Turn your VCF file into an annotated VCF file
 ANNOVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcfanno.vcf.gz 
-#/opt/tools/vcfanno/vcfanno -lua /mnt/causes-data01/data/RICHMOND/AnnotateVariants/VCFAnno/custom.lua \
-#-p $NSLOTS \
-#/mnt/causes-vnx1/Pipelines/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop_gnomAD_Exome.toml \
-#$NORMFILTERVCF > $ANNOVCF 
+/opt/tools/vcfanno/vcfanno -lua /mnt/causes-data01/data/RICHMOND/AnnotateVariants/VCFAnno/custom.lua \
+-p $NSLOTS \
+/mnt/causes-vnx1/Pipelines/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop_gnomAD_Exome.toml \
+$NORMFILTERVCF > $ANNOVCF 
 
 
 # Step 6: VCF2DB - Turn your annotated VCF file into a GEMINI DB
