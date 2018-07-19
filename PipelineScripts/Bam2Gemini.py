@@ -48,7 +48,12 @@ parser.add_argument("-B","--BAMLIST",help="Comma separated list of BAMS to be pr
 parser.add_argument("-v","--vcftype",help="The type of VCF.  If these are GVCFs that need to be merged, or separately called VCFs. REQUIRED option.",required=True)
 parser.add_argument("-V","--VCFLIST",help="Comma separated list of VCF files.  Set either GVCF or VCF with -v to know merging option.")
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
+#parser.add_argument("-C","--Config",help="Config file which points at locations for tool executables",required=True)
+#parser.add_argument("-Q","--QueryScript",help="Query script template",required=True)
 args = parser.parse_args()
+
+
+
 
 # Make sure you have the correct working Directory.
 workingDir = args.workingDir
@@ -256,9 +261,9 @@ def FilterVCF():
 def RunVCFAnno():
 	shellScriptFile.write("\n# Step 5: VCFAnno - Turn your VCF file into an annotated VCF file\n")
 	shellScriptFile.write('ANNOVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcfanno.vcf.gz \n')
-	shellScriptFile.write('/opt/tools/vcfanno/vcfanno -lua /mnt/causes-data01/data/RICHMOND/AnnotateVariants/VCFAnno/custom.lua \\\n')
+	shellScriptFile.write('/opt/tools/vcfanno/vcfanno -lua /mnt/causes-vnx1/PIPELINES/AnnotateVariants/AnnotateVariants/VCFAnno/custom.lua \\\n')
 	shellScriptFile.write('-p $NSLOTS \\\n')
-	shellScriptFile.write('/mnt/causes-data01/data/RICHMOND/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop.toml \\\n')
+	shellScriptFile.write('/mnt/causes-vnx1/PIPELINES/AnnotateVariants/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop.toml \\\n')
 	shellScriptFile.write('$NORMFILTERVCF > $ANNOVCF \n\n')
 
 # NOTE: If you want to add certain things as --a-ok make sure you add them here, otherwise they may error on the creation of the mysqlDB
@@ -266,7 +271,7 @@ def VCF2DB():
 	shellScriptFile.write("\n# Step 6: VCF2DB - Turn your annotated VCF file into a GEMINI DB\n\n")
 	shellScriptFile.write('python /opt/tools/vcf2db/vcf2db.py \\\n')
 	shellScriptFile.write('--expand gt_quals --expand gt_depths --expand gt_alt_depths --expand gt_ref_depths --expand gt_types \\\n')
-	shellScriptFile.write(' --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF --a-ok gnomad_genome_hom_all --a-ok gnomad_genome_hom_afr --a-ok gnomad_genome_hom_amr --a-ok gnomad_genome_hom_asj --a-ok gnomad_genome_hom_eas --a-ok gnomad_genome_hom_fin --a-ok gnomad_genome_hom_nfe --a-ok gnomad_genome_hom_oth --a-ok gnomad_exome_hom_all --a-ok gnomad_exome_hom_afr --a-ok gnomad_exome_hom_amr --a-ok gnomad_exome_hom_asj --a-ok gnomad_exome_hom_eas --a-ok gnomad_exome_hom_fin --a-ok gnomad_exome_hom_nfe --a-ok gnomad_exome_hom_oth --a-ok num_exac_Het --a-ok num_exac_Hom --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \\\n')
+	shellScriptFile.write(' --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF --a-ok gnomad_genome_hom_global --a-ok gnomad_genome_hom_afr --a-ok gnomad_genome_hom_amr --a-ok gnomad_genome_hom_asj --a-ok gnomad_genome_hom_eas --a-ok gnomad_genome_hom_fin --a-ok gnomad_genome_hom_nfe --a-ok gnomad_genome_hom_oth --a-ok gnomad_exome_hom_global --a-ok gnomad_exome_hom_afr --a-ok gnomad_exome_hom_amr --a-ok gnomad_exome_hom_asj --a-ok gnomad_exome_hom_eas --a-ok gnomad_exome_hom_fin --a-ok gnomad_exome_hom_nfe --a-ok gnomad_exome_hom_oth --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \\\n')
 	shellScriptFile.write('$ANNOVCF $PED_FILE $GEMINIDB \n')
 
 # This function will add the gemini build command from a merged haplo vcf
