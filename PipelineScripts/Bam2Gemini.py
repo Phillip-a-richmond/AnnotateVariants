@@ -261,9 +261,9 @@ def FilterVCF():
 def RunVCFAnno():
 	shellScriptFile.write("\n# Step 5: VCFAnno - Turn your VCF file into an annotated VCF file\n")
 	shellScriptFile.write('ANNOVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcfanno.vcf.gz \n')
-	shellScriptFile.write('/opt/tools/vcfanno/vcfanno -lua /mnt/causes-vnx1/PIPELINES/AnnotateVariants/AnnotateVariants/VCFAnno/custom.lua \\\n')
+	shellScriptFile.write('/opt/tools/vcfanno/vcfanno -lua /mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/custom.lua \\\n')
 	shellScriptFile.write('-p $NSLOTS \\\n')
-	shellScriptFile.write('/mnt/causes-vnx1/PIPELINES/AnnotateVariants/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop.toml \\\n')
+	shellScriptFile.write('/mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop_gnomAD_Exome.toml \\\n')
 	shellScriptFile.write('$NORMFILTERVCF > $ANNOVCF \n\n')
 
 # NOTE: If you want to add certain things as --a-ok make sure you add them here, otherwise they may error on the creation of the mysqlDB

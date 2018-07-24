@@ -21,14 +21,14 @@ ops = ["self"]
 
 #gnomAD Genome Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
 [[annotation]]
-file="/mnt/causes-vnx1/Databases/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz"
+file="/mnt/causes-vnx1/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz"
 fields = ["AF","Hom","AF_AFR","Hom_AFR","AF_AMR","Hom_AMR","AF_ASJ","Hom_ASJ","AF_EAS","Hom_EAS","AF_FIN","Hom_FIN","AF_NFE","Hom_NFE","AF_OTH","Hom_OTH"]
 names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_af_afr","gnomad_genome_hom_afr","gnomad_genome_af_amr","gnomad_genome_hom_amr","gnomad_genome_af_asj","gnomad_genome_hom_asj","gnomad_genome_af_eas","gnomad_genome_hom_eas","gnomad_genome_af_fin","gnomad_genome_hom_fin","gnomad_genome_af_nfe","gnomad_genome_hom_nfe","gnomad_genome_af_oth","gnomad_genome_hom_oth"]
 ops = ["self","self","self","self","self","self","self","self","self","self","self","self","self","self","self","self"]
 
 #gnomAD Exome Allele Frequency
 [[annotation]]
-file="/mnt/causes-vnx1/Databases/GNOMAD/gnomad.exomes.r2.0.2.sites.norm.vcf.gz"
+file="/mnt/causes-vnx1/DATABASES/GNOMAD/gnomad.exomes.r2.0.2.sites.norm.vcf.gz"
 fields = ["AF","Hom","AF_AFR","Hom_AFR","AF_AMR","Hom_AMR","AF_ASJ","Hom_ASJ","AF_EAS","Hom_EAS","AF_FIN","Hom_FIN","AF_NFE","Hom_NFE","AF_OTH","Hom_OTH"]
 names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_af_afr","gnomad_exome_hom_afr","gnomad_exome_af_amr","gnomad_exome_hom_amr","gnomad_exome_af_asj","gnomad_exome_hom_asj","gnomad_exome_af_eas","gnomad_exome_hom_eas","gnomad_exome_af_fin","gnomad_exome_hom_fin","gnomad_exome_af_nfe","gnomad_exome_hom_nfe","gnomad_exome_af_oth","gnomad_exome_hom_oth"]
 ops = ["self","self","self","self","self","self","self","self","self","self","self","self","self","self","self","self"]
