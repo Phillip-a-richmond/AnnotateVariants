@@ -43,7 +43,7 @@ Furthermore, this pipeline utilizes open source datasets within it's annotation 
 Currently, the pipeline is hard coded for a specific cluster that uses the Torque-Moab scheduler. However, I will expand upon this to include other schedulers such as SLURM. Also, generalizing for software install locations, or developing a single install-script via bioconda will also be performed later in 2018.
 
 
-![](https://github.com/Phillip-a-richmond/AnnotateVariants/blob/master/Figure3-NewInterpretationPipeline.png)
+![](https://github.com/Phillip-a-richmond/AnnotateVariants/blob/master/Figures/Figure3-NewInterpretationPipeline.png)
 
 
 
