@@ -232,6 +232,10 @@ python $TableAnnotator -i $AUTODOM_OUT_LOOSE -o ${AUTODOM_OUT_LOOSE}_annotated.t
 # General Queries to the database:
 GNOMAD_GENOME_COMMON='gnomad_genome_af_global > 0.01'
 GNOMAD_EXOME_COMMON='gnomad_exome_af_global > 0.01'
+GNOMAD_GENOME_RARE='gnomad_genome_af_global <= 0.01'
+GNOMAD_EXOME_RARE='gnomad_exome_af_global <= 0.01'
+
+
 GENEHANCER='genehancer is not NULL'
 DBSNP='rs_ids is not NULL'
 SEGDUP='in_segdup = 0'
@@ -246,7 +250,7 @@ echo "Annotation	Total	Common	Rare" >> $DBSTATFILE
 # Total number of variants in the file
 TOTAL_VARS=`gemini query -q "SELECT COUNT(*) FROM variants WHERE $SEGDUP" $GEMINIDB`
 rareTOTAL_VARS=`gemini query -q "SELECT COUNT(*) FROM variants WHERE $SEGDUP AND $GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE" $GEMINIDB`
-commonTOTAL_VARS=`gemini query -q "SELECT COUNT(*) FROM variants WHERE $SEGDUP AND $GNOMAD_GENOME_COMMON AND $GNOMAD_EXOME_COMMON" $GEMINIDB`
+commonTOTAL_VARS=`gemini query -q "SELECT COUNT(*) FROM variants WHERE $SEGDUP AND $GNOMAD_GENOME_COMMON OR $GNOMAD_EXOME_COMMON" $GEMINIDB`
 
 echo "TOTAL	$TOTAL_VARS	$commonTOTAL_VARS	$rareTOTAL_VARS" >> $DBSTATFILE
 

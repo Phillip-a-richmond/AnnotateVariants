@@ -20,7 +20,7 @@ import sys, os, argparse
 # Added Jill's GATK-HC pipeline March 2018
 # Added GSC- genome OR hg19 genome selection in April 2018
 # Added MosDepth June 2018
-
+# Migrated to VNX August 2018
 
 ##################
 ### Initialize ###
@@ -52,6 +52,7 @@ parser.add_argument("-M","--masked",help="If set, the pipeline will be run in ma
 parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
 parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
+parser.add_argument("-E","--Email",help="Email address",type=str)
 args = parser.parse_args()
 
 sampleID = args.sampleID
@@ -86,7 +87,7 @@ if args.annotate:
                 HeaderForAnnoFile.write("BAM2='%s%s-2_bowtie2_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
                 HeaderForAnnoFile.write("BAM3='%s%s-3_bowtie2_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
 #This isn't playing nicely for some reason
-	os.system("cat %s%s_AnnotationHeader.txt /mnt/causes-data01/data/PipelineControl/processingpipeline/AnnotationTemplate.sh > %s%s_AnnotationPipeline.sh"%(workingDir,sampleID,workingDir,sampleID))
+	os.system("cat %s%s_AnnotationHeader.txt /mnt/causes-vnx1/PipelineControl/processingpipeline/AnnotationTemplate.sh > %s%s_AnnotationPipeline.sh"%(workingDir,sampleID,workingDir,sampleID))
 
 
 
@@ -127,7 +128,8 @@ elif args.scheduler == 'PBS':
 	shellScriptFile.write('#PBS -o %s%s%s.o\n'%(workingDir,sampleID,args.version))
 	shellScriptFile.write('#PBS -e %s%s%s.e\n'%(workingDir,sampleID,args.version))
 	#email on job abort
-	shellScriptFile.write('#PBS -m bea\n#PBS -M prichmond@cmmt.ubc.ca\n')
+	if args.Email:
+		shellScriptFile.write('#PBS -m bea\n#PBS -M %s\n'%args.Email)
 	#SGE resource requirements
 	shellScriptFile.write("## Set the total memory for the job\n")
 	shellScriptFile.write('#PBS -l mem=%s\n'%Memory)
@@ -157,7 +159,7 @@ elif args.version=='old':
 		shellScriptFile.write("\nSAMPLE_ID=\'%s_bowtie2_masked\'\n"%sampleID)
 	else:
 		shellScriptFile.write("\nSAMPLE_ID=\'%s_bowtie2\'\n"%sampleID)
-	shellScriptFile.write("BOWTIE2_INDEX=\'/mnt/causes-data01/data/GENOMES/hg19/hg19\'\n")
+	shellScriptFile.write("BOWTIE2_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19\'\n")
 
 else:
 	print "You have specified a wronge value for version.  Must be either old or new"	
@@ -165,16 +167,16 @@ else:
 	shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem\'\n"%sampleID)
 
 if args.GENOME=='hg19':
-        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa.fa\'\n")
-        shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa\'\n")
-        shellScriptFile.write("GENOMEFILE=\'/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa.genome\'\n")
-        shellScriptFile.write("CHROM=\'/mnt/causes-data01/data/GENOMES/hg19/FASTA/\'\n")
+        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa.fa\'\n")
+        shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa\'\n")
+        shellScriptFile.write("GENOMEFILE=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa.genome\'\n")
+        shellScriptFile.write("CHROM=\'/mnt/causes-vnx1/GENOMES/hg19/FASTA/\'\n")
 	
 elif args.GENOME=='GSC':
-        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
-	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
-	shellScriptFile.write("CHROM=\'/mnt/causes-data01/data/GENOMES/GSC/SplitByChrom/\'\n")
-	shellScriptFile.write("GENOMEFILE=/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.genome\n\n")
+        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
+	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
+	shellScriptFile.write("CHROM=\'/mnt/causes-vnx1/GENOMES/GSC/SplitByChrom/\'\n")
+	shellScriptFile.write("GENOMEFILE=/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.genome\n\n")
 else:
         print "You did not choose a viable genome version, choose either GSC or hg19"
         sys.exit()
@@ -185,15 +187,15 @@ shellScriptFile.write("WORKING_DIR=\'%s\'\n"%workingDir)
 shellScriptFile.write("FASTQR1=\'%s\'\n"%R1fastq)
 shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
 #if args.masked:
-#	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
-#	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
-#	shellScriptFile.write("CHROM='/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/'\n")
-#        shellScriptFile.write("GENOMEFILE=/mnt/causes-data01/data/GENOMES/hg19/MASKEDFASTA/hg19_masked.genome\n\n")	
+#	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
+#	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
+#	shellScriptFile.write("CHROM='/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/'\n")
+#        shellScriptFile.write("GENOMEFILE=/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.genome\n\n")	
 #else:
-#	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
-#        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
-#        shellScriptFile.write("CHROM='/mnt/causes-data01/data/GENOMES/hg19/FASTA/'\n")
-#        shellScriptFile.write("GENOMEFILE=/mnt/causes-data01/data/GENOMES/hg19/hg19_bwa.genome\n\n")
+#	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
+#        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
+#        shellScriptFile.write("CHROM='/mnt/causes-vnx1/GENOMES/hg19/FASTA/'\n")
+#        shellScriptFile.write("GENOMEFILE=/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa.genome\n\n")
 
 
 
@@ -208,7 +210,7 @@ shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
 def FastQC():
 	#Initial FastQC
 	shellScriptFile.write("\n#FastQC\n")
-	shellScriptFile.write("#/opt/tools/FastQC/fastqc --extract $FASTQR1 $FASTQR2 -o $WORKING_DIR\n")
+	shellScriptFile.write("/opt/tools/FastQC/fastqc --extract $FASTQR1 $FASTQR2 -o $WORKING_DIR\n")
 
 # Part of the old pipeline
 def Bowtie2():
@@ -217,7 +219,7 @@ def Bowtie2():
 	shellScriptFile.write("/opt/tools/bowtie2-2.2.6/bowtie2  -x $BOWTIE2_INDEX -1 $FASTQR1 -2 $FASTQR2 -S $WORKING_DIR${SAMPLE_ID}.sam  -p $NSLOTS --very-sensitive -X 1000 --met-stderr --rg-id $SAMPLE_ID --rg \"SM:$SAMPLE_ID\tPL:illumina\" 2> $WORKING_DIR${SAMPLE_ID}.stderr\n\n")
 
 	shellScriptFile.write("\n#Fix Read Names\n")
-	shellScriptFile.write("#python /mnt/causes-data01/data/PipelineControl/FixSamReadNames.py $WORKING_DIR${SAMPLE_ID}.sam $WORKING_DIR${SAMPLE_ID}fixed.sam\n")
+	shellScriptFile.write("#python /mnt/causes-vnx1/PipelineControl/FixSamReadNames.py $WORKING_DIR${SAMPLE_ID}.sam $WORKING_DIR${SAMPLE_ID}fixed.sam\n")
 	shellScriptFile.write("#mv $WORKING_DIR$SAMPLE_ID\'fixed.sam\' $WORKING_DIR${SAMPLE_ID}.sam\n")
 
 def BWA():
@@ -276,7 +278,7 @@ def ReadMetrics():
 # Added DJA 2016/06/15
 def SNVMetrics():
 	shellScriptFile.write("\n#SNV Metrics\n")
-	shellScriptFile.write("java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T VariantEval --eval $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf\' --out $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf_metrics\' --dbsnp /opt/tools/GATK-3.4-46/resources/dbsnp_138.hg19_noM.vcf --intervals /mnt/causes-data01/data/mwenifumbo/ExomeCapture/hg19_RefSeq_050116_CodingExons_nohap.interval_list -R $GENOME_FASTA \n")
+	shellScriptFile.write("java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T VariantEval --eval $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf\' --out $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf_metrics\' --dbsnp /opt/tools/GATK-3.4-46/resources/dbsnp_138.hg19_noM.vcf --intervals /mnt/causes-vnx1/mwenifumbo/ExomeCapture/hg19_RefSeq_050116_CodingExons_nohap.interval_list -R $GENOME_FASTA \n")
 
 def ValidateSAM():
 	shellScriptFile.write("\n#Picard Validate BAM\n")
@@ -285,7 +287,7 @@ def ValidateSAM():
 def SummaryStats():
 	#Parse Stats
 	shellScriptFile.write("\n#Parse Stats\n")
-	shellScriptFile.write("python /mnt/causes-data01/data/PipelineControl/ParseStats.py %s %s %s %s > $WORKING_DIR$SAMPLE_ID'_summaryStats.txt'\n"%(sampleID,workingDir,R1fastq,R2fastq))
+	shellScriptFile.write("python /mnt/causes-vnx1/PipelineControl/ParseStats.py %s %s %s %s > $WORKING_DIR$SAMPLE_ID'_summaryStats.txt'\n"%(sampleID,workingDir,R1fastq,R2fastq))
 
 def CleanUp():
 	#Clean Up
@@ -396,8 +398,8 @@ def LumpyFilterAnnotate():
 	shellScriptFile.write("\n##Convert to ANNOVAR AVinput\n")
 	shellScriptFile.write("perl /opt/tools/annovar/convert2annovar.pl -format vcf4 -allsample --comment --includeinfo -withfreq $WORKING_DIR$SAMPLE_ID'_Lumpy_genotyped_filtered.vcf' > $WORKING_DIR$SAMPLE_ID'_Lumpy.avinput'\n")
 	shellScriptFile.write("\n##Run ANNOVAR DGV\n")
-	shellScriptFile.write("/mnt/causes-data01/data/Databases/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
-	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID'_Lumpy.avinput' /mnt/causes-data01/data/Databases/annovar/humandb -out $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar' \n")
+	shellScriptFile.write("/mnt/causes-vnx1/DATABASES/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
+	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID'_Lumpy.avinput' /mnt/causes-vnx1/DATABASES/annovar/humandb -out $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar' \n")
 	shellScriptFile.write("python /opt/tools/VariantAnnotation/PruneAnnotatedCNVs.py  $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.txt' $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.txt' \n")
 	shellScriptFile.write("python /opt/tools/VariantAnnotation/AddSummaryToAnnovar_CNV.py $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.txt' $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.omimAndSummary.txt' \n")
 
@@ -432,7 +434,7 @@ def Pindel():
 	shellScriptFile.write("\n##Generate Empirical insert size stats\n")
         shellScriptFile.write("/opt/tools/samtools-1.2/samtools view -r $SAMPLE_ID $WORKING_DIR$BAM | tail -n+1000000 | python /opt/tools/lumpy/pairend_distro.py -r %s -X 4 -N 1000000 -o $WORKING_DIR${BAM}.histo > $WORKING_DIR${BAM}.insertStats\n"%args.readlength)
         shellScriptFile.write("MEAN=`cat $WORKING_DIR${BAM}.insertStats | sed -E 's/\s+/,/' | cut -d, -f1 | sed -E 's/mean://' | xargs printf \"%.0f\"`\n")
-	shellScriptFile.write("python /mnt/causes-data01/data/PipelineControl/processingpipeline/pindel_config.py $WORKING_DIR$BAM $MEAN $WORKING_DIR$SAMPLE_ID \n")
+	shellScriptFile.write("python /mnt/causes-vnx1/PipelineControl/processingpipeline/pindel_config.py $WORKING_DIR$BAM $MEAN $WORKING_DIR$SAMPLE_ID \n")
 	shellScriptFile.write("/opt/tools/pindel-0.2.5b6/pindel --number_of_threads $NSLOTS \\\n")
 	shellScriptFile.write("-f $GENOME_FASTA \\\n")
 	shellScriptFile.write("-i $WORKING_DIR${BAM}_config.txt \\\n")
@@ -440,7 +442,7 @@ def Pindel():
 	shellScriptFile.write("-M 4 \\\n")
 	shellScriptFile.write("-N -x 3 \\\n")
 	shellScriptFile.write("-I false -t false -r false \\\n")
-	shellScriptFile.write("-J /mnt/causes-data01/data/Databases/hg19_centromeres_telomeres.bed  \n\n")
+	shellScriptFile.write("-J /mnt/causes-vnx1/DATABASES/hg19_centromeres_telomeres.bed  \n\n")
 
 def CANVAS():
 	shellScriptFile.write("#Running CANVAS\n#Redefining Variables\n")
@@ -458,7 +460,7 @@ def CANVAS():
 	shellScriptFile.write("\n#Make the working directory for CANVAS\n")
 	shellScriptFile.write("mkdir $CANVAS_DIR\n")
 	shellScriptFile.write("#Run CANVAS\n")
-	shellScriptFile.write("mono /opt/tools/Canvas/Canvas.exe Germline-WGS -b $WORKING_DIR$BAMFILE --b-allele-vcf=$WORKING_DIR$VCFFILE -o $CANVAS_DIR -r /mnt/causes-data01/data/GENOMES/hg19/hg19_CANVAS_kmer.fa -g /mnt/causes-data01/data/GENOMES/hg19/ -f /mnt/causes-data01/data/GENOMES/hg19/hg19_CANVAS_Filter13.bed -n $SAMPLE_ID\n\n")
+	shellScriptFile.write("mono /opt/tools/Canvas/Canvas.exe Germline-WGS -b $WORKING_DIR$BAMFILE --b-allele-vcf=$WORKING_DIR$VCFFILE -o $CANVAS_DIR -r /mnt/causes-vnx1/GENOMES/hg19/hg19_CANVAS_kmer.fa -g /mnt/causes-vnx1/GENOMES/hg19/ -f /mnt/causes-vnx1/GENOMES/hg19/hg19_CANVAS_Filter13.bed -n $SAMPLE_ID\n\n")
 	
 	shellScriptFile.write("#Get rid of the reference calls (also unzips)\n")
 	shellScriptFile.write("zcat $CANVAS_DIR$CANVAS_VCFGZ | grep -v ':REF:' > $CANVAS_DIR$CANVAS_VCF\n")
@@ -467,8 +469,8 @@ def CANVAS():
 	shellScriptFile.write("#Copy to a bed file (nothing special)\n")
 	shellScriptFile.write("cp $CANVAS_DIR$CANVAS_AVINPUT $CANVAS_DIR$CANVAS_BED\n\n")
 	shellScriptFile.write("#Run annovar\n")
-	shellScriptFile.write("/mnt/causes-data01/data/Databases/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
-	shellScriptFile.write("$CANVAS_DIR$CANVAS_AVINPUT /mnt/causes-data01/data/Databases/annovar/humandb -out $WORKING_DIR$CANVAS_ANNOTATED\n")
+	shellScriptFile.write("/mnt/causes-vnx1/DATABASES/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
+	shellScriptFile.write("$CANVAS_DIR$CANVAS_AVINPUT /mnt/causes-vnx1/DATABASES/annovar/humandb -out $WORKING_DIR$CANVAS_ANNOTATED\n")
 
 def MetaSV():
 	shellScriptFile.write("\n# MetaSV \n\n")
@@ -498,7 +500,7 @@ def MosDepth():
 	shellScriptFile.write("/opt/tools/mosdepth-0.2.2/mosdepth -n -q 0:1:10:20:40:60:100: -t $NSLOTS \\\n")
 	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
 	shellScriptFile.write("\n#Plot output \n\n")
-	shellScriptFile.write("python /mnt/causes-data01/data/RICHMOND/mosdepth/scripts/plot-dist.py \\\n")
+	shellScriptFile.write("python /mnt/causes-vnx1/RICHMOND/mosdepth/scripts/plot-dist.py \\\n")
 	shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}.mosdepth.global.dist.txt \\\n")
 	shellScriptFile.write("-o $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.html \\\n")
 	shellScriptFile.write("> $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.summary.txt \n\n")
@@ -507,7 +509,7 @@ def MosDepth():
 def SVANNOTATE():
 	shellScriptFile.write("\n# Get variants in proband \n")
 	shellScriptFile.write("# Convert to bed using annovar \n")
-	shellScriptFile.write("perl /mnt/causes-data01/data/Databases/annovar/convert2annovar.pl $WORKDIR/${SAMPLE}.DEL.preformat \\\n")
+	shellScriptFile.write("perl /mnt/causes-vnx1/DATABASES/annovar/convert2annovar.pl $WORKDIR/${SAMPLE}.DEL.preformat \\\n")
 	shellScriptFile.write("\t -format vcf4 \\\n")
 	shellScriptFile.write("\t -outfile $WORKING_DIR/${SAMPLE}.DEL \\\n")
 	shellScriptFile.write("\t -includeinfo \n")
@@ -518,7 +520,7 @@ def SVANNOTATE():
 if args.version == 'new':
 	shellScriptFile.write("\n echo \"Primary Analysis Started\"\n")
 	shellScriptFile.write("date\n")	
-	#FastQC()
+	FastQC()
         BWA()
 	Sam2Bam()
         DupRemove()

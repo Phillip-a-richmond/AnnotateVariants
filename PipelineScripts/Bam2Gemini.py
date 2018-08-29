@@ -45,6 +45,7 @@ parser.add_argument("-p","--processors",help="Choose the number of processors fo
 parser.add_argument("-m","--memory",help="Choose the memory needed for this job",required=True)
 parser.add_argument("-P","--PED",help="The PED File for this family",required=True)
 parser.add_argument("-B","--BAMLIST",help="Comma separated list of BAMS to be processed.  These BAMs should correspond to the identifiers inside the Ped File")
+parser.add_argument("-E","--Email",help="Email address",type=str)
 parser.add_argument("-v","--vcftype",help="The type of VCF.  If these are GVCFs that need to be merged, or separately called VCFs. REQUIRED option.",required=True)
 parser.add_argument("-V","--VCFLIST",help="Comma separated list of VCF files.  Set either GVCF or VCF with -v to know merging option.")
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
@@ -103,7 +104,8 @@ shellScriptFile.write('#PBS -V\n')
 shellScriptFile.write('#PBS -o %s%s.o\n'%(workingDir,args.Family))
 shellScriptFile.write('#PBS -e %s%s.e\n'%(workingDir,args.Family))
 #email on job abort
-shellScriptFile.write('#PBS -m bea\n#PBS -M prichmond@cmmt.ubc.ca\n')
+if args.Email:
+	shellScriptFile.write('#PBS -m bea\n#PBS -M %s\n'%args.Email)
 shellScriptFile.write("## Set the total memory for the job\n")
 shellScriptFile.write('#PBS -l mem=%s\n'%Memory)
 shellScriptFile.write("## Set the max walltime for the job\n")
@@ -121,9 +123,10 @@ shellScriptFile.write('source /opt/tools/hpcenv.sh\n\n')
 shellScriptFile.write("FAMILY_ID=\'%s\'\n"%args.Family)
 shellScriptFile.write("WORKING_DIR=\'%s\'\n"%workingDir)
 if args.GENOME=='hg19':
+	sys.exit("hg19 genome location unclear")
 	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/hg19/FASTA/hg19.fa\'\n")
 elif args.GENOME=='GSC':
-	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/GSC/GRCh37-lite.fa\'\n")
+	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
 else:
 	print "You did not choose a viable genome version, choose either GSC or hg19"
 	sys.exit()
@@ -263,7 +266,7 @@ def RunVCFAnno():
 	shellScriptFile.write('ANNOVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcfanno.vcf.gz \n')
 	shellScriptFile.write('/opt/tools/vcfanno/vcfanno -lua /mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/custom.lua \\\n')
 	shellScriptFile.write('-p $NSLOTS \\\n')
-	shellScriptFile.write('/mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop_gnomAD_Exome.toml \\\n')
+	shellScriptFile.write('/mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop_gnomAD_Exome_VNX.toml \\\n')
 	shellScriptFile.write('$NORMFILTERVCF > $ANNOVCF \n\n')
 
 # NOTE: If you want to add certain things as --a-ok make sure you add them here, otherwise they may error on the creation of the mysqlDB
@@ -283,7 +286,7 @@ def MergedNormVCF2GeminiDB():
 # This is deprecated now
 def AddGNOMAD2GeminiDB():
 	shellScriptFile.write("\n# Step 5: Add gnomAD\n\n")
-	shellScriptFile.write("genome_VCF=/mnt/causes-data01/data/Databases/GNOMAD/gnomad.genomes.r2.0.1.sites.wholeGenome_tmp.norm.vcf.gz\n")
+	shellScriptFile.write("genome_VCF=/mnt/causes-vnx1/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz\n")
 	shellScriptFile.write("/opt/tools/gemini/bin/gemini annotate -f $genome_VCF -a extract -e AF,Hom -c aaf_gnomAD_genome_all,gnomAD_genome_num_hom_alt -t float,integer -o max,max $GEMINIDB\n")
 	shellScriptFile.write('echo "UPDATE variants SET aaf_gnomAD_genome_all = -1.0, gnomAD_genome_num_hom_alt = -1 where aaf_gnomAD_genome_all is NULL;" | sqlite3 $GEMINIDB\n')
 
