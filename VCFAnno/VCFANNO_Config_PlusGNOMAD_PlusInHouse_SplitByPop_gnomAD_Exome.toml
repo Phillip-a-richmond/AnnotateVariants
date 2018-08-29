@@ -4,7 +4,7 @@
 # I have made new annotations here at the top of this file, while the ones that I took from Brent Pedersen are usually pointing to GEMINI databases
 # Last edits: April 19 2018 (PAR)
 # Last edits: July 16 2018 (PAR) - added gnomad exome, dropped exac,
-# Last edits: August 29 2018 (RvdL) - updated file locations, data01 to vnx1
+# Last edits: August 29 2018 (RvdL) - tried to update file locations, data01 to vnx1, CADD, PolyPhen, GeneHancer missing
 
 # GeneHancer
 #[[annotation]]
