@@ -252,7 +252,7 @@ def FilterVCF():
 	shellScriptFile.write("\n# Step 4: Filter Merged, normalized VCF\n\n")
 	shellScriptFile.write("NORMFILTERVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.filter.vcf.gz\n")
 	shellScriptFile.write("/opt/tools/bcftools-1.8/bin/bcftools filter \\\n")
-	shellScriptFile.write("\t --include 'FORMAT/AD[0:1]>=10 && FORMAT/DP[0] < 300' \\\n")
+	shellScriptFile.write("\t --include 'FORMAT/AD[*:1]>=10 && FORMAT/DP[*] < 300' \\\n")
 	shellScriptFile.write("\t -m + \\\n")
 	shellScriptFile.write("\t -s + \\\n")
 	shellScriptFile.write("\t -O z \\\n")

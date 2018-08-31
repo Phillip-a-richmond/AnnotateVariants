@@ -215,13 +215,13 @@ if __name__ == "__main__":
 
 # These are hard coded locations for database files. These files are small, so they are all just text files.
 # They contain gene-based information
-    SummaryFileName = '/mnt/causes-data01/data/Databases/RefSeqGene_Summaries_270316.txt'
-    Gene2MimFileName = '/mnt/causes-data01/data/Databases/OMIM_mim2gene'
-    Gene2Disease = '/mnt/causes-data01/data/Databases/OMIM_phenotype_genelist'
-    PLI = '/mnt/causes-data01/data/Databases/TOLERANCE/PLI_March2016.txt'
-    RVIS = '/mnt/causes-data01/data/Databases/TOLERANCE/RVIS_March2016.txt'
-    MESHOP = '/mnt/causes-data01/data/Databases/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
-    HPO = '/mnt/causes-data01/data/Databases/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
+    SummaryFileName = '/mnt/causes-vnx1/DATABASES/RefSeqGene_Summaries_270316.txt'
+    Gene2MimFileName = '/mnt/causes-vnx1/DATABASES/OMIM_mim2gene'
+    Gene2Disease = '/mnt/causes-vnx1/DATABASES/OMIM_phenotype_genelist'
+    PLI = '/mnt/causes-vnx1/DATABASES/TOLERANCE/PLI_March2016.txt'
+    RVIS = '/mnt/causes-vnx1/DATABASES/TOLERANCE/RVIS_March2016.txt'
+    MESHOP = '/mnt/causes-vnx1/DATABASES/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
+    HPO = '/mnt/causes-vnx1/DATABASES/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
 
     # Read in the annotations
     GeneSummaries = GetSummaryDict(SummaryFileName)
