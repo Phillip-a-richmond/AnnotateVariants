@@ -7,9 +7,9 @@
 # Updates to this script should accomodate differences in how many individuals are present
 
 ## Define variables
-WORKING_DIR='/mnt/causes-vnx1/TESTING/'
-GEMINIDB='NA12878_Trio.db'
-FAMILY_ID='NA12878_Trio'
+WORKING_DIR='/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/MODI_TRAINING/T109/'
+GEMINIDB='T109.db'
+FAMILY_ID='T109'
 TableAnnotator=/mnt/causes-vnx1/PIPELINES/AnnotateVariants/TableAnnotators/GeminiTable2CVL.py
 
 source /opt/tools/hpcenv.sh
@@ -41,8 +41,8 @@ X_DENOVO_OUT_LOOSE=$WORKING_DIR${FAMILY_ID}_Xdenovo_loose
 DBSTATFILE=${FAMILY_ID}_GeminiDB_Stats.txt
 
 # Phase 4
-GENERAL_DAMAGING=${FAMILY_ID}_GeneralDamaging
-GENERAL_DAMAGING_HOMO=${FAMILY_ID}_GeneralDamaging_loose
+GENERAL_DAMAGING_HET=${FAMILY_ID}_GeneralDamaging_Het
+GENERAL_DAMAGING_HOMO=${FAMILY_ID}_GeneralDamaging_Homo
 CLINVAR_HITS=${FAMILY_ID}_Clinvar_Hits
 
 # Columns to present within CVL
@@ -386,7 +386,7 @@ python  $TableAnnotator -i $CLINVAR_HITS -o ${CLINVAR_HITS}_annotated.txt
 gemini query -q "SELECT $COLUMNS FROM variants WHERE $GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $CONFIDENTREGION AND $SEGDUP AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND $FILTER"\
 	--gt-filter "(gt_types).(phenotype==2).(==HET).(any)" \
 	--header \
-	$GEMINIDB > $GENERAL_DAMAGING
+	$GEMINIDB > $GENERAL_DAMAGING_HET
 
 python $TableAnnotator -i $GENERAL_DAMAGING_HET -o ${GENERAL_DAMAGING_HET}_annotated.txt
 
@@ -532,6 +532,6 @@ rm $COMPOUND_HET_OUT_LOOSE
 rm $X_RECESSIVE_OUT_LOOSE
 rm $X_DOMINANT_OUT_LOOSE
 rm $X_DENOVO_OUT_LOOSE
-rm $GENERAL_DAMAGING
+rm $GENERAL_DAMAGING_HET
 rm $GENERAL_DAMAGING_HOMO
 
