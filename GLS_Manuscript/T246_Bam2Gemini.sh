@@ -27,10 +27,10 @@ cd $WORKING_DIR
 
 # Step 2: Merge VCFs
 
-#/opt/tools/jdk1.7.0_79/bin/java -Djava.io.tmpdir=$TMPDIR -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T CombineVariants \
-#-R $GENOME_FASTA \
-#--variant $WORKING_DIR${SAMPLE1_VCF} \
-#-o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf 
+/opt/tools/jdk1.7.0_79/bin/java -Djava.io.tmpdir=$TMPDIR -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T CombineVariants \
+-R $GENOME_FASTA \
+--variant $WORKING_DIR${SAMPLE1_VCF} \
+-o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf 
 
 #Get Rid of non-chr chromosomes
 
@@ -59,7 +59,7 @@ zless $VCF \
 
 NORMFILTERVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.filter.vcf.gz
 /opt/tools/bcftools-1.8/bin/bcftools filter \
-	 --include 'FORMAT/AD[0:1]>=10 && FORMAT/DP[0] < 300' \
+	 --include 'FORMAT/AD[*:1]>=10 && FORMAT/DP[*] < 300' \
 	 -m + \
 	 -s + \
 	 -O z \
