@@ -33,6 +33,11 @@ if len(sys.argv) < 2:
         print "-P T274.ped -F T274 -v VCF \\"
         print "-V tidex1006_BWAmem_dupremoved_realigned_HaplotypeCaller.vcf,tidex1007_BWAmem_dupremoved_realigned_HaplotypeCaller.vcf\n"
 
+	print "If running singleton:"
+	print "python Bam2Gemini.py  -d /mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Metabolomics/TIDEX071/ -p 12 -m 40G \\"
+        print "-P TIDEX071.ped -F TIDEX017 -v VCF \\"
+        print "-V TIDEX071_BWAmem_dupremoved_realigned_HaplotypeCaller.vcf\n"
+
 	sys.exit()
 
 
@@ -49,6 +54,7 @@ parser.add_argument("-E","--Email",help="Email address",type=str)
 parser.add_argument("-v","--vcftype",help="The type of VCF.  If these are GVCFs that need to be merged, or separately called VCFs. REQUIRED option.",required=True)
 parser.add_argument("-V","--VCFLIST",help="Comma separated list of VCF files.  Set either GVCF or VCF with -v to know merging option.")
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
+parser.add_argument("-S","--Singleton",help="If you are running a singleton, use this option. It will expect -v VCF, and -V <sample.vcf> options",action='store_true',default=False)
 #parser.add_argument("-C","--Config",help="Config file which points at locations for tool executables",required=True)
 #parser.add_argument("-Q","--QueryScript",help="Query script template",required=True)
 args = parser.parse_args()
@@ -79,6 +85,7 @@ elif args.VCFLIST:
 	else:
 		print "You're not using the proper vcftype, or you haven't set it."
 		sys.exit()
+
 
 
 
@@ -231,6 +238,11 @@ def MergeVCF_withVCFLIST():
 	shellScriptFile.write("#/opt/tools/tabix/tabix $WORKING_DIR${FAMILY_ID}.merged.hc.vcf.gz\n\n")
 	
 
+# If running in singleton mode
+def RunSingletonVCF2MergedVCF():
+	shellScriptFile.write("# Step 1-2: rename your VCF to merged VCF\n")
+	shellScriptFile.write("cp $WORKING_DIR$SAMPLE1_VCF $WORKING_DIR${FAMILY_ID}.merged.hc.vcf\n")
+
 # Doesn't matter if you have your own VCF list (either version) or a BAM list
 # You'll still need to normalize your merged VCF
 def MergedVCF2NormVCF():
@@ -292,6 +304,24 @@ def AddGNOMAD2GeminiDB():
 
 
 # Run in either VCF or BAM mode
+if args.Singleton:
+	print "If running singleton mode, must use -v VCF"
+	if args.VCFLIST:
+		RunSingletonVCF2MergedVCF()
+		MergedVCF2NormVCF()
+	        FilterVCF()
+	        RunVCFAnno()
+	        VCF2DB()
+
+	elif args.BAMLIST:
+		Bam2VCF()
+                MergeGVCF_withBAMLIST()
+                MergedVCF2NormVCF()
+                FilterVCF()
+                RunVCFAnno()
+                VCF2DB()
+	sys.exit()
+
 if args.VCFLIST:
 	if args.vcftype == 'GVCF':
 		MergeGVCF_withVCFLIST()
