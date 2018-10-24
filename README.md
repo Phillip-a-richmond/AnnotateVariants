@@ -24,7 +24,7 @@ This pipeline was designed by Phillip Richmond in order to analyze & prioritize 
 Furthermore, this pipeline utilizes open source datasets within it's annotation framework, including:
 + CADD 
 + gnomAD
-+ OMIM*
++ OMIM\*
 + ClinVar
 + UCSC RefGene
 + Entrez Gene Summary
@@ -38,7 +38,7 @@ Furthermore, this pipeline utilizes open source datasets within it's annotation 
 + Platinum Genomes ConfidentRegions
 + UCSC Segmental Duplications
 
-* OMIM requires a license for use of the API/downloadable databases, which must be applied for through their website.
+\* OMIM requires a license for use of the API/downloadable databases, which must be applied for through their website.
 
 Currently, the pipeline is hard coded for a specific cluster that uses the Torque-Moab scheduler. However, I will expand upon this to include other schedulers such as SLURM. Also, generalizing for software install locations, or developing a single install-script via bioconda will also be performed later in 2018.
 
@@ -49,6 +49,9 @@ Currently, the pipeline is hard coded for a specific cluster that uses the Torqu
 
 ### Set-up
 *THERE IS A LOT OF SETTING UP TO DO!*  
+
+NOTE - (2018-09-10) Updates to this are coming. We will have a conda install environment, and a unified acquisition script for the databases.
+
 But, once you get set up, then things run nice and smooth.
 
 1. Install Necessary software, details in InstallTools.sh
@@ -69,10 +72,29 @@ But, once you get set up, then things run nice and smooth.
 + ReMM  http://remm.visze.de/files/ReMM.v0.3.1.tsv.gz
 + gnomAD http://gnomad.broadinstitute.org/downloads
 
+
 ### Run Test
 You can run a test analysis by following the instructions within the [Test](https://github.com/Phillip-a-richmond/AnnotateVariants/tree/master/Test) directory.
 
 ### Run Sample
+
+
+### Known Issues
++ There is no inheritance model for de-novo + compound het (GEMINI Limitation). E.g. where a de novo is the second variant of a compound het pair
++ There is no guarantee/unit tests for deletion + snv (old pipeline hemizygous?)
++ Currently hard-coded, and not system agnostic. As the pipeline stands it needs a new version with configuration files before it can be ported to a new system (evident with my hard-coded paths).
+
+
+
+### Improvements
++ GEMINI ROH - Needs to wait on Brent Pedersen to fix
++ Better management of duo and singleton analyses. For now, they just can be mined from the General Damaging tab
++ Better utilization of duo-affected pairs
+
+### The Future 
++ TIDEX-Tool (jacques & alice) for better analysis
+
+
 
 
 
