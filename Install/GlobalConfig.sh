@@ -17,6 +17,19 @@ VCFANNO=/opt/tools/vcfanno/vcfanno
 BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools
 VCF2DB=/opt/tools/vcf2db/vcf2db.py
 GEMINI=/opt/tools/gemini/bin/gemini
+SAMTOOLS=
+BWAMEM='/opt/tools/bwa-0.7.12/bwa mem'
+MOSDEPTH=/opt/tools/mosdepth-0.2.2/mosdepth
+CNVNATOR=/opt/tools/CNVnator/src/cnvnator
+LUMPY=
+PINDEL=/opt/tools/pindel-0.2.5b6/pindel
+SURVIVOR=
+ERDS=/opt/tools/erds1.1/erds_pipeline.pl
+
+
+
+
+
 
 # Tool configs/relevant directories
 VCFANNOTOML=$ANNOTATEVARIANTS_DIR/VCFAnno/VCFANNO_Config_PlusGNOMAD_PlusInHouse_SplitByPop_gnomAD_Exome_VNX.toml
@@ -24,7 +37,10 @@ VCFANNOLUA=$ANNOTATEVARIANTS_DIR/VCFAnno/custom.lua
 
 # Database locations
 DATADIR=/mnt/causes-vnx1/DATABASES/
+GENOME_FASTA=
+GENOME_DICT=
 
+DBSNP=
 
 
 
