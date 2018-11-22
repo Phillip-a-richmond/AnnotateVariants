@@ -21,6 +21,7 @@ import sys, os, argparse
 # Added GSC- genome OR hg19 genome selection in April 2018
 # Added MosDepth June 2018
 # Migrated to VNX August 2018
+# Added MToolBox November 2018 (RvdL)
 
 ##################
 ### Initialize ###
@@ -51,6 +52,7 @@ parser.add_argument("-R","--readlength",help="The length of the reads in integer
 parser.add_argument("-M","--masked",help="If set, the pipeline will be run in masked mode",action='store_true',default=False)
 parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
+parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="")
 parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
 parser.add_argument("-E","--Email",help="Email address",type=str)
 args = parser.parse_args()
@@ -59,6 +61,7 @@ sampleID = args.sampleID
 workingDir = args.workingDir
 R1fastq = args.inputR1
 R2fastq = args.inputR2
+mtoolboxConfigFile = args.mtoolbox
 print "The working directory is: %s"%workingDir
 print "The sample ID is: %s"%sampleID
 print "The fastq files you're working with are: \n%s\n%s\n"%(R1fastq,R2fastq)
@@ -162,7 +165,7 @@ elif args.version=='old':
 	shellScriptFile.write("BOWTIE2_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19\'\n")
 
 else:
-	print "You have specified a wronge value for version.  Must be either old or new"
+	print "You have specified a wrong value for version.  Must be either old or new"
 	print "Unless you're running with 'neither'"
 	shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem\'\n"%sampleID)
 
@@ -515,6 +518,36 @@ def SVANNOTATE():
 	shellScriptFile.write("\t -includeinfo \n")
 
 
+def MToolBox():
+	shellScriptFile.write("\n# Run MToolBox for mitochondrial variant analysis \n")
+	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
+	shellScriptFile.write("MTOOLBOX_PATH=/opt/tools/MToolBox-1.0/ \n")
+	shellScriptFile.write("#MTOOLBOX_PATH=/mnt/home/BCRICWH.LAN/rvanderlee/MToolBox-1.1/ \n")
+	shellScriptFile.write("PATH=$MTOOLBOX_PATH/MToolBox/:$MTOOLBOX_PATH:$PATH \n")
+	shellScriptFile.write("MTOOLBOX_WORKING_DIR=$WORKING_DIR/MToolBox_${SAMPLE}/ \n")
+	shellScriptFile.write("mkdir -p $MTOOLBOX_WORKING_DIR/ \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("MTOOLBOX_CONFIG_FILE_ORIGINAL=\'%s\'\n"%mtoolboxConfigFile)
+	shellScriptFile.write("MTOOLBOX_CONFIG_FILE_ORIGINAL_BASENAME=$(basename $MTOOLBOX_CONFIG_FILE_ORIGINAL) \n")
+	shellScriptFile.write("MTOOLBOX_CONFIG_FILE=$MTOOLBOX_WORKING_DIR/$MTOOLBOX_CONFIG_FILE_ORIGINAL_BASENAME \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("#edit the MToolBox config file template so that is specifies the MToolBox results/working directory for the current analysis \n")
+	shellScriptFile.write("cp $MTOOLBOX_CONFIG_FILE_ORIGINAL $MTOOLBOX_CONFIG_FILE \n")
+	shellScriptFile.write("sed -i \"s#^output_name\=\.#output_name=$MTOOLBOX_WORKING_DIR#\" $MTOOLBOX_CONFIG_FILE \n" )
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("#link the raw fastq files to the MToolBox working directory, and name them as required by MToolBox: \<sample\_name\>.R1.fastq, \<sample\_name\>.R2.fastq \n")
+	shellScriptFile.write("ln -sf ${FASTQR1} $MTOOLBOX_WORKING_DIR/${SAMPLE}.R1.fastq.gz \n")
+	shellScriptFile.write("ln -sf ${FASTQR2} $MTOOLBOX_WORKING_DIR/${SAMPLE}.R2.fastq.gz \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("echo \"Changing working directory to $MTOOLBOX_WORKING_DIR and running MToolBox...\" \n")
+	shellScriptFile.write("PWD_CURRENT=\`pwd\` \n")
+	shellScriptFile.write("cd $MTOOLBOX_WORKING_DIR \n")
+	shellScriptFile.write("$MTOOLBOX_PATH/MToolBox/MToolBox.sh -i ${MTOOLBOX_CONFIG_FILE} \n")
+	shellScriptFile.write("echo \"Changing working directory to back to $PWD_CURRENT...\" \n")
+	shellScriptFile.write("cd $PWD_CURRENT \n")
+	shellScriptFile.write(" \n")
+
+
 #Now that we've defined those parts of the script, I'll parse out what's necessary to run, and add it to the script sequentially
 
 if args.version == 'new':
@@ -537,6 +570,11 @@ if args.version == 'new':
 	#GATK_Coverage()
         # Summary stats needs to be fixed for this pipeline version (Mar20,2017)
 	#SummaryStats()
+
+	if args.mtoolbox != "":
+		shellScriptFile.write("\necho \"Mitochondrial Variant Analysis Started\"\n")
+		shellScriptFile.write("date\n")
+		MToolBox()
 
 	shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
 	shellScriptFile.write("date\n")
