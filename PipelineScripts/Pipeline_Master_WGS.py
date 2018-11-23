@@ -21,6 +21,7 @@ import sys, os, argparse
 # Added GSC- genome OR hg19 genome selection in April 2018
 # Added MosDepth June 2018
 # Migrated to VNX August 2018
+# Added MToolBox November 2018 (RvdL)
 
 ##################
 ### Initialize ###
@@ -51,6 +52,7 @@ parser.add_argument("-R","--readlength",help="The length of the reads in integer
 parser.add_argument("-M","--masked",help="If set, the pipeline will be run in masked mode",action='store_true',default=False)
 parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
+parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="")
 parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
 parser.add_argument("-E","--Email",help="Email address",type=str)
 args = parser.parse_args()
@@ -59,6 +61,7 @@ sampleID = args.sampleID
 workingDir = args.workingDir
 R1fastq = args.inputR1
 R2fastq = args.inputR2
+mtoolboxConfigFile = args.mtoolbox
 print "The working directory is: %s"%workingDir
 print "The sample ID is: %s"%sampleID
 print "The fastq files you're working with are: \n%s\n%s\n"%(R1fastq,R2fastq)
@@ -77,7 +80,7 @@ if args.annotate:
 	HeaderForAnnoFile.write("SAMPLE_ID_2='%s-2'\n"%sampleID[:-2])
 	HeaderForAnnoFile.write("SAMPLE_ID_3='%s-3'\n"%sampleID[:-2])
 	HeaderForAnnoFile.write("WORKING_DIR='%s'\n"%workingDir)
-	HeaderForAnnoFile.write("SCRIPTDIR='/opt/tools/VariantAnnotation/'\n")	
+	HeaderForAnnoFile.write("SCRIPTDIR='/opt/tools/VariantAnnotation/'\n")
 	if args.version == 'new':
 		HeaderForAnnoFile.write("BAM1='%s%s-1_BWAmem_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
 		HeaderForAnnoFile.write("BAM2='%s%s-2_BWAmem_dupremoved_realigned.sorted.bam'\n"%(workingDir,sampleID[:-2]))
@@ -118,7 +121,7 @@ if args.scheduler=='SGE':
 	#Parallel processing
 	shellScriptFile.write('#$ -pe smp %d\n'%numProcessors)
 	shellScriptFile.write('\n\nexport PARALLEL=$NSLOTS\nexport OMP_NUM_THREADS=$NSLOTS\n')
-	
+
 elif args.scheduler == 'PBS':
 	#Job name
 	shellScriptFile.write('#PBS -N %s_%s_PrimaryPipeline\n'%(sampleID,args.version))
@@ -146,14 +149,14 @@ elif args.scheduler == 'PBS':
 	shellScriptFile.write("source /opt/tools/hpcenv.sh\n\n")
 
 
-	
+
 #Set the variables for working directory, sampleID, and fastq full filepath
 if args.version=='new':
 	if args.masked:
 		shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem_masked\'\n"%sampleID)
 	else:
 		shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem\'\n"%sampleID)
-		
+
 elif args.version=='old':
 	if args.masked:
 		shellScriptFile.write("\nSAMPLE_ID=\'%s_bowtie2_masked\'\n"%sampleID)
@@ -162,7 +165,7 @@ elif args.version=='old':
 	shellScriptFile.write("BOWTIE2_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19\'\n")
 
 else:
-	print "You have specified a wronge value for version.  Must be either old or new"	
+	print "You have specified a wrong value for version.  Must be either old or new"
 	print "Unless you're running with 'neither'"
 	shellScriptFile.write("\nSAMPLE_ID=\'%s_BWAmem\'\n"%sampleID)
 
@@ -171,7 +174,7 @@ if args.GENOME=='hg19':
         shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa\'\n")
         shellScriptFile.write("GENOMEFILE=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa.genome\'\n")
         shellScriptFile.write("CHROM=\'/mnt/causes-vnx1/GENOMES/hg19/FASTA/\'\n")
-	
+
 elif args.GENOME=='GSC':
         shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
 	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
@@ -190,7 +193,7 @@ shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
 #	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
 #	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.fasta\'\n")
 #	shellScriptFile.write("CHROM='/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/'\n")
-#        shellScriptFile.write("GENOMEFILE=/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.genome\n\n")	
+#        shellScriptFile.write("GENOMEFILE=/mnt/causes-vnx1/GENOMES/hg19/MASKEDFASTA/hg19_masked.genome\n\n")
 #else:
 #	shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
 #        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
@@ -461,7 +464,7 @@ def CANVAS():
 	shellScriptFile.write("mkdir $CANVAS_DIR\n")
 	shellScriptFile.write("#Run CANVAS\n")
 	shellScriptFile.write("mono /opt/tools/Canvas/Canvas.exe Germline-WGS -b $WORKING_DIR$BAMFILE --b-allele-vcf=$WORKING_DIR$VCFFILE -o $CANVAS_DIR -r /mnt/causes-vnx1/GENOMES/hg19/hg19_CANVAS_kmer.fa -g /mnt/causes-vnx1/GENOMES/hg19/ -f /mnt/causes-vnx1/GENOMES/hg19/hg19_CANVAS_Filter13.bed -n $SAMPLE_ID\n\n")
-	
+
 	shellScriptFile.write("#Get rid of the reference calls (also unzips)\n")
 	shellScriptFile.write("zcat $CANVAS_DIR$CANVAS_VCFGZ | grep -v ':REF:' > $CANVAS_DIR$CANVAS_VCF\n")
 	shellScriptFile.write("#Filter using custom script\n")
@@ -500,7 +503,7 @@ def MosDepth():
 	shellScriptFile.write("/opt/tools/mosdepth-0.2.2/mosdepth -n -q 0:1:10:20:40:60:100: -t $NSLOTS \\\n")
 	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
 	shellScriptFile.write("\n#Plot output \n\n")
-	shellScriptFile.write("python /mnt/causes-vnx1/RICHMOND/mosdepth/scripts/plot-dist.py \\\n")
+	shellScriptFile.write("python /opt/tools/mosdepth-0.2.2/mosdepth/plot-dist.py \\\n")
 	shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}.mosdepth.global.dist.txt \\\n")
 	shellScriptFile.write("-o $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.html \\\n")
 	shellScriptFile.write("> $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.summary.txt \n\n")
@@ -515,11 +518,41 @@ def SVANNOTATE():
 	shellScriptFile.write("\t -includeinfo \n")
 
 
+def MToolBox():
+	shellScriptFile.write("\n# Run MToolBox for mitochondrial variant analysis \n")
+	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
+	shellScriptFile.write("MTOOLBOX_PATH=/opt/tools/MToolBox-1.0/ \n")
+	shellScriptFile.write("#MTOOLBOX_PATH=/mnt/home/BCRICWH.LAN/rvanderlee/MToolBox-1.1/ \n")
+	shellScriptFile.write("PATH=$MTOOLBOX_PATH/MToolBox/:$MTOOLBOX_PATH:$PATH \n")
+	shellScriptFile.write("MTOOLBOX_WORKING_DIR=$WORKING_DIR/MToolBox_${SAMPLE}/ \n")
+	shellScriptFile.write("mkdir -p $MTOOLBOX_WORKING_DIR/ \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("MTOOLBOX_CONFIG_FILE_ORIGINAL=\'%s\'\n"%mtoolboxConfigFile)
+	shellScriptFile.write("MTOOLBOX_CONFIG_FILE_ORIGINAL_BASENAME=$(basename $MTOOLBOX_CONFIG_FILE_ORIGINAL) \n")
+	shellScriptFile.write("MTOOLBOX_CONFIG_FILE=$MTOOLBOX_WORKING_DIR/$MTOOLBOX_CONFIG_FILE_ORIGINAL_BASENAME \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("#edit the MToolBox config file template so that is specifies the MToolBox results/working directory for the current analysis \n")
+	shellScriptFile.write("cp $MTOOLBOX_CONFIG_FILE_ORIGINAL $MTOOLBOX_CONFIG_FILE \n")
+	shellScriptFile.write("sed -i \"s#^output_name\=\.#output_name=$MTOOLBOX_WORKING_DIR#\" $MTOOLBOX_CONFIG_FILE \n" )
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("#link the raw fastq files to the MToolBox working directory, and name them as required by MToolBox: \<sample\_name\>.R1.fastq, \<sample\_name\>.R2.fastq \n")
+	shellScriptFile.write("ln -sf ${FASTQR1} $MTOOLBOX_WORKING_DIR/${SAMPLE}.R1.fastq.gz \n")
+	shellScriptFile.write("ln -sf ${FASTQR2} $MTOOLBOX_WORKING_DIR/${SAMPLE}.R2.fastq.gz \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("echo \"Changing working directory to $MTOOLBOX_WORKING_DIR and running MToolBox...\" \n")
+	shellScriptFile.write("PWD_CURRENT=\`pwd\` \n")
+	shellScriptFile.write("cd $MTOOLBOX_WORKING_DIR \n")
+	shellScriptFile.write("$MTOOLBOX_PATH/MToolBox/MToolBox.sh -i ${MTOOLBOX_CONFIG_FILE} \n")
+	shellScriptFile.write("echo \"Changing working directory to back to $PWD_CURRENT...\" \n")
+	shellScriptFile.write("cd $PWD_CURRENT \n")
+	shellScriptFile.write(" \n")
+
+
 #Now that we've defined those parts of the script, I'll parse out what's necessary to run, and add it to the script sequentially
 
 if args.version == 'new':
 	shellScriptFile.write("\n echo \"Primary Analysis Started\"\n")
-	shellScriptFile.write("date\n")	
+	shellScriptFile.write("date\n")
 	FastQC()
         BWA()
 	Sam2Bam()
@@ -533,13 +566,18 @@ if args.version == 'new':
         GATK_HaplotypeCallerGVCF()
         #SNVMetrics()
         ValidateSAM()
-	MosDepth()	
-	#GATK_Coverage()	
+	MosDepth()
+	#GATK_Coverage()
         # Summary stats needs to be fixed for this pipeline version (Mar20,2017)
 	#SummaryStats()
-	
+
+	if args.mtoolbox != "":
+		shellScriptFile.write("\necho \"Mitochondrial Variant Analysis Started\"\n")
+		shellScriptFile.write("date\n")
+		MToolBox()
+
 	shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
-	shellScriptFile.write("date\n")	
+	shellScriptFile.write("date\n")
 
 
 elif args.version == 'old':
@@ -556,7 +594,7 @@ elif args.version == 'old':
 	CleanUp()
 	ValidateSAM()
 	GATK_Coverage()
-	
+
 elif args.version == 'neither':
 	print "Not putting down the primary analysis"
 
