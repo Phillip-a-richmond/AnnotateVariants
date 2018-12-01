@@ -540,7 +540,7 @@ def MToolBox():
 	shellScriptFile.write("ln -sf ${FASTQR2} $MTOOLBOX_WORKING_DIR/${SAMPLE}.R2.fastq.gz \n")
 	shellScriptFile.write(" \n")
 	shellScriptFile.write("echo \"Changing working directory to $MTOOLBOX_WORKING_DIR and running MToolBox...\" \n")
-	shellScriptFile.write("PWD_CURRENT=\`pwd\` \n")
+	shellScriptFile.write("PWD_CURRENT=`pwd` \n")
 	shellScriptFile.write("cd $MTOOLBOX_WORKING_DIR \n")
 	shellScriptFile.write("$MTOOLBOX_PATH/MToolBox/MToolBox.sh -i ${MTOOLBOX_CONFIG_FILE} \n")
 	shellScriptFile.write("echo \"Changing working directory to back to $PWD_CURRENT...\" \n")

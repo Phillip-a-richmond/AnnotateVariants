@@ -1,0 +1,32 @@
+Tool	Version || {Date Acquired}	PMID (or biorXiv/arXiv)	Source
+BWA mem	0.7.12	arXiv:1303.3997v1	https://sourceforge.net/projects/bio-bwa/files/
+Samtools	1.2	19505943	http://www.htslib.org/download/
+Picard	1.139	.	https://broadinstitute.github.io/picard/
+GATK	3.4-46	27250555	https://software.broadinstitute.org/gatk/download/
+VT	0.5772	.	https://genome.sph.umich.edu/wiki/Vt
+SNPEff	4.11 (gene: GRCh37.75)	22728672	http://snpeff.sourceforge.net/download.html
+BCFTools	1.8	.	http://www.htslib.org/download/
+bgzip	0.2.5	.	http://www.htslib.org/download/
+tabix	0.2.5	.	http://www.htslib.org/download/
+VCFAnno	0.2.8	27250555	https://github.com/brentp/vcfanno
+VCF2DB	{January 22nd 2018}	.	https://github.com/quinlan-lab/vcf2db
+GEMINI	0.19.1	23874191	https://gemini.readthedocs.io/en/latest/
+			
+Database	Version || {Date Acquired}	PMID (or biorXiv/arXiv)	Source
+GRCh37	{August 2017}	.	http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/
+CADD	1.3	24487276	https://cadd.gs.washington.edu
+PolyPhen2	2.2.2	23315928	ftp://genetics.bwh.harvard.edu/pph2/whess/polyphen-2.2.2-whess-2011_12.tab.tar.bz2
+PrimateAI	0.2	30038395	https://github.com/Illumina/PrimateAI
+gnomAD (exome)	2.0.2	27535533	http://gnomad.broadinstitute.org/downloads
+gnomAD (genome)	2.0.2	27535533	http://gnomad.broadinstitute.org/downloads
+GEMINI Databases*	0.19.1	23874191	https://gemini.readthedocs.io/en/latest/
+RLCRs	{April 2018}	29304372	http://tcag.ca/documents/projects/RLCRs_no_Repeat_Masker.zip
+ConfidentRegions	{April 2018}	27903644	ftp://ussd-ftp.illumina.com/2017-1.0/hg19/small_variants/
+OMIM	{August 2018}	.	http://data.omim.org/downloads/
+RefSeq Gene Summary	{October 2016}	.	ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/RefSeqGene/
+RVIS	Release 3, March 2016	23990802	http://genic-intolerance.org
+pLI	Release 0.3.1, March 2016	27535533	https://decipher.sanger.ac.uk/info/loss-intolerance
+HPO	{May 2018}	27899602	https://hpo.jax.org/app/download/annotation
+MeSHOPs	Release 1, July 2010	23017167	http://www.meshops.oicr.on.ca/meshop/index.html
+GeneHancer	{October 2017}	28605766	https://genecards.weizmann.ac.il/geneloc/index.shtml
+TrAP	{January 2018}	28794409	http://trap-score.org

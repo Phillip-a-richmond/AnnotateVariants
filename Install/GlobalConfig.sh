@@ -23,7 +23,7 @@ MOSDEPTH=/opt/tools/mosdepth-0.2.2/mosdepth
 CNVNATOR=/opt/tools/CNVnator/src/cnvnator
 LUMPY=
 PINDEL=/opt/tools/pindel-0.2.5b6/pindel
-SURVIVOR=
+SURVIVOR=/opt/tools/SURVIVOR-src/Debug/SURVIVOR
 ERDS=/opt/tools/erds1.1/erds_pipeline.pl
 
 
