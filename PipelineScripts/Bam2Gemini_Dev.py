@@ -130,8 +130,7 @@ shellScriptFile.write('source /opt/tools/hpcenv.sh\n\n')
 shellScriptFile.write("FAMILY_ID=\'%s\'\n"%args.Family)
 shellScriptFile.write("WORKING_DIR=\'%s\'\n"%workingDir)
 if args.GENOME=='hg19':
-	sys.exit("hg19 genome location unclear")
-	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-data01/data/GENOMES/hg19/FASTA/hg19.fa\'\n")
+	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/hg19/FASTA/hg19.fa\'\n")
 elif args.GENOME=='GSC':
 	shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
 else:
@@ -171,7 +170,8 @@ def Bam2GVCF():
 	        shellScriptFile.write(" --minReadsPerAlignmentStart 5 \\\n")
 	        shellScriptFile.write(" --minPruning 2 \\\n")
 	        shellScriptFile.write(" --pcr_indel_model NONE \\\n")
-	        shellScriptFile.write(" --dbsnp /opt/tools/GATK-3.5-0-g36282e4/resources/dbsnp_138.b37.excluding_sites_after_129.vcf \\\n")
+		if args.GENOME=='GSC':
+	        	shellScriptFile.write(" --dbsnp /opt/tools/GATK-3.5-0-g36282e4/resources/dbsnp_138.b37.excluding_sites_after_129.vcf \\\n")
 		shellScriptFile.write(" -o $WORKING_DIR${SAMPLE%d_BAM}.HC.g.vcf \n"%i)
 # Generate VCFs from BAM files
 def Bam2VCF():
