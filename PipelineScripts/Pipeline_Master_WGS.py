@@ -21,7 +21,8 @@ import sys, os, argparse
 # Added GSC- genome OR hg19 genome selection in April 2018
 # Added MosDepth June 2018
 # Migrated to VNX August 2018
-# Added MToolBox November 2018 (RvdL)
+# Added MToolBox, --mtoolbox [mtoolbox_config_file], November 2018 (RvdL)
+# Added various coverage and metric calculations for WES data, --metrics-exome, December 2018 (RvdL)
 
 ##################
 ### Initialize ###
@@ -53,6 +54,7 @@ parser.add_argument("-M","--masked",help="If set, the pipeline will be run in ma
 parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
 parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
 parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="")
+parser.add_argument("--metrics-exome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit was used",action='store_true',default=False)
 parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
 parser.add_argument("-E","--Email",help="Email address",type=str)
 args = parser.parse_args()
@@ -498,7 +500,7 @@ def ERDS():
 	shellScriptFile.write("\t-r $GENOME_FASTA \\\n")
 
 
-def MosDepth():
+def MosDepth_WGS():
 	shellScriptFile.write("\n#MosDepth \n\n")
 	shellScriptFile.write("/opt/tools/mosdepth-0.2.2/mosdepth -n -q 0:1:10:20:40:60:100: -t $NSLOTS \\\n")
 	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
@@ -547,6 +549,29 @@ def MToolBox():
 	shellScriptFile.write("cd $PWD_CURRENT \n")
 	shellScriptFile.write(" \n")
 
+def MosDepth_WES():
+	shellScriptFile.write("\n# Run MosDepth \n")
+	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
+	shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
+	shellScriptFile.write("MOSDEPTH_PATH=/opt/tools/mosdepth-0.2.2/ \n")
+	shellScriptFile.write(" \n")
+	shellScriptFile.write("$MOSDEPTH_PATH/mosdepth -t 4 -n -b $EXOME_CAPTURE_BED $METRICS_WORKING_DIR/$SAMPLE $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+	shellScriptFile.write("python $MOSDEPTH_PATH/plot-dist.py -o $METRICS_WORKING_DIR/mosdepth_coverage.html $METRICS_WORKING_DIR/*region.dist.txt \n")
+	shellScriptFile.write("COV_OUT=$METRICS_WORKING_DIR/mean_coverage_mosdepth.txt \n")
+	shellScriptFile.write("python $MOSDEPTH_PATH/mean_coverage_mosdepth.py $METRICS_WORKING_DIR/*regions.bed.gz > $COV_OUT \n")
+	shellScriptFile.write("head -1000 $COV_OUT \n")
+	shellScriptFile.write(" \n")
+
+def Picard_HSMETRICS():
+	shellScriptFile.write("\n# Run Picard CalculateHsMetrics \n")
+	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar CalculateHsMetrics \\\n")
+	shellScriptFile.write("\t I=$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+	shellScriptFile.write("\t O=$METRICS_WORKING_DIR${SAMPLE_ID}_picard_hsmetrics.txt \\\n")
+	shellScriptFile.write("\t R=$GENOME_FASTA \\\n")
+	shellScriptFile.write("\t BAIT_INTERVALS=$EXOME_CAPTURE_INTERVAL \\\n")
+	shellScriptFile.write("\t TARGET_INTERVALS=$EXOME_CAPTURE_INTERVAL \n")
+	shellScriptFile.write(" \n")
+
 
 #Now that we've defined those parts of the script, I'll parse out what's necessary to run, and add it to the script sequentially
 
@@ -566,10 +591,21 @@ if args.version == 'new':
         GATK_HaplotypeCallerGVCF()
         #SNVMetrics()
         ValidateSAM()
-	MosDepth()
-	#GATK_Coverage()
-        # Summary stats needs to be fixed for this pipeline version (Mar20,2017)
-	#SummaryStats()
+		# MosDepth_WGS()
+
+	if args.metrics_exome:
+		shellScriptFile.write("\necho \"Exome Metrics Calculations Started\"\n")
+		shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
+		shellScriptFile.write("EXOME_CAPTURE_INTERVAL=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.GRCh37-lite.interval_list \n")
+		shellScriptFile.write("METRICS_WORKING_DIR=$WORKING_DIR/METRICS/ \n")
+		shellScriptFile.write("mkdir -p $METRICS_WORKING_DIR \n")
+		shellScriptFile.write(" \n")
+
+		MosDepth_WES()
+		Picard_HSMETRICS()
+		#GATK_Coverage()
+		    # Summary stats needs to be fixed for this pipeline version (Mar20,2017)
+			#SummaryStats()
 
 	if args.mtoolbox != "":
 		shellScriptFile.write("\necho \"Mitochondrial Variant Analysis Started\"\n")
