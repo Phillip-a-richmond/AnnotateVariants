@@ -87,7 +87,7 @@ def Bowtie2():
 	shellScriptFile.write("#mv $WORKING_DIR$SAMPLE_ID\'fixed.sam\' $WORKING_DIR${SAMPLE_ID}.sam\n")
 
 #SNP calling mpileup
-def VarCall():
+def VarCall(shellScriptFile):
 	shellScriptFile.write("\n#SNPcalling Mpileup\n")
 	shellScriptFile.write("#/opt/tools/samtools-1.2/samtools mpileup -Bgf $GENOME_FASTA $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' | /opt/tools/bcftools-1.2/bcftools call -vc - > $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.bcf\'\n")
 	shellScriptFile.write("#/opt/tools/bcftools-1.2/vcfutils.pl varFilter -Q 30 -a 2 $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.bcf\' | awk \'(match ($1, \"##\") || $6 > 30)\' > $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.vcf\'\n")
@@ -98,23 +98,23 @@ def VarCall():
 	shellScriptFile.write("\n/opt/tools/samtools-0.1.19/bcftools/vcfutils.pl varFilter -Q20 -a 3 $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.bcf' | awk '(match ($1,\"##\") || $6 > 30)' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf'\n")
 
 # Part of the old pipeline
-def IndelRemoval():
+def IndelRemoval(shellScriptFile):
 	shellScriptFile.write("\n#Indel Removal\n")
 	shellScriptFile.write("/opt/tools/tabix-0.2.6/bgzip -c $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz' \n")
 	shellScriptFile.write("/opt/tools/tabix-0.2.6/tabix $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz'\n")
 	shellScriptFile.write("/opt/tools/bcftools-1.2/bcftools filter -e \"TYPE='indel' && IS=1\"  $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf' \n")
 
 # Added DJA 2016/06/15
-def SNVMetrics():
+def SNVMetrics(shellScriptFile):
 	shellScriptFile.write("\n#SNV Metrics\n")
 	shellScriptFile.write("java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T VariantEval --eval $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf\' --out $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf_metrics\' --dbsnp /opt/tools/GATK-3.4-46/resources/dbsnp_138.hg19_noM.vcf --intervals /mnt/causes-vnx1/mwenifumbo/ExomeCapture/hg19_RefSeq_050116_CodingExons_nohap.interval_list -R $GENOME_FASTA \n")
 
-def SummaryStats():
+def SummaryStats(shellScriptFile):
 	#Parse Stats
 	shellScriptFile.write("\n#Parse Stats\n")
 	shellScriptFile.write("python /mnt/causes-vnx1/PipelineControl/ParseStats.py %s %s %s %s > $WORKING_DIR$SAMPLE_ID'_summaryStats.txt'\n"%(sampleID,workingDir,R1fastq,R2fastq))
 
-def Platypus():
+def Platypus(shellScriptFile):
 	shellScriptFile.write("\n#SNP Calling Platypus\n")
 	shellScriptFile.write("python /opt/tools/Platypus-0.8.1/Platypus.py callVariants --nCPU=$NSLOTS --refFile=$GENOME_FASTA --bamFiles=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' --output=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_Platypus.vcf\'\n")
 	shellScriptFile.write("\n#Sort platypus file\n")
@@ -125,23 +125,23 @@ def Platypus():
 ###### Either new pipeline, or shared pipeline commands (both old and new) #######
 
 # FastQC to generate quality report. No interpretation of the quality report though
-def FastQC():
+def FastQC(shellScriptFile):
 	shellScriptFile.write("\n#FastQC\n")
 	shellScriptFile.write("/opt/tools/FastQC/fastqc --extract $FASTQR1 $FASTQR2 -o $WORKING_DIR\n")
 
 #Map with BWA
-def BWA():
+def BWA(shellScriptFile):
 	shellScriptFile.write("\n#Map with BWA\n")
 	shellScriptFile.write("/opt/tools/bwa-0.7.12/bwa mem $BWA_INDEX -t $NSLOTS -R \"@RG\\tID:$SAMPLE_ID\\tSM:$SAMPLE_ID\\tPL:illumina\" -M $FASTQR1 $FASTQR2 > $WORKING_DIR$SAMPLE_ID'.sam'\n\n")
 
 #Convert to binary, sort, and index
-def Sam2Bam():
+def Sam2Bam(shellScriptFile):
 	shellScriptFile.write("#Convert to binary, sort, and index\n")
 	shellScriptFile.write("/opt/tools/samtools-1.2/samtools view -@ $NSLOTS -u -bS $WORKING_DIR$SAMPLE_ID\'.sam\' | /opt/tools/samtools-1.2/samtools sort -@ $NSLOTS -m 3G - $WORKING_DIR$SAMPLE_ID\'.sorted\'\n")
 	shellScriptFile.write("/opt/tools/samtools-1.2/samtools index $WORKING_DIR$SAMPLE_ID\'.sorted.bam\'\n")
 
 # Duplicate marking
-def DupRemove():
+def DupRemove(shellScriptFile):
 	shellScriptFile.write("\n#Remove Duplicates\n")
 	shellScriptFile.write("TMPDIR=$WORKING_DIR'picardtmp/'\n")
 	shellScriptFile.write("mkdir $TMPDIR\n")
@@ -149,23 +149,23 @@ def DupRemove():
 	shellScriptFile.write("/opt/tools/samtools-1.2/samtools index $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\'\n")
 
 # GATK Realignment
-def Realign():
+def Realign(shellScriptFile):
 	shellScriptFile.write("\n#Realign\n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T RealignerTargetCreator -nt $NSLOTS -R $GENOME_FASTA -minReads 5 -I $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_indelsites.intervals\' \n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T IndelRealigner -model USE_READS -R $GENOME_FASTA -targetIntervals $WORKING_DIR$SAMPLE_ID\'_indelsites.intervals\' -I $WORKING_DIR$SAMPLE_ID\'_dupremoved.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\'\n")
 	shellScriptFile.write("/opt/tools/samtools-1.2/samtools index $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\'\n")
 
 # Added DJA 2016/06/15
-def ReadMetrics():
+def ReadMetrics(shellScriptFile):
 	shellScriptFile.write("\n#Read Metrics\n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar CollectMultipleMetrics INPUT=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' OUTPUT=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted\' REFERENCE_SEQUENCE=$GENOME_FASTA\n")
 
 # Functional
-def ValidateSAM():
+def ValidateSAM(shellScriptFile):
 	shellScriptFile.write("\n#Picard Validate BAM\n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar  /opt/tools/picard-tools-1.139/picard.jar ValidateSamFile M=VERBOSE MO=10000000 I=$WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam' O=$WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam_PicardSAMValidate.txt'\n")
 
-def CleanUp():
+def CleanUp(shellScriptFile):
 	#Clean Up
 	shellScriptFile.write("\n#Clean Up\n")
 	shellScriptFile.write("ValidateOutput=`cat $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam_PicardSAMValidate.txt'`\n")
@@ -179,7 +179,7 @@ def CleanUp():
 
 
 #SNP calling with GATK HaplotypeCaller, Jmwenifumbo's code here. Also includes BCFtools normalization and filter
-def GATK_HaplotypeCaller():
+def GATK_HaplotypeCaller(shellScriptFile):
 	shellScriptFile.write("\n#SNP Calling HaplotypeCaller\n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T HaplotypeCaller \\\n")
 	shellScriptFile.write("	-nct 4 --never_trim_vcf_format_field \\\n")
@@ -215,7 +215,7 @@ def GATK_HaplotypeCaller():
 	shellScriptFile.write("--output $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.norm.filter.vcf.gz \n")
 
 #SNP calling, creating a GVCF which is used in multi-sample variant calling (Bam2Gemini.sh part of the pipeline)
-def GATK_HaplotypeCallerGVCF():
+def GATK_HaplotypeCallerGVCF(shellScriptFile):
 	shellScriptFile.write("\n#SNP Calling HaplotypeCaller GVCFmode\n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar \\\n")
 	shellScriptFile.write(" -T HaplotypeCaller -nct 4 --emitRefConfidence GVCF \\\n")
@@ -231,13 +231,13 @@ def GATK_HaplotypeCallerGVCF():
 	shellScriptFile.write(" -o $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.g.vcf\n")
 
 # GATK Depth of Coverage Assessment
-def GATK_Coverage():
+def GATK_Coverage(shellScriptFile):
 	shellScriptFile.write("\n#GATK Depth Of Coverage\n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $GENOME_FASTA -I $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_Coverage'\n")
 
 
 # MosDepth depth of coverage assessment
-def MosDepth_WGS():
+def MosDepth_WGS(shellScriptFile):
 	shellScriptFile.write("\n#MosDepth \n\n")
 	shellScriptFile.write("/opt/tools/mosdepth-0.2.2/mosdepth -n -q 0:1:10:20:40:60:100: -t $NSLOTS \\\n")
 	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
@@ -247,7 +247,7 @@ def MosDepth_WGS():
 	shellScriptFile.write("-o $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.html \\\n")
 	shellScriptFile.write("> $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.summary.txt \n\n")
 
-def MosDepth_WES():
+def MosDepth_WES(shellScriptFile):
 	shellScriptFile.write("\n# Run MosDepth \n")
 	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
 	shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
@@ -260,7 +260,7 @@ def MosDepth_WES():
 	shellScriptFile.write("head -1000 $COV_OUT \n")
 	shellScriptFile.write(" \n")
 
-def Picard_HSMETRICS():
+def Picard_HSMETRICS(shellScriptFile):
 	shellScriptFile.write("\n# Run Picard CalculateHsMetrics \n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar CalculateHsMetrics \\\n")
 	shellScriptFile.write("\t I=$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
@@ -272,7 +272,7 @@ def Picard_HSMETRICS():
 
 
 # MToolBox Mitochondrial analysis
-def MToolBox():
+def MToolBox(shellScriptFile):
 	shellScriptFile.write("\n# Run MToolBox for mitochondrial variant analysis \n")
 	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
 	shellScriptFile.write("MTOOLBOX_PATH=/opt/tools/MToolBox-1.0/ \n")
@@ -302,16 +302,10 @@ def MToolBox():
 	shellScriptFile.write(" \n")
 
 
-
-
-
-
-
-
 # Structural variant calling
 
 # CNV Calling with CNVnator
-def CNVNATOR():
+def CNVNATOR(shellScriptFile):
 	shellScriptFile.write("#Running CNVNATOR Windowsize 100\n\n")
 	shellScriptFile.write("#Defining Variables\n")
 	shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
@@ -335,7 +329,7 @@ def CNVNATOR():
         shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
 
 #CNV Calling with ERDS
-def ERDS():
+def ERDS(shellScriptFile):
 	shellScriptFile.write("\n# ERDS \n\n")
 	shellScriptFile.write("perl /opt/tools/erds1.1/erds_pipeline.pl \\\n")
 	shellScriptFile.write("\t-b $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
@@ -344,7 +338,7 @@ def ERDS():
 	shellScriptFile.write("\t-r $GENOME_FASTA \\\n")
 
 # CNV calling with CANVAS, also includes an annovar call
-def CANVAS():
+def CANVAS(shellScriptFile):
 	shellScriptFile.write("#Running CANVAS\n#Redefining Variables\n")
 	shellScriptFile.write("BAMFILE=$SAMPLE_ID'_dupremoved_realigned'\n")
 	shellScriptFile.write("VCFFILE=$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf'\n")
@@ -373,7 +367,7 @@ def CANVAS():
 	shellScriptFile.write("$CANVAS_DIR$CANVAS_AVINPUT /mnt/causes-vnx1/DATABASES/annovar/humandb -out $WORKING_DIR$CANVAS_ANNOTATED\n")
 
 # SV Calling with Pindel
-def Pindel():
+def Pindel(shellScriptFile):
 	shellScriptFile.write("# Running Pindel \n\n")
 	shellScriptFile.write("#Defining Variables\n")
         shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
@@ -391,7 +385,7 @@ def Pindel():
 	shellScriptFile.write("-J /mnt/causes-vnx1/DATABASES/hg19_centromeres_telomeres.bed  \n\n")
 
 # Merging SVs with MetaSV
-def MetaSV():
+def MetaSV(shellScriptFile):
 	shellScriptFile.write("\n# MetaSV \n\n")
 	shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
 	shellScriptFile.write("run_metasv.py --bam $WORKING_DIR/$BAM --reference $GENOME_FASTA \\\n")
@@ -406,7 +400,7 @@ def MetaSV():
 	shellScriptFile.write("--age /opt/tools/AGE/age_align \\\n")
 
 # SV Calling Deprecated
-def Lumpy():
+def Lumpy(shellScriptFile):
 	shellScriptFile.write("\n\n#Lumpy CNV Caller\n")
 	shellScriptFile.write("\n##PreProcess\n")
 	shellScriptFile.write("BAM_FILE=$SAMPLE_ID'_dupremoved_realigned'\n")
@@ -429,7 +423,7 @@ def Lumpy():
 	shellScriptFile.write(" -sr id:$SAMPLE_ID,bam_file:$WORKING_DIR$BAM_FILE'_splitters.sorted.bam',back_distance:10,weight:1,min_mapping_threshold:40 > $WORKING_DIR$SAMPLE_ID'_Lumpy.vcf'\n")
 
 # Lumpy Filter/Annotate Deprecated
-def LumpyFilterAnnotate():
+def LumpyFilterAnnotate(shellScriptFile):
 	shellScriptFile.write("\n#Genotype,Filter,Annotate\n##Run SVtyper\n")
 	shellScriptFile.write("/opt/tools/svtyper-0.1.0/svtyper -B $WORKING_DIR$BAM_FILE'.sorted.bam' -i $WORKING_DIR$SAMPLE_ID'_Lumpy.vcf' -o $WORKING_DIR$SAMPLE_ID'_Lumpy_genotyped.vcf'\n")
 	shellScriptFile.write("\n##Filter genotyped Lumpy (Custom script)\n")
@@ -445,7 +439,7 @@ def LumpyFilterAnnotate():
 	shellScriptFile.write("python /opt/tools/VariantAnnotation/AddSummaryToAnnovar_CNV.py $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.txt' $WORKING_DIR$SAMPLE_ID'_Lumpy_annovar.hg19_multianno.filtered.omimAndSummary.txt' \n")
 
 # Not using this anymore
-def SVANNOTATE():
+def SVANNOTATE(shellScriptFile):
 	shellScriptFile.write("\n# Get variants in proband \n")
 	shellScriptFile.write("# Convert to bed using annovar \n")
 	shellScriptFile.write("perl /mnt/causes-vnx1/DATABASES/annovar/convert2annovar.pl $WORKDIR/${SAMPLE}.DEL.preformat \\\n")
@@ -482,6 +476,11 @@ def Main():
 	#This is where we'll begin writing the script, starting with the header information
 	shellScriptFile = open('%s%s_FullPipeline_%s.sh'%(workingDir,sampleID,args.version),'w')
 	shellScriptFile.write('#!/bin/bash\n')
+
+
+	##########
+	# Header #
+	##########
 	
 	# These will be different for SGE (old cluster) and PBS (new cluster)
 	if args.scheduler=='SGE':
@@ -541,6 +540,10 @@ def Main():
 		shellScriptFile.write("#SBATCH --output=%s-%j.out\n")
 		shellScriptFile.write("#SBATCH --error=%s-%j.out\n")
 	
+	#############
+	# Variables #
+	#############
+
 	#Set the variables for working directory, sampleID, and fastq full filepath
 	if args.version=='new':
 		shellScriptFile.write("\nSAMPLE_ID=\'%s\'\n"%sampleID)
@@ -569,87 +572,87 @@ def Main():
 	        print "You did not choose a viable genome version, choose either GSC or hg19"
 	        sys.exit()
 	
-	
-	
 	shellScriptFile.write("WORKING_DIR=\'%s\'\n"%workingDir)
 	shellScriptFile.write("FASTQR1=\'%s\'\n"%R1fastq)
 	shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
 
+
+	#####################
+	# Pipeline Commands #
+	#####################
+	
+
 	if args.version == 'new':
 		shellScriptFile.write("\n echo \"Primary Analysis Started\"\n")
 		shellScriptFile.write("date\n")
-		FastQC()
-	        BWA()
-		Sam2Bam()
-	        DupRemove()
-	        Realign()
-	        #VarCall()
-	        CleanUp()
-	        #ReadMetrics()
-	        #Platypus()
-	        GATK_HaplotypeCaller()
-	        GATK_HaplotypeCallerGVCF()
-	        #SNVMetrics()
-	        ValidateSAM()
-			# MosDepth_WGS()
-	
-		if args.metrics_exome:
-			shellScriptFile.write("\necho \"Exome Metrics Calculations Started\"\n")
-			shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
-			shellScriptFile.write("EXOME_CAPTURE_INTERVAL=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.GRCh37-lite.interval_list \n")
-			shellScriptFile.write("METRICS_WORKING_DIR=$WORKING_DIR/METRICS/ \n")
-			shellScriptFile.write("mkdir -p $METRICS_WORKING_DIR \n")
-			shellScriptFile.write(" \n")
-	
-			MosDepth_WES()
-			Picard_HSMETRICS()
-			#GATK_Coverage()
-			    # Summary stats needs to be fixed for this pipeline version (Mar20,2017)
-				#SummaryStats()
-	
+		FastQC(shellScriptFile)
+	        BWA(shellScriptFile)
+		Sam2Bam(shellScriptFile)
+	        DupRemove(shellScriptFile)
+	        Realign(shellScriptFile)
+	        CleanUp(shellScriptFile)
+	        GATK_HaplotypeCaller(shellScriptFile)
+	        GATK_HaplotypeCallerGVCF(shellScriptFile)
+	        ValidateSAM(shellScriptFile)
 		if args.mtoolbox != "":
 			shellScriptFile.write("\necho \"Mitochondrial Variant Analysis Started\"\n")
 			shellScriptFile.write("date\n")
-			MToolBox()
+			MToolBox(shellScriptFile)
+	
+		#### 	
+		if args.Type == 'Genome'
+		MosDepth_WGS(shellScriptFile)
+			if args.cnv:
+				shellScriptFile.write("\necho \"CNV Analysis Started\"\n")
+			        shellScriptFile.write("date\n")
+				CNVNATOR(shellScriptFile)
+				ERDS(shellScriptFile)
+
+			# Add Smoove?	
+			if args.sv:
+				if not args.cnv:
+					CNVNATOR(shellScriptFile)
+				Lumpy(shellScriptFile)
+				Pindel(shellScriptFile)
+				MetaSV(shellScriptFile)
+				shellScriptFile.write("\necho \"CNV Analysis Finished\"\n")
+			        shellScriptFile.write("date\n")
+
+		elif args.Type == 'Exome':
+			if args.metrics_exome:
+				shellScriptFile.write("\necho \"Exome Metrics Calculations Started\"\n")
+				shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
+				shellScriptFile.write("EXOME_CAPTURE_INTERVAL=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.GRCh37-lite.interval_list \n")
+				shellScriptFile.write("METRICS_WORKING_DIR=$WORKING_DIR/METRICS/ \n")
+				shellScriptFile.write("mkdir -p $METRICS_WORKING_DIR \n")
+				shellScriptFile.write(" \n")
+	
+				MosDepth_WES(shellScriptFile)
+				Picard_HSMETRICS(shellScriptFile)
+	
 	
 		shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
 		shellScriptFile.write("date\n")
 	
-	
+	# Not changing anything for exome vs. genome here	
 	elif args.version == 'old':
-		FastQC()
-		Bowtie2()
-		Sam2Bam()
-		DupRemove()
-	        Realign()
-	        VarCall()
-	        SummaryStats()
-	        IndelRemoval()
-		ReadMetrics()
-		SNVMetrics()
-		CleanUp()
-		ValidateSAM()
-		GATK_Coverage()
+		FastQC(shellScriptFile)
+		Bowtie2(shellScriptFile)
+		Sam2Bam(shellScriptFile)
+		DupRemove(shellScriptFile)
+	        Realign(shellScriptFile)
+	        VarCall(shellScriptFile)
+	        SummaryStats(shellScriptFile)
+	        IndelRemoval(shellScriptFile)
+		ReadMetrics(shellScriptFile)
+		SNVMetrics(shellScriptFile)
+		CleanUp(shellScriptFile)
+		ValidateSAM(shellScriptFile)
+		GATK_Coverage(shellScriptFile)
 	
 	elif args.version == 'neither':
 		print "Not putting down the primary analysis"
 	
-	if args.cnv:
-		shellScriptFile.write("\necho \"CNV Analysis Started\"\n")
-	        shellScriptFile.write("date\n")
-		CNVNATOR()
-		ERDS()
-	
-	# Splitting out SV from CNV, improve speed
-	if args.sv:
-		if not args.cnv:
-			CNVNATOR()
-		Lumpy()
-	#	LumpyFilterAnnotate()
-		Pindel()
-		MetaSV()
-		shellScriptFile.write("\necho \"CNV Analysis Finished\"\n")
-	        shellScriptFile.write("date\n")
 	
 
 
