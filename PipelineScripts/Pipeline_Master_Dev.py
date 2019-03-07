@@ -28,6 +28,7 @@ import sys, os, argparse
 	# Reorganized a bit, cleaned up _BWAmem from the sampleIDs since it's no longer meaningful
 	# Added SLURM compatability
 	# Removed "masked" option
+	# Added MEI option
 	
 
 ##################
@@ -39,8 +40,10 @@ import sys, os, argparse
 def GetArgs():
 	if len(sys.argv) < 2:
 		print "Re-run with the -h option"
-		print "Typical Running Command:"
-		print "python Pipeline_Master.py -v new -d /mnt/causes-data04/ -s TDX-468 -1 /mnt/causes-data04/data2/RAW/EXOME_TIDEX/Family121/TIDEX468_CAGATC_L001_R1_001.fastq.gz -2 /mnt/causes-data04/data2/RAW/EXOME_TIDEX/Family121/TIDEX468_CAGATC_L001_R1_001.fastq.gz -p 16 -m 100G"
+		print "Typical Running Command (genome, calling CNVs, SVs, MEIs, and mito analysis:"
+		print "python Pipeline_Master.py -p 16 -m 60G -R 150 -T Genome --cnv -S PBS --mtoolbox --sv --mei -v new \\\n -s TIDEX555 -d /mnt/causes-vnx2/TIDE/PROCESS/GENOME_TIDEX/T149/ \\\n -1 /mnt/causes-vnx2/TIDE/RAW/GENOME_TIDEX/T149/TIDEX555_R1.fastq.gz \\\n -2 /mnt/causes-vnx2/TIDE/RAW/GENOME_TIDEX/T149/TIDEX555_R2.fastq.gz"
+		print "Typical Running Command (Exome, MEI, Mito):"
+		print "python Pipeline_Master.py -p 8 -m 30 -R 150 -T Exome --mei -S PBS --mtoolbox -v new \\\n -s TIDEX970 -d /mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/T263/ \\\n -1 /mnt/causes-vnx2/TIDE/RAW/EXOME_TIDEX/T263/TIDEX970_1.fastq.gz \\\n -2 /mnt/causes-vnx2/TIDE/RAW/EXOME_TIDEX/T263/TIDEX970_2.fastq.gz\n"
 		sys.exit()
 	
 	
@@ -62,6 +65,7 @@ def GetArgs():
 	parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="")
 	parser.add_argument("--metrics-exome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit was used",action='store_true',default=False)
 	parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
+	parser.add_argument("--mei",help="Run MEI (mobile element insertion) calling",action='store_true',default=False)
 	parser.add_argument("-E","--Email",help="Email address",type=str)
 	args = parser.parse_args()
 	return args
@@ -448,6 +452,37 @@ def SVANNOTATE(shellScriptFile):
 	shellScriptFile.write("\t -includeinfo \n")
 
 
+#################
+
+# Mobile element insertion calling
+
+def MEI(shellScriptFile):
+	shellScriptFile.write("\n# Mobile Element Insertions\n")
+	shellScriptFile.write("## Define Variables\n")
+	shellScriptFile.write("ANALYSIS_DIR=${WORKING_DIR}MEI\n")
+	shellScriptFile.write("MELT_DIR=/opt/tools/MELVTv2.1.5/\n")
+	shellScriptFile.write("MEI_LIST=${MELT_DIR}/me_refs/1KGP_Hg19/mei_list.txt\n")
+	shellScriptFile.write("GENE_ANNO=/opt/tools/MELTv2.1.5/add_bed_files/1KGP_Hg19/hg19.genes.bed\n\n")
+	shellScriptFile.write("# MELT Singleton \n\n")
+	shellScriptFile.write("java -jar ${MELT_DIR}MELT.jar Single \\\n")
+	shellScriptFile.write("-a -b hs37d5/NC007605 -c 8 -h $GENOME_FASTA \\\n")
+	shellScriptFile.write("-bamfile $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+	shellScriptFile.write("-n ${MELT_DIR}add_bed_files/1KGP_Hg19/hg19.genes.bed \\\n")
+	shellScriptFile.write(" -t $MEI_LIST -w $WORKING_DIR \n")
+	shellScriptFile.write("# MELT Assuming multiple samples downstream \n")
+	shellScriptFile.write("## Step 1 - Preprocess \n")
+	shellScriptFile.write("java -Xmx2G -jar ${MELT_DIR}MELT.jar Preprocess \\\n")
+	shellScriptFile.write("-bamfile $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+	shellScriptFile.write("-h $GENOME_FASTA \n\n")
+	shellScriptFile.write("## Step 2 - Individual Analysis\n")
+	shellScriptFile.write("java -Xmx6G -jar ${MELT_DIR}MELT.jar IndivAnalysis \\\n")
+	shellScriptFile.write("-w $ANALYSIS_DIR \\\n")
+	shellScriptFile.write("-t $MEI_LIST -c 30 -h $GENOME_FASTA \\\n")
+	shellScriptFile.write("-bamfile $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+
+
+
+
 # This is the main part of the program. Here I'll parse out what's necessary to run, and add it to the script sequentially
 def Main():
 
@@ -599,9 +634,8 @@ def Main():
 			shellScriptFile.write("date\n")
 			MToolBox(shellScriptFile)
 	
-		#### 	
-		if args.Type == 'Genome'
-		MosDepth_WGS(shellScriptFile)
+		if (args.Type == "Genome"):
+			MosDepth_WGS(shellScriptFile)
 			if args.cnv:
 				shellScriptFile.write("\necho \"CNV Analysis Started\"\n")
 			        shellScriptFile.write("date\n")

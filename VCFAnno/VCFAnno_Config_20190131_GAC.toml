@@ -6,7 +6,17 @@
 # Last edits: July 16 2018 (PAR) - added gnomad exome, dropped exac, 
 # Last edits: August 20 2018 (PAR) - Moved away from /mnt/causes-data01/ to /mnt/causes-vnx1/
 # Last edits: August 22nd 2018 (PAR) - Added eQTL
-# Last edits: January 31st 2019 (PAR) - updated gnomAD, 
+# Last edits: January 31st 2019 (PAR) - updated gnomAD, added CADD v1.4
+# Last edits: February 28th, 2019 (PAR) - added CCR regions
+
+
+# CCR - Conserved coding regions
+[[annotation]]
+file='/mnt/causes-vnx1/DATABASES/CCR/ccrs.combined.v2.20180420.bed.gz'
+columns = [4]
+names = ['CCR']
+ops = ['self']
+
 # eQTL GTEX WholeBlood
 [[annotation]]
 file='/mnt/causes-vnx1/DATABASES/eQTL/Whole_Blood_v7GTEXeQTL_sorted.vcf.gz'
@@ -36,18 +46,18 @@ names = ["SpliceAI_AcceptorGain","SpliceAI_AcceptorLoss","SpliceAI_DonorGain","S
 ops = ["self"]
 
 # FATHMM-XF Noncoding
-#[[annotation]]
-#file = "/mnt/causes-vnx1/DATABASES/fathmm_xf_noncoding.vcf.gz"
-#columns = [5]
-#names = ["FATHMM-XF-NONCODING"]
-#ops = ["self"]
+[[annotation]]
+file = "/mnt/causes-vnx1/DATABASES/FATHMM/fathmm_xf_noncoding.tsv.gz"
+columns = [5]
+names = ["FATHMM-XF-NONCODING"]
+ops = ["self"]
 
-# FATHMM-XF Coding, these need to be proper vcfs I think
-#[[annotation]]
-#file = "/mnt/causes-vnx1/DATABASES/fathmm_xf_coding.vcf.gz"
-#columns = [5]
-#names = ["FATHMM-XF-CODING"]
-#ops = ["self"]
+# FATHMM-XF Coding
+[[annotation]]
+file = "/mnt/causes-vnx1/DATABASES/FATHMM/fathmm_xf_coding.tsv.gz"
+columns = [5]
+names = ["FATHMM-XF-CODING"]
+ops = ["self"]
 
 #gnomAD Genome Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
 # Updated to v2.1

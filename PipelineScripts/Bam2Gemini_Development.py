@@ -14,6 +14,7 @@ import sys, os, argparse
 	# Removed deprecated code
 	# Updated VCFAnno config files
 	# Updated BCFTools filters
+# Update March 1st 2019
 
 ##################
 ### Initialize ###
@@ -22,18 +23,18 @@ def GetArgs():
 	if len(sys.argv) < 2:
 		print "Re-run with the -h option"
 		print "Typical Running Command (From Bams, GVCF mode):"
-		print "python Bam2Gemini.py  -d /mnt/causes-data04/PROCESS/GENOME_TIDEX/T014_new/ -p 16 -m 40G \\"
+		print "python Bam2Gemini.py  -d /mnt/causes-vnx2/TIDE/PROCESS/GENOME_TIDEX/T014_new/ -p 16 -m 40G \\"
 		print "-P T014.ped -F T014 -v GVCF \\"
 		print "-B T014-1_BWAmem_dupremoved_realigned.sorted.bam,T014-2_BWAmem_dupremoved_realigned.sorted.bam,T014-3_BWAmem_dupremoved_realigned.sorted.bam\n"
 	
 	
 		print "Typical Running Command (From GVCFs):"
-	        print "python Bam2Gemini.py  -d /mnt/causes-data04/PROCESS/GENOME_TIDEX/T014_new/ -p 16 -m 40G \\"
+	        print "python Bam2Gemini.py  -d /mnt/causes-vnx2/TIDE/PROCESS/GENOME_TIDEX/T014_new/ -p 16 -m 40G \\"
 	        print "-P T014.ped -F T014 -v GVCF \\"
 	        print "-V T014-1_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf,T014-2_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf,T014-3_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf\n"
 	
 		print "Typical Running Command, duo (From VCFs):"
-	        print "python Bam2Gemini.py  -d /mnt/causes-data04/PROCESS/GENOME_TIDEX/T274_new/ -p 16 -m 40G \\"
+	        print "python Bam2Gemini.py  -d /mnt/causes-vnx2/TIDE/PROCESS/GENOME_TIDEX/T274_new/ -p 16 -m 40G \\"
 	        print "-P T274.ped -F T274 -v VCF \\"
 	        print "-V tidex1006_BWAmem_dupremoved_realigned_HaplotypeCaller.vcf,tidex1007_BWAmem_dupremoved_realigned_HaplotypeCaller.vcf\n"
 	
@@ -164,7 +165,7 @@ def MergedVCF2NormVCF():
 def FilterVCF():
 	shellScriptFile.write("\n# Step 4: Filter Merged, normalized VCF\n\n")
 	shellScriptFile.write("/opt/tools/bcftools-1.8/bin/bcftools filter \\\n")
-	shellScriptFile.write("\t --include 'FORMAT/AD[*:1]>=10 && FORMAT/DP[*] < 300' \\\n")
+	shellScriptFile.write("\t --include 'FORMAT/AD[*:1]>=5 && FORMAT/DP[*] < 600 && FORMAT/AD[' \\\n")
 	shellScriptFile.write("\t -m + \\\n")
 	shellScriptFile.write("\t -s + \\\n")
 	shellScriptFile.write("\t -O z \\\n")
@@ -234,7 +235,6 @@ def Main():
 	shellScriptFile.write("FAMILY_ID=\'%s\'\n"%args.Family)
 	shellScriptFile.write("WORKING_DIR=\'%s\'\n"%workingDir)
 	if args.GENOME=='hg19':
-		sys.exit("hg19 genome location unclear")
 		shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/hg19/FASTA/hg19.fa\'\n")
 	elif args.GENOME=='GSC':
 		shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
@@ -305,7 +305,6 @@ def Main():
 			VCF2DB()
 	
 	elif args.BAMLIST:
-			
 		if args.vcftype == 'GVCF':
 			Bam2GVCF()
 			MergeGVCF_withBAMLIST()
