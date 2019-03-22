@@ -1,0 +1,17 @@
+name: AnnotateVariants
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - bcftools
+  - bwa
+  - htslib
+  - picard
+  - samtools
+  - snpeff
+  - vcf2db
+  - vcfanno
+  - vt
+
+
+
