@@ -62,8 +62,9 @@ def GetArgs():
 	parser.add_argument("-T","--Type",help="Exome || Genome",required=True)
 	parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
 	parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
-	parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="")
+	parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="/mnt/causes-vnx1/PIPELINES/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh")
 	parser.add_argument("--metrics-exome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit was used",action='store_true',default=False)
+	parser.add_argument("--metrics-genome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics",action='store_true',default=False)
 	parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
 	parser.add_argument("--mei",help="Run MEI (mobile element insertion) calling",action='store_true',default=False)
 	parser.add_argument("-E","--Email",help="Email address",type=str)
@@ -264,19 +265,28 @@ def MosDepth_WES(shellScriptFile):
 	shellScriptFile.write("head -1000 $COV_OUT \n")
 	shellScriptFile.write(" \n")
 
-def Picard_HSMETRICS(shellScriptFile):
+def Picard_HSMETRICS_genome(shellScriptFile):
 	shellScriptFile.write("\n# Run Picard CalculateHsMetrics \n")
 	shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar CalculateHsMetrics \\\n")
 	shellScriptFile.write("\t I=$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
 	shellScriptFile.write("\t O=$METRICS_WORKING_DIR${SAMPLE_ID}_picard_hsmetrics.txt \\\n")
 	shellScriptFile.write("\t R=$GENOME_FASTA \\\n")
-	shellScriptFile.write("\t BAIT_INTERVALS=$EXOME_CAPTURE_INTERVAL \\\n")
-	shellScriptFile.write("\t TARGET_INTERVALS=$EXOME_CAPTURE_INTERVAL \n")
 	shellScriptFile.write(" \n")
+
+def Picard_HSMETRICS_exome(shellScriptFile):
+        shellScriptFile.write("\n# Run Picard CalculateHsMetrics \n")
+        shellScriptFile.write("/opt/tools/jdk1.7.0_79/bin/java -jar /opt/tools/picard-tools-1.139/picard.jar CalculateHsMetrics \\\n")
+        shellScriptFile.write("\t I=$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+        shellScriptFile.write("\t O=$METRICS_WORKING_DIR${SAMPLE_ID}_picard_hsmetrics.txt \\\n")
+        shellScriptFile.write("\t R=$GENOME_FASTA \\\n")
+        shellScriptFile.write("\t BAIT_INTERVALS=$EXOME_CAPTURE_INTERVAL \\\n")
+        shellScriptFile.write("\t TARGET_INTERVALS=$EXOME_CAPTURE_INTERVAL \n")
+        shellScriptFile.write(" \n")
+
 
 
 # MToolBox Mitochondrial analysis
-def MToolBox(shellScriptFile):
+def MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile):
 	shellScriptFile.write("\n# Run MToolBox for mitochondrial variant analysis \n")
 	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
 	shellScriptFile.write("MTOOLBOX_PATH=/opt/tools/MToolBox-1.0/ \n")
@@ -455,7 +465,6 @@ def SVANNOTATE(shellScriptFile):
 #################
 
 # Mobile element insertion calling
-
 def MEI(shellScriptFile):
 	shellScriptFile.write("\n# Mobile Element Insertions\n")
 	shellScriptFile.write("## Define Variables\n")
@@ -481,7 +490,22 @@ def MEI(shellScriptFile):
 	shellScriptFile.write("-bamfile $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
 
 
+##################
 
+# STR calling
+def STRetch_GRCh37(shellScriptFile):
+	shellScriptFile.write("\n# Short Tandem Repeats\n")
+	shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/tools/bin/bpipe run \\\n")
+	shellScriptFile.write("-p input_regions=/mnt/causes-vnx1/PIPELINES/STRetch/reference-data/GRCh37.simpleRepeat_period1-6_dedup.sorted.bed \\\n")
+	shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/pipelines/GRCh37_STRetch_wgs_bam_pipeline.groovy \\\n")
+	shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+
+def STRetch_hg19(shellScriptFile):
+	shellScriptFile.write("\n# Short Tandem Repeats\n")
+	shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/tools/bin/bpipe run \\\n")
+        shellScriptFile.write("-p input_regions=/mnt/causes-vnx1/PIPELINES/STRetch/reference-data/hg19.simpleRepeat_period1-6_dedup.sorted.bed \\\n")
+        shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/pipelines/hg19_STRetch_wgs_bam_pipeline.groovy \\\n")
+        shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
 
 # This is the main part of the program. Here I'll parse out what's necessary to run, and add it to the script sequentially
 def Main():
@@ -612,12 +636,23 @@ def Main():
 	shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
 
 
+        # Make some variables for tools which are used within this pipeline
+        shellScriptFile.write("# Define Tool paths. If they are in your path, simply change these full filepaths to only be the final command\n")
+        shellScriptFile.write("# For example: Change BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools to be BCFTOOLS=bcftools if it's in your path \n\n")
+        shellScriptFile.write("ANNOTVARDIR=%s\n"%args.AnnotateVariantsDir)
+        shellScriptFile.write("SNPEFFJAR=/opt/tools/snpEff/snpEff.jar\n")
+        shellScriptFile.write("BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools\n")
+        shellScriptFile.write("GATKJAR=/opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar\n")
+        shellScriptFile.write("JAVA=/opt/tools/jdk1.7.0_79/bin/java\n")
+        shellScriptFile.write("BGZIP=/opt/tools/tabix/bgzip\n")
+        shellScriptFile.write("TABIX=/opt/tools/tabix/tabix\n")
+
 	#####################
 	# Pipeline Commands #
 	#####################
-	
 
 	if args.version == 'new':
+		
 		shellScriptFile.write("\n echo \"Primary Analysis Started\"\n")
 		shellScriptFile.write("date\n")
 		FastQC(shellScriptFile)
@@ -632,16 +667,24 @@ def Main():
 		if args.mtoolbox != "":
 			shellScriptFile.write("\necho \"Mitochondrial Variant Analysis Started\"\n")
 			shellScriptFile.write("date\n")
-			MToolBox(shellScriptFile)
+			MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile)
 	
+		if (args.mei):
+			MEI(shellScriptFile)
 		if (args.Type == "Genome"):
 			MosDepth_WGS(shellScriptFile)
+			Picard_HSMETRICS_exome(shellScriptFile)
 			if args.cnv:
 				shellScriptFile.write("\necho \"CNV Analysis Started\"\n")
 			        shellScriptFile.write("date\n")
 				CNVNATOR(shellScriptFile)
 				ERDS(shellScriptFile)
-
+			if args.STR:
+				shellScriptFile.write("\necho \"STR calling\"\n")
+				if args.GENOME=='hg19':
+					STRetch_hg19(shellScriptFile)
+				elif args.GENOME=='GSC':
+					STRetch_GRCh37(shellScriptFile)
 			# Add Smoove?	
 			if args.sv:
 				if not args.cnv:
@@ -651,7 +694,7 @@ def Main():
 				MetaSV(shellScriptFile)
 				shellScriptFile.write("\necho \"CNV Analysis Finished\"\n")
 			        shellScriptFile.write("date\n")
-
+		
 		elif args.Type == 'Exome':
 			if args.metrics_exome:
 				shellScriptFile.write("\necho \"Exome Metrics Calculations Started\"\n")
@@ -662,8 +705,8 @@ def Main():
 				shellScriptFile.write(" \n")
 	
 				MosDepth_WES(shellScriptFile)
-				Picard_HSMETRICS(shellScriptFile)
-	
+				Picard_HSMETRICS_exome(shellScriptFile)
+			# Add here: exome CNV calling	
 	
 		shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
 		shellScriptFile.write("date\n")
@@ -687,8 +730,6 @@ def Main():
 	elif args.version == 'neither':
 		print "Not putting down the primary analysis"
 	
-	
-
 
 if __name__=="__main__":
 	Main()

@@ -7,6 +7,7 @@
 # The purpose of this python script is to take in a gemini table file, and add some annotations. 
 # The annotations are all gene-based at this point, and are simple to add from text files. The heavy lifting of finding the gene has already been done
 # This script also assumes only 1 gene being in the annotation column. For cases of overlapping genes, or intergenic variants, this script will not handle those annotations well (as of April 23rd 2018)
+# March 21st 2019 - Added OE scores, added gnomad hyperlink (https://gnomad.broadinstitute.org/variant/20-2465304-T-A)
 
 ###########
 # Imports #
@@ -126,10 +127,57 @@ def GetMESHOPDict(MESHOPFILE):
         return Gene2MESHOP	
 
 
+# Added 20190321
+def MakeGnomADHyperlink(chrom,pos,ref,alt):
+	base = 'https://gnomad.broadinstitute.org/variant/'
+	if 'chr' in chrom:
+		chrom = chrom[3:]
+	gnomad_hyperlink='%s%s-%s-%s-%s'%(base,chrom,pos,ref,alt)
+	return gnomad_hyperlink
+
+# OE score
+def MakeOEDict(OEFILE)
+	infile = open(OEFILE,'r')
+	Gene2OE = {}
+	for line in infile:
+		cols = line.strip('\n').split('\t')
+
+
+# FLAGS - Just a list of genes to 'flag'
+def MakeFLAGSList(FLAGSFILE):
+	infile = open(FLAGSFILE,'r')
+	FLAGS_GeneList = []
+	for line in infile:
+		FLAGS_GeneList.append(line.strip('\n'))
+
+
+# Gene name mapping
+def MakeGeneNameDict(GENENAMEFILE):
+	infile = open(MESHOPFILE,'r')
+        Gene2MESHOP={}
+        for line in infile:
+                gene,meshop = line.strip('\n').split('\t')
+                if Gene2MESHOP.has_key(gene):
+                        Gene2MESHOP[gene].append(meshop)
+                else:
+                        Gene2MESHOP[gene]=[meshop]
+        #print Gene2MESHOP
+        return Gene2MESHOP
+	return
+
+
+# Gene alias mapping
+def MakeGeneAliasDict(GENEALIASFILE):
+	return
+
+
+
+
 
 
 # This function takes in the dictionaries desribed above, reads in the gemini infile, and outputs the gemini outfile
-def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP):
+# NOTE: THIS IS HARD CODED TO A SPECIFIC TABLE FORMAT
+def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP,Gene2OE,FLAGS_GeneList):
 	infile = open(GeminiInFileName,'r')
 	outfile = open(GeminiOutFileName,'w')
 	header = infile.readline()
@@ -139,6 +187,24 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		line = line.strip('\n')
 		cols = line.split("\t")
 		gene = cols[5]
+		chrom = cols[0]
+		pos = cols[2]
+		ref = cols[3]
+		alt = cols[4]
+
+		# Additions 20190321
+		# add gnomad hyperlink (20190321)
+		gnomad_Hyperlink = MakeGnomADHyperlink(chrom,pos,ref,alt)
+
+		# Add flags
+		if gene in FLAGS_GeneList:
+			flags = 'This is a FLAGS Gene'
+		else:
+			flags = '.'
+
+		
+		
+
 		# Check for Omim phenotype, add if there, if not make it '.'
 		if Gene2Pheno.has_key(gene):
 			omim_pheno=Gene2Pheno[gene]

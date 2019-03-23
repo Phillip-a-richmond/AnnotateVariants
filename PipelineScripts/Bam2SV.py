@@ -6,9 +6,12 @@ import sys, os, argparse
 # Open source GNU licensing         #
 #####################################
 
-############
-#Bam2Gemini#
-############
+########
+#Bam2SV#
+########
+
+# The purpose of this script is to take in a BAM or a set of BAM files, and genotype them with structural variant calling tools
+# This tool can work with exome or genome
 
 
 ##################
