@@ -88,10 +88,10 @@ SEGDUP='in_segdup=0'
 
 # Chose 0.5 based on spliceAI manuscript
 # https://www.cell.com/cell/pdf/S0092-8674(18)31629-5.pdf
-SPLICEAI='(spliceai_acceptorgain >= 0.5) OR (spliceai_acceptorloss >= 0.5 ) OR (spliceai_donorgain >= 0.5) OR (spliceai_donorloss >= 0.5 )'
+SPLICEAI='((spliceai_acceptorgain >= 0.5) OR (spliceai_acceptorloss >= 0.5 ) OR (spliceai_donorgain >= 0.5) OR (spliceai_donorloss >= 0.5 ))'
 
-CADD='(cadd >= 20) OR (cadd_indel >= 20)'
-FATHMM_NONCODING='fathmm_xf_noncoding >= 0.9'
+CADD='((cadd >= 20) OR (cadd_indel >= 20))'
+FATHMM_NONCODING='(fathmm_xf_noncoding >= 0.9)'
 NONCODING="NOT $CODING AND ($FATHMM_NONCODING OR $CADD)"
 
 

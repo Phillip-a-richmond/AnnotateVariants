@@ -10,8 +10,12 @@ python ../PipelineScripts/Bam2Gemini_Development.py \
 	-T Exome \
 	-A /mnt/causes-vnx1/PIPELINES/AnnotateVariants/
 
+exit
 # Run it from the command line
 sh /mnt/causes-vnx1/PIPELINES/AnnotateVariants/Test/NA12878_Trio_Bam2Gemini.sh
+
+# Run the Gemini Queries
+sh /mnt/causes-vnx1/PIPELINES/AnnotateVariants/GeminiQueryScripts/GeminiQueries_dev.sh
 
 
 
