@@ -69,9 +69,8 @@ def GetArgs():
 	parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
 	parser.add_argument("-S","--Singleton",help="Use this option if you are running a singleton",action='store_true',default=False)
 	parser.add_argument("-D","--DatabaseDir",help="Path for the directory containing databases which VCFAnno will use to annotate your VCF. Default is: /mnt/causes-vnx1/DATABASES/",type=str,default='/mnt/causes-vnx1/DATABASES/')
-	parser.add_argument("-A","--AnnotateVariantsDir",help="Path for the github repo AnnotateVariants",required=True,default='/mnt/causes-vnx1/PIPELINES/AnnotateVariants')
+	parser.add_argument("-A","--AnnotateVariantsDir",help="Path for the github repo AnnotateVariants",required=True,default='/mnt/causes-vnx1/PIPELINES/AnnotateVariants/')
 	#parser.add_argument("-C","--Config",help="Config file which points at locations for tool executables",required=True)
-	#parser.add_argument("-Q","--QueryScript",help="Query script template",required=True)
 	args = parser.parse_args()
 	return args	
 
@@ -107,8 +106,6 @@ def Bam2VCF(shellScriptFile,BAMS):
 		shellScriptFile.write("-R $GENOME_FASTA -I $WORKING_DIR$SAMPLE%d_BAM \\\n"%(i))
 		shellScriptFile.write("-o $WORKING_DIR${SAMPLE%d_BAM}.HC.vcf \n"%i)
 	#Here I'll merge the gVCFs generated above. So we can just refer to them within this code as:  $WORKING_DIR$SAMPLE%d_BAM.HC.g.vcf
-
-
 
 # Merge the GVCFs, assuming you started with BAMs and these were generated in Step 1
 def MergeGVCF_withBAMLIST(shellScriptFile,BAMS):
@@ -197,6 +194,22 @@ def VCF2DB(shellScriptFile):
 def Singleton_RenameVCF2MergedVCF(shellScriptFile):
 	shellScriptFile.write("\n# Step 1-2: rename your VCF to merged VCF\n")
 	shellScriptFile.write("cp $WORKING_DIR$SAMPLE1_VCF $WORKING_DIR${FAMILY_ID}.merged.hc.vcf\n")
+
+
+def MakeQueryScript(shellScriptFile,args):
+	shellScriptFile.write("# Create Query Script within working directory \n")
+	shellScriptFile.write("rm %s_GeminiQueryScript.header\n"%(args.Family))
+	shellScriptFile.write("rm %s_GeminiQueryScript.sh\n"%(args.Family))
+	shellScriptFile.write("echo \"WORKING_DIR=%s\" >> $WORKING_DIR/%s_GeminiQueryScript.header\n"%(args.workingDir,args.Family))
+	shellScriptFile.write("echo \"GEMINIDB=%s.db\" >> $WORKING_DIR/%s_GeminiQueryScript.header\n"%(args.Family,args.Family))
+	shellScriptFile.write("echo \"FAMILY_ID=%s\" >> $WORKING_DIR/%s_GeminiQueryScript.header\n"%(args.Family,args.Family))
+	shellScriptFile.write("echo \"TableAnnotator=%s/TableAnnotators/GeminiTable2CVL-dev.py\" >> $WORKING_DIR/%s_GeminiQueryScript.header\n"%(args.AnnotateVariantsDir,args.Family))
+	shellScriptFile.write("cat $WORKING_DIR/%s_GeminiQueryScript.header %s/GeminiQueryScripts/GeminiQueries_dev.sh > $WORKING_DIR/%s_GeminiQueryScript.sh\n"%(args.Family,args.AnnotateVariantsDir,args.Family))
+
+def RunQueryScript(shellScriptFile,args):
+	shellScriptFile.write("#Run Query Script you just generated\n")
+	shellScriptFile.write("sh $WORKING_DIR/%s_GeminiQueryScript.sh\n\n"%(args.Family))
+
 
 def Main():
 
@@ -366,6 +379,15 @@ def Main():
 			print "6) Create a GEMINI database"
 			VCF2DB(shellScriptFile)
 	
+
+	
+	# Final stage: Gemini Query Script
+	# Point here is to take the Query script, add a header, and then run it
+	MakeQueryScript(shellScriptFile,args)
+	RunQueryScript(shellScriptFile,args)
+
+
+
 
 
 if __name__=="__main__":

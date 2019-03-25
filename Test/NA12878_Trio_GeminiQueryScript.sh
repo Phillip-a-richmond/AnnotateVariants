@@ -1,3 +1,7 @@
+WORKING_DIR=/mnt/causes-vnx1/PIPELINES/AnnotateVariants/Test/
+GEMINIDB=NA12878_Trio.db
+FAMILY_ID=NA12878_Trio
+TableAnnotator=/mnt/causes-vnx1/PIPELINES/AnnotateVariants//TableAnnotators/GeminiTable2CVL-dev.py
 
 # ^^ Header above describes family, location of GeminiDB, location of table annotator 
 

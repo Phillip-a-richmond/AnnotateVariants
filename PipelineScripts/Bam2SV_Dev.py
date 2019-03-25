@@ -41,45 +41,76 @@ def GetArgs():
 	parser.add_argument("-E","--Email",help="Email address",type=str)
 	parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
 	parser.add_argument("-S","--Singleton",help="Use this option if you are running a singleton",action='store_true',default=False)
+        parser.add_argument("--sv",help="Run SV calling and annotation",action='store_true',default=False)
+        parser.add_argument("--mei",help="Run MEI (mobile element insertion) calling",action='store_true',default=False)
+        parser.add_argument("--STR",help="Run STR (short tandem repeat) calling with STRetch",action='store_true',default=False)
 	args = parser.parse_args()
 	return args	
 
 
 #########################################################################################
+# SMOOVE SV Calling and Annotation with AnnotSV
+def SMOOVE(shellScriptFile,BAMS):
+	shellScriptFile.write("#Running SMOOVE\n\n")
+	shellScriptFile.write("docker run -v /mnt:/mnt brentp/smoove smoove call \\\n")
+	shellScriptFile.write("--name $SAMPLE_ID -p $NSLOTS -x \\\n")
+	shellScriptFile.write("--outdir $WORKING_DIR/Smoove \\\n")
+	shellScriptFile.write("--genotype --duphold -f $GENOME_FASTA \\\n")
+	for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("${SAMPLE%d_BAM} \\\n"%i)
 
 # CNV Calling with CNVnator
-def CNVNATOR(shellScriptFile):
+def CNVNATOR(shellScriptFile,BAMS):
         shellScriptFile.write("#Running CNVNATOR Windowsize 100\n\n")
         shellScriptFile.write("#Defining Variables\n")
-        shellScriptFile.write("BAM=${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
         shellScriptFile.write("WIN=100\n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR${BAM}.root -genome $GENOME_FASTA -tree $WORKING_DIR$BAM \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -his $WIN -d $CHROM \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -stat $WIN \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -partition $WIN \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
-
-        shellScriptFile.write("# Preparing for use within Lumpy\n")
-        shellScriptFile.write("/opt/tools/lumpy-0.2.11/scripts/cnvanator_to_bedpes.py -c $WORKING_DIR${SAMPLE_ID}_CNVnatorCall_$WIN -b 600 --del_o $WORKING_DIR${SAMPLE_ID}.del.$WIN.bedpe --dup_o $WORKING_DIR${SAMPLE_ID}.dup.$WIN.bedpe \n")
-        shellScriptFile.write("/opt/tools/lumpy-0.2.11/scripts/bedpe_sort.py -b $WORKING_DIR${SAMPLE_ID}.del.$WIN.bedpe -g $GENOMEFILE > $WORKING_DIR${SAMPLE_ID}.del.$WIN.sorted.bedpe \n")
-        shellScriptFile.write("/opt/tools/lumpy-0.2.11/scripts/bedpe_sort.py -b $WORKING_DIR${SAMPLE_ID}.dup.$WIN.bedpe -g $GENOMEFILE > $WORKING_DIR${SAMPLE_ID}.dup.$WIN.sorted.bedpe \n")
+	for i in range(1,len(BAMS)+1,1):
+		shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+        	shellScriptFile.write("$CNVNATOR -root $WORKING_DIR${BAM}.root -genome $GENOME_FASTA -tree $WORKING_DIR$BAM \n")
+        	shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -his $WIN -d $CHROM \n")
+        	shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -stat $WIN \n")
+        	shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -partition $WIN \n")
+        	shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
 
         shellScriptFile.write("#Running CNVNATOR Windowsize 1000\n\n")
         shellScriptFile.write("WIN=1000\n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -his $WIN -d $CHROM \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -stat $WIN \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -partition $WIN \n")
-        shellScriptFile.write("/opt/tools/CNVnator/src/cnvnator -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
+	for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+       		shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -his $WIN -d $CHROM \n")
+       		shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -stat $WIN \n")
+       		shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -partition $WIN \n")
+       		shellScriptFile.write("$CNVNATOR -root $WORKING_DIR/${BAM}.root -genome $GENOME_FASTA -call $WIN > $WORKING_DIR/${SAMPLE_ID}_CNVnatorCall_$WIN \n")
 
 #CNV Calling with ERDS
-def ERDS(shellScriptFile):
+def ERDS(shellScriptFile,BAMS,VCFS):
         shellScriptFile.write("\n# ERDS \n\n")
-        shellScriptFile.write("perl /opt/tools/erds1.1/erds_pipeline.pl \\\n")
-        shellScriptFile.write("\t-b $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
-        shellScriptFile.write("\t-v $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned_HaplotypeCaller.vcf \\\n")
-        shellScriptFile.write("\t-o $WORKING_DIR${SAMPLE_ID}_ERDS/ \\\n")
-        shellScriptFile.write("\t-r $GENOME_FASTA \\\n")
+	for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+	        shellScriptFile.write("perl $ERDS  \\\n")
+	        shellScriptFile.write("\t-b $BAM \\\n")
+	        shellScriptFile.write("\t-v $VCF \\\n")
+	        shellScriptFile.write("\t-o $WORKING_DIR${BAM}_ERDS/ \\\n")
+	        shellScriptFile.write("\t-r $GENOME_FASTA \\\n")
 
+# SV Calling with Pindel
+def Pindel(shellScriptFile,args):
+        shellScriptFile.write("# Running Pindel \n\n")
+        shellScriptFile.write("#Defining Variables\n")
+	for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+	        shellScriptFile.write("\n##Generate Empirical insert size stats\n")
+	        shellScriptFile.write("$SAMTOOLS view -r $SAMPLE_ID $WORKING_DIR$BAM | tail -n+1000000 | python /opt/tools/lumpy/pairend_distro.py -r %s -X 4 -N 1000000 -o $WORKING_DIR${BAM}.histo > $WORKING_DIR${BAM}.insertStats\n"%args.readlength)
+	        shellScriptFile.write("MEAN=`cat $WORKING_DIR${BAM}.insertStats | sed -E 's/\s+/,/' | cut -d, -f1 | sed -E 's/mean://' | xargs printf \"%.0f\"`\n")
+	        shellScriptFile.write("python /mnt/causes-vnx1/PIPELINES/AnnotateVariants/pindel_config.py $WORKING_DIR$BAM $MEAN $WORKING_DIR$SAMPLE_ID \n")
+	        shellScriptFile.write("/opt/tools/pindel-0.2.5b6/pindel --number_of_threads $NSLOTS \\\n")
+	        shellScriptFile.write("-f $GENOME_FASTA \\\n")
+	        shellScriptFile.write("-i $WORKING_DIR${BAM}_config.txt \\\n")
+	        shellScriptFile.write("-c ALL -o $WORKING_DIR$SAMPLE_ID \\\n")
+	        shellScriptFile.write("-M 4 \\\n")
+	        shellScriptFile.write("-N -x 3 \\\n")
+	        shellScriptFile.write("-I false -t false -r false \\\n")
+	        shellScriptFile.write("-J /mnt/causes-vnx1/DATABASES/hg19_centromeres_telomeres.bed  \n\n")
+	
 
 # Mobile element insertion calling
 def MEI(shellScriptFile):
@@ -89,10 +120,12 @@ def MEI(shellScriptFile):
         shellScriptFile.write("MELT_DIR=/opt/tools/MELVTv2.1.5/\n")
         shellScriptFile.write("MEI_LIST=${MELT_DIR}/me_refs/1KGP_Hg19/mei_list.txt\n")
         shellScriptFile.write("GENE_ANNO=/opt/tools/MELTv2.1.5/add_bed_files/1KGP_Hg19/hg19.genes.bed\n\n")
-        shellScriptFile.write("# MELT Singleton \n\n")
+        for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+	shellScriptFile.write("# MELT Singleton \n\n")
         shellScriptFile.write("java -jar ${MELT_DIR}MELT.jar Single \\\n")
         shellScriptFile.write("-a -b hs37d5/NC007605 -c 8 -h $GENOME_FASTA \\\n")
-        shellScriptFile.write("-bamfile $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
+        shellScriptFile.write("-bamfile $WORKING_DIR$$BAM \\\n")
         shellScriptFile.write("-n ${MELT_DIR}add_bed_files/1KGP_Hg19/hg19.genes.bed \\\n")
         shellScriptFile.write(" -t $MEI_LIST -w $WORKING_DIR \n")
 # This is for multiple samples, leaving here for now
@@ -107,33 +140,55 @@ def MEI(shellScriptFile):
         shellScriptFile.write("-t $MEI_LIST -c 30 -h $GENOME_FASTA \\\n")
         shellScriptFile.write("-bamfile $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \\\n")
 
-
-def RunSTRetch(shellScriptFile):
-	shellScriptFile.write("# Running STRetch")
-	shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/tools/bin/bpipe run \\\n")
-	shellScriptFile.write("-p input_regions=/mnt/causes-vnx1/PIPELINES/STRetch/reference-data/hg19.simpleRepeat_period1-6_dedup.sorted.bed \\\n")
-	shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/pipelines/STRetch_wgs_bam_pipeline.groovy \\\n")
-	shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
+###### STR calling ######
+def STRetch_GRCh37(shellScriptFile):
+        shellScriptFile.write("\n# Short Tandem Repeats\n")
+	for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+	        shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/tools/bin/bpipe run \\\n")
+	        shellScriptFile.write("-p input_regions=/mnt/causes-vnx1/PIPELINES/STRetch/reference-data/GRCh37.simpleRepeat_period1-6_dedup.sorted.bed \\\n")
+	        shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/pipelines/GRCh37_STRetch_wgs_bam_pipeline.groovy \\\n")
+	        shellScriptFile.write("$WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
 	
-# This is basic, just running the VCFAnno command on your input merged VCF
-def RunVCFAnno(shellScriptFile,DatabaseDir):
-	shellScriptFile.write("\n# Step 5: VCFAnno - Turn your VCF file into an annotated VCF file\n")
-	shellScriptFile.write('/opt/tools/vcfanno/vcfanno -lua /mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/custom.lua \\\n')
-	shellScriptFile.write('-p $NSLOTS -base-path %s\\\n'%DatabaseDir)
-	shellScriptFile.write('/mnt/causes-vnx1/PIPELINES/AnnotateVariants/VCFAnno/VCFAnno_Config_20190131_GAC.toml \\\n')
-	shellScriptFile.write('$NORMFILTERVCF > $ANNOVCF \n\n')
+def STRetch_hg19(shellScriptFile):
+        shellScriptFile.write("\n# Short Tandem Repeats\n")
+	for i in range(1,len(BAMS)+1,1):
+                shellScriptFile.write("BAM=${SAMPLE%d_BAM}\n"%i)
+	        shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/tools/bin/bpipe run \\\n")
+	        shellScriptFile.write("-p input_regions=/mnt/causes-vnx1/PIPELINES/STRetch/reference-data/hg19.simpleRepeat_period1-6_dedup.sorted.bed \\\n")
+	        shellScriptFile.write("/mnt/causes-vnx1/PIPELINES/STRetch/pipelines/hg19_STRetch_wgs_bam_pipeline.groovy \\\n")
+	        shellScriptFile.write("$WORKING_DIR$BAM \n")
+	
 
-# NOTE: If you want to add certain things as --a-ok make sure you add them here, otherwise they may error on the creation of the mysqlDB
-def VCF2DB(shellScriptFile):
-	shellScriptFile.write("\n# Step 6: VCF2DB - Turn your annotated VCF file into a GEMINI DB\n\n")
-	shellScriptFile.write('python /opt/tools/vcf2db/vcf2db.py \\\n')
-	shellScriptFile.write('--expand gt_quals --expand gt_depths --expand gt_alt_depths --expand gt_ref_depths --expand gt_types \\\n')
-	shellScriptFile.write(' --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF --a-ok gnomad_genome_hom_global --a-ok gnomad_genome_hom_afr --a-ok gnomad_genome_hom_amr --a-ok gnomad_genome_hom_asj --a-ok gnomad_genome_hom_eas --a-ok gnomad_genome_hom_fin --a-ok gnomad_genome_hom_nfe --a-ok gnomad_genome_hom_oth --a-ok gnomad_exome_hom_global --a-ok gnomad_exome_hom_afr --a-ok gnomad_exome_hom_amr --a-ok gnomad_exome_hom_asj --a-ok gnomad_exome_hom_eas --a-ok gnomad_exome_hom_fin --a-ok gnomad_exome_hom_nfe --a-ok gnomad_exome_hom_oth --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \\\n')
-	shellScriptFile.write('$ANNOVCF $PED_FILE $GEMINIDB \n')
+# CNV calling with CANVAS, also includes an annovar call
+def CANVAS(shellScriptFile):
+        shellScriptFile.write("#Running CANVAS\n#Redefining Variables\n")
+        shellScriptFile.write("BAMFILE=$SAMPLE_ID'_dupremoved_realigned'\n")
+        shellScriptFile.write("VCFFILE=$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf'\n")
+        shellScriptFile.write("CANVAS_DIR=$WORKING_DIR$SAMPLE_ID'_CANVAS/'\n")
+        shellScriptFile.write("CANVAS_VCFGZ='CNV.vcf.gz'\n")
+        shellScriptFile.write("CANVAS_VCF=$SAMPLE_ID'_CANVAS_CNV.vcf'\n")
+        shellScriptFile.write("CANVAS_VCF_FILTERED=$SAMPLE_ID'_CANVAS_CNV_filtered.vcf'\n")
+        shellScriptFile.write("CANVAS_AVINPUT=$SAMPLE_ID'_CANVAS.avinput'\n")
+        shellScriptFile.write("CANVAS_LOH_AVINPUT=$SAMPLE_ID'_CANVAS_LOH.avinput'\n")
+        shellScriptFile.write("CANVAS_ANNOTATED=$SAMPLE_ID'_CANVAS_annovar'\n")
+        shellScriptFile.write("CANVAS_BED=$SAMPLE_ID'_CANVAS_CNV.bed'\n")
 
-def Singleton_RenameVCF2MergedVCF(shellScriptFile):
-	shellScriptFile.write("\n# Step 1-2: rename your VCF to merged VCF\n")
-	shellScriptFile.write("cp $WORKING_DIR$SAMPLE1_VCF $WORKING_DIR${FAMILY_ID}.merged.hc.vcf\n")
+        shellScriptFile.write("\n#Make the working directory for CANVAS\n")
+        shellScriptFile.write("mkdir $CANVAS_DIR\n")
+        shellScriptFile.write("#Run CANVAS\n")
+        shellScriptFile.write("mono /opt/tools/Canvas/Canvas.exe Germline-WGS -b $WORKING_DIR$BAMFILE --b-allele-vcf=$WORKING_DIR$VCFFILE -o $CANVAS_DIR -r /mnt/causes-vnx1/GENOMES/hg19/hg19_CANVAS_kmer.fa -g /mnt/causes-vnx1/GENOMES/hg19/ -f /mnt/causes-vnx1/GENOMES/hg19/hg19_CANVAS_Filter13.bed -n $SAMPLE_ID\n\n")
+
+        shellScriptFile.write("#Get rid of the reference calls (also unzips)\n")
+        shellScriptFile.write("zcat $CANVAS_DIR$CANVAS_VCFGZ | grep -v ':REF:' > $CANVAS_DIR$CANVAS_VCF\n")
+        shellScriptFile.write("#Filter using custom script\n")
+        shellScriptFile.write("python /opt/tools/VariantAnnotation/FilterCanvas.py $CANVAS_DIR$CANVAS_VCF $CANVAS_DIR$CANVAS_VCF_FILTERED $CANVAS_DIR$CANVAS_AVINPUT $CANVAS_DIR$CANVAS_LOH_AVINPUT\n\n")
+        shellScriptFile.write("#Copy to a bed file (nothing special)\n")
+        shellScriptFile.write("cp $CANVAS_DIR$CANVAS_AVINPUT $CANVAS_DIR$CANVAS_BED\n\n")
+        shellScriptFile.write("#Run annovar\n")
+        shellScriptFile.write("/mnt/causes-vnx1/DATABASES/annovar/new_table_annovar.pl --otherinfo --buildver hg19 --protocol refgene,dgvMerged_commafix --operation g,r --argument '','-minqueryfrac 0.8 --colsWanted 2&3&4&10&17&18&19&21' \\\n")
+        shellScriptFile.write("$CANVAS_DIR$CANVAS_AVINPUT /mnt/causes-vnx1/DATABASES/annovar/humandb -out $WORKING_DIR$CANVAS_ANNOTATED\n")
+
 
 def Main():
 
@@ -175,6 +230,8 @@ def Main():
 	
 	
 		
+	# Add variable names to the shell script
+	shellScriptFile.write("# Define some variables\n\n")
 	#Set the variables for working directory, sampleID, and fastq full filepath
 	shellScriptFile.write("FAMILY_ID=\'%s\'\n"%args.Family)
 	shellScriptFile.write("WORKING_DIR=\'%s\'\n"%args.workingDir)
@@ -190,92 +247,60 @@ def Main():
 	shellScriptFile.write("mkdir $TMPDIR\n")
 	
 	#The BAM files from our list, if running in the BAM mode
-	if args.BAMLIST:
-		for i in range(1,len(BAMS)+1,1):
-			shellScriptFile.write("SAMPLE%d_BAM=%s\n"%(i,BAMS[i-1]))
-	
-	# The VCF files from our list, if running in the VCF mode
-	if args.VCFLIST:
-		for i in range(1,len(VCFS)+1,1):
-			shellScriptFile.write("SAMPLE%d_VCF=%s\n"%(i,VCFS[i-1]))
-		# Make sure you have the correct working Directory.
-		args.workingDir = args.args.workingDir
-		print "The working directory is: %s"%args.workingDir
-		print "Family you're working with: %s"%args.Family
+        if args.BAMLIST:
+                BAMS = args.BAMLIST.split(',')
+                print "These are the BAMS you are working with"
+                for i in range(1,len(BAMS)+1,1):
+                        shellScriptFile.write("SAMPLE%d_BAM=%s\n"%(i,BAMS[i-1]))
+                        print BAMS[i-1]
 		
-		if args.BAMLIST:
-			BAMS = args.BAMLIST.split(',')
-			print "These are the BAM files you're working with:"
-			for each in BAMS:
-				print each
-		elif args.VCFLIST:
-			VCFS = args.VCFLIST.split(',')
-		        print "These are the VCF files you're working with:"
-		        for each in VCFS:
-		                print each
-			if args.vcftype == 'GVCF':
-				print "These should be GVCFs"
-			elif args.vcftype == 'VCF':
-				print "These should be VCFs"
-			else:
-				print "You're not using the proper vcftype, or you haven't set it."
-				sys.exit(shellScriptFile)
+	# NOTE: BAM files are referred to within this pipeline simply as: SAMPLE#_BAM, where # is an integer for the BAM number
+
+
 	
-	# Add variable names to the shell script
-	shellScriptFile.write("# Define some variables\n\n")
-	shellScriptFile.write("SNPEFFJAR=/opt/tools/snpEff/snpEff.jar\n")
-	shellScriptFile.write("GEMINIDB=$WORKING_DIR${FAMILY_ID}.db\n")
-	shellScriptFile.write("VCF=$WORKING_DIR${FAMILY_ID}.merged.hc.vcf\n")
-	shellScriptFile.write("NORMVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcf.gz\n")
-	shellScriptFile.write("NORMFILTERVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.filter.vcf.gz\n")
-	shellScriptFile.write('ANNOVCF=$WORKING_DIR${FAMILY_ID}.merged.hc.norm.vcfanno.vcf.gz \n')
-	
+
+        # Make some variables for tools which are used within this pipeline
+        shellScriptFile.write("# Define Tool paths. If they are in your path, simply change these full filepaths to only be the final command\n")
+        shellScriptFile.write("# For example: Change BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools to be BCFTOOLS=bcftools if it's in your path \n\n")
+        shellScriptFile.write("BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools\n")
+        shellScriptFile.write("GATKJAR=/opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar\n")
+        shellScriptFile.write("JAVA=/opt/tools/jdk1.7.0_79/bin/java\n")
+        shellScriptFile.write("BGZIP=/opt/tools/tabix/bgzip\n")
+        shellScriptFile.write("TABIX=/opt/tools/tabix/tabix\n")
+        shellScriptFile.write("BWA=/opt/tools/bwa-0.7.12/bwa\n")
+        shellScriptFile.write("SAMTOOLS=/opt/tools/samtools-1.2/samtools\n")
+        shellScriptFile.write("PICARD=/opt/tools/picard-tools-1.139/picard.jar\n")
+        shellScriptFile.write("MOSDEPTH=/opt/tools/mosdepth-0.2.2/mosdepth\n")
+        shellScriptFile.write("CNVNATOR=/opt/tools/CNVnator/src/cnvnator\n")
+        shellScriptFile.write("FASTQC=/opt/tools/FastQC/fastqc\n")
+        shellScriptFile.write("ERDS=/opt/tools/erds1.1/erds_pipeline.pl\n")
+
+
 
 #### Call functions to populate the commands in the script
 
-	# Run in either VCF or BAM mode
-	if args.VCFLIST:
-	# if running in GVCF mode, then you want to joint genotype from multiple GVCFs
-		if args.vcftype == 'GVCF':
-			if args.Singleton:
-				print "You cannot use singleton with GVCF mode"
-				sys.exit(shellScriptFile)
-			MergeGVCF_withVCFLIST(shellScriptFile)
-			MergedVCF2NormVCF(shellScriptFile)
-			FilterVCF(shellScriptFile)
-			RunVCFAnno(shellScriptFile,DatabaseDir)
-			VCF2DB(shellScriptFile)
-	# if running in the VCF mode, I assume you have separate VCFs whcih you want to merge into a single merged.vcf
-		elif args.vcftype == 'VCF':
-			if args.Singleton(shellScriptFile):
-				SingletonVCF2MergedVCFRename(shellScriptFile)
-			else:
-				MergeVCF_withVCFLIST(shellScriptFile)
-			MergedVCF2NormVCF(shellScriptFile)
-			FilterVCF(shellScriptFile)
-			RunVCFAnno(shellScriptFile,DatabaseDir)
-			VCF2DB(shellScriptFile)
 	
-	elif args.BAMLIST:
-		if args.vcftype == 'GVCF':
-			if args.Singleton:
-                                print "You cannot use singleton with GVCF mode"
-                                sys.exit(shellScriptFile)
-			Bam2GVCF(shellScriptFile)
-			MergeGVCF_withBAMLIST(shellScriptFile)
-			MergedVCF2NormVCF(shellScriptFile)
-			FilterVCF(shellScriptFile)
-			RunVCFAnno(shellScriptFile,DatabaseDir)
-			VCF2DB(shellScriptFile)
-	
-		elif args.vcftype == 'VCF':
-			Bam2VCF(shellScriptFile)
-			if args.Singleton:
-				SingletonVCF2MergedVCFRename(shellScriptFile)
-			else:
-				MergeVCF_withVCFLIST(shellScriptFile)
-	                MergedVCF2NormVCF(shellScriptFile)
-	                FilterVCF(shellScriptFile)
-			RunVCFAnno(shellScriptFile,DatabaseDir)
-			VCF2DB(shellScriptFile)
-	
+	if args.BAMLIST:
+		if (args.mei):
+                        MEI(shellScriptFile)
+                if args.cnv:
+               		shellScriptFile.write("\necho \"CNV Analysis Started\"\n")
+                        shellScriptFile.write("date\n")
+                        CNVNATOR(shellScriptFile)
+                        ERDS(shellScriptFile)
+                if args.STR:
+                        shellScriptFile.write("\necho \"STR calling\"\n")
+                        if args.GENOME=='hg19':
+                                STRetch_hg19(shellScriptFile)
+                        elif args.GENOME=='GSC':
+                                STRetch_GRCh37(shellScriptFile)
+                if args.sv:
+			
+			
+		
+	else:
+		print "You did not supply the BAMs you fool!"
+		sys.exit()
+
+
+
