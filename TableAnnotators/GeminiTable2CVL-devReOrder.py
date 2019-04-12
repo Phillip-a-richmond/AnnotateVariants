@@ -189,6 +189,39 @@ def MakeGeneAliasDict(GENEALIASFILE):
         return Gene2ALIAS
 
 
+# The point of this function is to re-order the columns according to some order file
+# Essentially, I want to read in this header column array, find the value of each index, and then take an array of values and pull the correct indices 
+# repopulate a new array
+def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
+
+
+	infile = open(ORDERFILE,'r')
+	# This is the array of final ordering, based on the input ordering file
+	FinalArrayOrder = []
+	
+	for line in infile:
+		FinalArrayOrder.append(line.strip('\n'))
+	#print FinalArrayOrder
+
+	# Next, I'll read in the array header to a dictionary, where a key is e.g. 'gene' or 'chrom'
+	# and the value is the position within the existing array
+	HeaderDict = {}
+	for i in range(len(INARRAYHEADER)):
+		HeaderDict[INARRAYHEADER[i]] = i
+
+	#print HeaderDict
+
+	# I'm going to build an empty array and repopulate it according to the final array order
+	dummyarray = range(len(FinalArrayOrder))
+	
+	# Now I'll take the final array order, and for each item I'll get the index from the column
+	for i in range(len(FinalArrayOrder)):
+		val = FinalArrayOrder[i]
+		dummyarray[i] = INARRAYVALS[HeaderDict[val]]
+	#print dummyarray
+	ReorderedCols=dummyarray
+	return FinalArrayOrder,ReorderedCols
+
 
 # This function takes in the dictionaries desribed above, reads in the gemini infile, and outputs the gemini outfile
 # NOTE: THIS IS HARD CODED TO A SPECIFIC TABLE FORMAT
@@ -198,8 +231,37 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 	header = infile.readline()
 	header = header.strip('\n')
 	
-	# newline,gnomad_hyperlink,varcards_hyperlink,omim_pheno,omim_hyperlink,flags,rvis_score,rvis_pct,pLI_score,oe_mis_score,oe_lof_score,hpo,meshop,gene_name,gene_alias,gene_summary
-	outfile.write("%s\tgnomAD_Hyperlink\tVarCards_Hyperlink\tOMIM_Phenotypes\tOMIM_Entry\tFLAGS\tRVIS_Score\tRVIS_Pct\tpLI_Score\tOE_Missense\tOE_LoF\tHPO\tMeSHOP\tGene_Name\tGene_Alias\tGeneSummary\n"%header)
+	# Automated check to make sure there is something in this file, otherwise write to outfile: No Variants to Report 
+	if len(header) < 1:
+		outfile.write("No Variants to Report\n")
+		return
+
+	# This is the existing header, and I'll add the new features to this array
+	headercols = header.split('\t')
+	headercols.append('gnomAD_Hyperlink')
+	headercols.append('VarCards_Hyperlink')
+	headercols.append('OMIM_Phenotypes')
+	headercols.append('OMIM_Entry')
+	headercols.append('FLAGS')
+	headercols.append('RVIS_Score')
+	headercols.append('RVIS_Pct')
+	headercols.append('pLI_Score')
+	headercols.append('OE_Missense')
+	headercols.append('OE_LoF')
+	headercols.append('HPO')
+	headercols.append('MeSHOP')
+	headercols.append('Gene_Name')
+	headercols.append('Gene_Alias')
+	headercols.append('GeneSummary')
+
+	#print headercols
+	#print headercols.index('gnomAD_Hyperlink')
+	
+	# a dummy test here
+	cols = headercols
+	FinalOrderHeader,ReorderedCols = ReOrderCols(ArrayOrderFile,headercols,cols)
+	outfile.write("%s\n"%'\t'.join(FinalOrderHeader))
+	#outfile.write("%s\tgnomAD_Hyperlink\tVarCards_Hyperlink\tOMIM_Phenotypes\tOMIM_Entry\tFLAGS\tRVIS_Score\tRVIS_Pct\tpLI_Score\tOE_Missense\tOE_LoF\tHPO\tMeSHOP\tGene_Name\tGene_Alias\tGeneSummary\n"%header)
 	for line in infile:
 		line = line.strip('\n')
 		cols = line.split("\t")
@@ -291,9 +353,24 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		# join the cols
 		newline = "\t".join(cols)
 		
-#		ReOrderCols(ArrayOrderFile,cols)
+		cols.append(gnomad_hyperlink)
+		cols.append(varcards_hyperlink)
+		cols.append(omim_pheno)
+		cols.append(omim_hyperlink)
+		cols.append(flags)
+		cols.append(rvis_score)
+		cols.append(rvis_pct)
+		cols.append(pLI_score)
+		cols.append(oe_mis_score)
+		cols.append(oe_lof_score)
+		cols.append(hpo)
+		cols.append(meshop)
+		cols.append(gene_name)
+		cols.append(gene_alias)
+		cols.append(gene_summary)
 		
-		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(newline,gnomad_hyperlink,varcards_hyperlink,omim_pheno,omim_hyperlink,flags,rvis_score,rvis_pct,pLI_score,oe_mis_score,oe_lof_score,hpo,meshop,gene_name,gene_alias,gene_summary))
+		FinalOrderHeader,ReorderedCols = ReOrderCols(ArrayOrderFile,headercols,cols)
+		outfile.write("%s\n"%'\t'.join(ReorderedCols))
 
 		#reset variables
 		gene_summary = '.'

@@ -84,7 +84,7 @@ def Bam2GVCF(shellScriptFile,BAMS):
 	# Here I'm going to write out a Bam2gVCF for each of the bam files listed.  I'll just add a HC.g.vcf tag to the bam file names
 	for i in range(1,len(BAMS)+1,1):
 	        shellScriptFile.write("$JAVA -jar $GATKJAR \\\n")
-	        shellScriptFile.write(" -T HaplotypeCaller --emitRefConfidence GVCF \\\n")
+	        shellScriptFile.write(" -T HaplotypeCaller --emitRefConfidence GVCF -nct $NSLOTS \\\n")
 		shellScriptFile.write(" -R $GENOME_FASTA -I $WORKING_DIR$SAMPLE%d_BAM \\\n"%(i))
 	        shellScriptFile.write(" --standard_min_confidence_threshold_for_calling 10 \\\n")
 	        shellScriptFile.write(" --standard_min_confidence_threshold_for_emitting 10 \\\n")
@@ -110,7 +110,7 @@ def Bam2VCF(shellScriptFile,BAMS):
 # Merge the GVCFs, assuming you started with BAMs and these were generated in Step 1
 def MergeGVCF_withBAMLIST(shellScriptFile,BAMS):
 	shellScriptFile.write("\n# Merge gVCFs\n\n")
-	shellScriptFile.write("$JAVA -Djava.io.tmpdir=$TMPDIR -jar $GATKJAR -T GenotypeGVCFs -nt $NSLOTS \\\n")
+	shellScriptFile.write("$JAVA -Djava.io.tmpdir=$TMPDIR -jar $GATKJAR -T GenotypeGVCFs \\\n")
 	shellScriptFile.write("-R $GENOME_FASTA \\\n")
 	for i in range(1,len(BAMS)+1,1):
 		shellScriptFile.write("--variant $WORKING_DIR${SAMPLE%d_BAM}.HC.g.vcf \\\n"%i)
@@ -154,7 +154,7 @@ def MergedVCF2NormVCF(shellScriptFile):
 	shellScriptFile.write("\t| sed 's/ID=AD,Number=./ID=AD,Number=R/' \\\n")
 	shellScriptFile.write("\t| $VT decompose -s - \\\n")
 	shellScriptFile.write("\t| $VT normalize -r $GENOME_FASTA - \\\n")
-	shellScriptFile.write("\t| $JAVA -Xmx10g -jar $SNPEFFJAR GRCh37.75 \\\n")
+	shellScriptFile.write("\t| $SNPEFFJAVA -Xmx10g -jar $SNPEFFJAR -dataDir /mnt/causes-vnx1/PIPELINES/SNPEff/snpEff/data/ GRCh37.87 \\\n")
 	shellScriptFile.write("\t| $BGZIP -c > $NORMVCF \n")
 	shellScriptFile.write("$TABIX -p vcf $NORMVCF\n")
 
@@ -162,7 +162,7 @@ def MergedVCF2NormVCF(shellScriptFile):
 def FilterVCF(shellScriptFile):
 	shellScriptFile.write("\n# Filter Merged, normalized VCF\n\n")
 	shellScriptFile.write("$BCFTOOLS filter \\\n")
-	shellScriptFile.write("\t --include 'FORMAT/AD[*:1]>=5 && FORMAT/DP[*] < 600' \\\n")
+	shellScriptFile.write("\t --include 'FORMAT/AD[*:1]>=7 && FORMAT/DP[*] < 600' \\\n")
 	shellScriptFile.write("\t -m + \\\n")
 	shellScriptFile.write("\t -s + \\\n")
 	shellScriptFile.write("\t -O z \\\n")
@@ -258,6 +258,7 @@ def Main():
 	shellScriptFile.write("VCF2DB=/opt/tools/vcf2db/vcf2db.py\n")
 	shellScriptFile.write("GATKJAR=/opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar\n")
 	shellScriptFile.write("JAVA=/opt/tools/jdk1.7.0_79/bin/java\n")
+	shellScriptFile.write("SNPEFFJAVA=/opt/tools/jdk1.8.0_92/bin/java\n")
 	shellScriptFile.write("BGZIP=/opt/tools/tabix/bgzip\n")
 	shellScriptFile.write("TABIX=/opt/tools/tabix/tabix\n")
 	shellScriptFile.write("VT=/opt/tools/vt/vt\n\n")

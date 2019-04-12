@@ -136,7 +136,7 @@ def MakeGnomADHyperlink(chrom,pos,ref,alt):
 	return gnomad_hyperlink
 
 # OE score
-def MakeOEDict(OEFILE)
+def MakeOEDict(OEFILE):
 	infile = open(OEFILE,'r')
 	Gene2OE = {}
 	for line in infile:
@@ -177,7 +177,7 @@ def MakeGeneAliasDict(GENEALIASFILE):
 
 # This function takes in the dictionaries desribed above, reads in the gemini infile, and outputs the gemini outfile
 # NOTE: THIS IS HARD CODED TO A SPECIFIC TABLE FORMAT
-def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP,Gene2OE,FLAGS_GeneList):
+def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP):
 	infile = open(GeminiInFileName,'r')
 	outfile = open(GeminiOutFileName,'w')
 	header = infile.readline()
@@ -196,14 +196,6 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		# add gnomad hyperlink (20190321)
 		gnomad_Hyperlink = MakeGnomADHyperlink(chrom,pos,ref,alt)
 
-		# Add flags
-		if gene in FLAGS_GeneList:
-			flags = 'This is a FLAGS Gene'
-		else:
-			flags = '.'
-
-		
-		
 
 		# Check for Omim phenotype, add if there, if not make it '.'
 		if Gene2Pheno.has_key(gene):

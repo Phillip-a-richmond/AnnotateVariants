@@ -59,15 +59,15 @@ ops = ["self"]
 # Updated to v2.1
 [[annotation]]
 file="GNOMAD/v2.1/gnomad.genomes.r2.1.sites.vcf.gz"
-fields = ["AF","nhomalt","AC","AN","popmax","AC_popmax","AN_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
-names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global","gnomad_genome_popmax","gnomad_genome_af_popmax","gnomad_genome_hom_popmax","gnomad_genome_ac_popmax","gnomad_genome_an_popmax","gnomad_genome_AF_controls","gnomad_genome_hom_controls"]
+fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global","gnomad_genome_popmax","gnomad_genome_an_popmax","gnomad_genome_ac_popmax","gnomad_genome_af_popmax","gnomad_genome_hom_popmax","gnomad_genome_af_controls","gnomad_genome_hom_controls"]
 ops = ["self","self","self","self","self","self","self","self","self","self","self"]
 
 #gnomAD Exome Allele Frequency
 [[annotation]]
 file="GNOMAD/v2.1/gnomad.exomes.r2.1.sites.vcf.gz"
-fields = ["AF","nhomalt","AC","AN","popmax","AC_popmax","AN_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
-names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_ac_global","gnomad_exome_an_global","gnomad_exome_popmax","gnomad_exome_af_popmax","gnomad_exome_hom_popmax","gnomad_exome_ac_popmax","gnomad_exome_an_popmax","gnomad_exome_AF_controls","gnomad_exome_hom_controls"]
+fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_ac_global","gnomad_exome_an_global","gnomad_exome_popmax","gnomad_exome_an_popmax","gnomad_exome_ac_popmax","gnomad_exome_af_popmax","gnomad_exome_hom_popmax","gnomad_exome_af_controls","gnomad_exome_hom_controls"]
 ops = ["self","self","self","self","self","self","self","self","self","self","self"]
 
 #Count from in-house database, added by Phil Richmond

@@ -9,7 +9,7 @@
 #PBS -l walltime=240:00:00
 ## Set the total number of processors for the job
 #PBS -l nodes=1:ppn=16
-NSLOTS=$PBS_NUM_PPN
+NSLOTS=16
 umask 0002
 source /opt/tools/hpcenv.sh
 
@@ -46,55 +46,55 @@ SAMPLE3_VCF=NA12892_BWAmem_dupremoved_realigned_HaplotypeCaller_chr20.vcf
 
 # Merge VCFs
 
-#$JAVA -Djava.io.tmpdir=$TMPDIR -jar $GATKJAR -T CombineVariants \
-#-R $GENOME_FASTA \
-#--variant $WORKING_DIR${SAMPLE1_VCF} \
-#--variant $WORKING_DIR${SAMPLE2_VCF} \
-#--variant $WORKING_DIR${SAMPLE3_VCF} \
-#-o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf 
-#
-##Get Rid of non-chr chromosomes
-#
-##  Normalize merged VCF, annotate with SNPeff
-#
-#zless $VCF \
-#	| sed 's/ID=AD,Number=./ID=AD,Number=R/' \
-#	| $VT decompose -s - \
-#	| $VT normalize -r $GENOME_FASTA - \
-#	| $JAVA -Xmx10g -jar $SNPEFFJAR GRCh37.75 \
-#	| $BGZIP -c > $NORMVCF 
-#$TABIX -p vcf $NORMVCF
-#
-## Filter Merged, normalized VCF
-#
-#$BCFTOOLS filter \
-#	 --include 'FORMAT/AD[*:1]>=5 && FORMAT/DP[*] < 600' \
-#	 -m + \
-#	 -s + \
-#	 -O z \
-#	 --output $NORMFILTERVCF \
-#	 $NORMVCF 
-#
-#$TABIX $NORMFILTERVCF \
-#
-#
-## VCFAnno - Turn your VCF file into an annotated VCF file
-#$VCFANNO -lua $ANNOTVARDIR/VCFAnno/custom.lua \
-#-p $NSLOTS -base-path /mnt/causes-vnx1/DATABASES/ \
-#$ANNOTVARDIR/VCFAnno/VCFAnno_Config_20190321_GAC.toml \
-#$NORMFILTERVCF > $ANNOVCF 
-#
-#
-## VCF2DB - Turn your annotated VCF file into a GEMINI DB
-#
-#python $VCF2DB \
-#--expand gt_quals --expand gt_depths --expand gt_alt_depths --expand gt_ref_depths --expand gt_types \
-# --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF \
-# --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \
-#--a-ok gnomad_exome_ac_global --a-ok gnomad_exome_ac_popmax --a-ok gnomad_exome_an_global --a-ok gnomad_exome_an_popmax --a-ok gnomad_exome_hom_controls --a-ok gnomad_exome_hom_global \
-#--a-ok gnomad_exome_hom_popmax --a-ok gnomad_exome_popmax --a-ok gnomad_genome_ac_global --a-ok gnomad_genome_ac_popmax --a-ok gnomad_genome_an_global --a-ok gnomad_genome_an_popmax \
-#--a-ok gnomad_genome_hom_controls --a-ok gnomad_genome_hom_global --a-ok gnomad_genome_hom_popmax --a-ok gnomad_genome_popmax \
-#$ANNOVCF $PED_FILE $GEMINIDB 
+$JAVA -Djava.io.tmpdir=$TMPDIR -jar $GATKJAR -T CombineVariants \
+-R $GENOME_FASTA \
+--variant $WORKING_DIR${SAMPLE1_VCF} \
+--variant $WORKING_DIR${SAMPLE2_VCF} \
+--variant $WORKING_DIR${SAMPLE3_VCF} \
+-o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf 
+
+#Get Rid of non-chr chromosomes
+
+#  Normalize merged VCF, annotate with SNPeff
+
+zless $VCF \
+	| sed 's/ID=AD,Number=./ID=AD,Number=R/' \
+	| $VT decompose -s - \
+	| $VT normalize -r $GENOME_FASTA - \
+	| $JAVA -Xmx10g -jar $SNPEFFJAR GRCh37.75 \
+	| $BGZIP -c > $NORMVCF 
+$TABIX -p vcf $NORMVCF
+
+# Filter Merged, normalized VCF
+
+$BCFTOOLS filter \
+	 --include 'FORMAT/AD[*:1]>=7 && FORMAT/DP[*] < 600' \
+	 -m + \
+	 -s + \
+	 -O z \
+	 --output $NORMFILTERVCF \
+	 $NORMVCF 
+
+$TABIX $NORMFILTERVCF \
+
+
+# VCFAnno - Turn your VCF file into an annotated VCF file
+$VCFANNO -lua $ANNOTVARDIR/VCFAnno/custom.lua \
+-p $NSLOTS -base-path /mnt/causes-vnx1/DATABASES/ \
+$ANNOTVARDIR/VCFAnno/VCFAnno_Config_20190321_GAC.toml \
+$NORMFILTERVCF > $ANNOVCF 
+
+
+# VCF2DB - Turn your annotated VCF file into a GEMINI DB
+
+python $VCF2DB \
+--expand gt_quals --expand gt_depths --expand gt_alt_depths --expand gt_ref_depths --expand gt_types \
+ --a-ok InHouseDB_AC  --a-ok in_segdup --a-ok AF --a-ok AC --a-ok AN --a-ok MLEAC --a-ok MLEAF \
+ --a-ok cpg_island --a-ok common_pathogenic --a-ok cse-hiseq --a-ok DS --a-ok ConfidentRegion \
+--a-ok gnomad_exome_ac_global --a-ok gnomad_exome_ac_popmax --a-ok gnomad_exome_an_global --a-ok gnomad_exome_an_popmax --a-ok gnomad_exome_hom_controls --a-ok gnomad_exome_hom_global \
+--a-ok gnomad_exome_hom_popmax --a-ok gnomad_exome_popmax --a-ok gnomad_genome_ac_global --a-ok gnomad_genome_ac_popmax --a-ok gnomad_genome_an_global --a-ok gnomad_genome_an_popmax \
+--a-ok gnomad_genome_hom_controls --a-ok gnomad_genome_hom_global --a-ok gnomad_genome_hom_popmax --a-ok gnomad_genome_popmax \
+$ANNOVCF $PED_FILE $GEMINIDB 
 # Create Query Script within working directory 
 rm NA12878_Trio_GeminiQueryScript.header
 rm NA12878_Trio_GeminiQueryScript.sh
