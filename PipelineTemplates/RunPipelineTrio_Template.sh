@@ -17,10 +17,11 @@ EMAIL=<e.g. rvdlee@cmmt.ubc.ca>
 ## DIRECTORIES AND SCRIPT PATHS
 BASE_DIR=/mnt/causes-vnx1/PIPELINES/AnnotateVariants/
 DIR_SCRIPTS=${BASE_DIR}/PipelineScripts/
+DB_DIR=/mnt/causes-vnx1/DATABASES/ \
 
-SCRIPT_MASTER_WGS=${DIR_SCRIPTS}/Pipeline_Master_WGS.py
+SCRIPT_MASTER=${DIR_SCRIPTS}/Pipeline_Master.py
 SCRIPT_BAM2GEMINI=${DIR_SCRIPTS}/Bam2Gemini.py
-PEDMAKER=/mnt/causes-vnx1/PIPELINES/AnnotateVariants/PipelineScripts/MakePED.py
+PEDMAKER=${BASE_DIR}PipelineScripts/MakePED.py
 
 MTOOLBOX_CONFIG_FILE=${BASE_DIR}/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh
 
@@ -38,7 +39,7 @@ mkdir -p $DIR_WORKING # Make a directory
 ## STEP 1) processing fastq to bam to vcf, creates "FullPipeline" scripts
 
 # proband
-python $SCRIPT_MASTER_WGS -v new \
+python $SCRIPT_MASTER -v new \
 		 -T Exome \
 		 -d $DIR_WORKING -p 12 -m 40gb \
 		 -1 $DIR_RAW/${ID_PROBAND}_1.fastq.gz \
@@ -48,7 +49,7 @@ python $SCRIPT_MASTER_WGS -v new \
 		 --mtoolbox $MTOOLBOX_CONFIG_FILE --metrics-exome
 
 # mother
-python $SCRIPT_MASTER_WGS -v new \
+python $SCRIPT_MASTER -v new \
 		 -T Exome \
 		 -d $DIR_WORKING -p 12 -m 40gb \
 		 -1 $DIR_RAW/${ID_MOTHER}_1.fastq.gz \
@@ -58,7 +59,7 @@ python $SCRIPT_MASTER_WGS -v new \
 		 --mtoolbox $MTOOLBOX_CONFIG_FILE --metrics-exome
 
 # father
-python $SCRIPT_MASTER_WGS -v new \
+python $SCRIPT_MASTER -v new \
 		 -T Exome \
 		 -d $DIR_WORKING -p 12 -m 40gb \
 		 -1 $DIR_RAW/${ID_FATHER}_1.fastq.gz \
@@ -69,10 +70,12 @@ python $SCRIPT_MASTER_WGS -v new \
 
 
 ## STEP 2) processes and annotate vcfs and convert to GEMINI database, creates "Bam2Gemini" script
-python $SCRIPT_BAM2GEMINI -G GSC \
+python $SCRIPT_BAM2GEMINI -G GSC -T Exome \
         -v GVCF -V ${ID_PROBAND}_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf,${ID_MOTHER}_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf,${ID_FATHER}_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf \
         -P $ID_FAMILY.ped -p 8 -m 30G -F $ID_FAMILY \
  		-E $EMAIL \
+	-D $DB_DIR \
+	-A $BASE_DIR \
         -d $DIR_WORKING
 
 

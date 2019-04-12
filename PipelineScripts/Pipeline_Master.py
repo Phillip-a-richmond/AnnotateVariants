@@ -200,9 +200,9 @@ def MosDepth_WGS(shellScriptFile):
 	shellScriptFile.write("-o $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.html \\\n")
 	shellScriptFile.write("> $WORKING_DIR${SAMPLE_ID}.mostdepthCoverage.summary.txt \n\n")
 
-def MosDepth_WES(shellScriptFile):
+def MosDepth_WES(shellScriptFile,args):
 	shellScriptFile.write("\n# Run MosDepth \n")
-	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
+	shellScriptFile.write("SAMPLE=\'%s\'\n"%args.sampleID)
 	shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
 	shellScriptFile.write("MOSDEPTH_PATH=/opt/tools/mosdepth-0.2.2/ \n")
 	shellScriptFile.write(" \n")
@@ -485,11 +485,11 @@ def Main():
 		if args.mtoolbox != "":
 			MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile)
 		if (args.Type == "Genome"):
-			MosDepth_WGS(shellScriptFile)
+			MosDepth_WGS(shellScriptFile,args)
 			Picard_HSMETRICS_exome(shellScriptFile)
 		elif args.Type == 'Exome':
 			if args.metrics_exome:
-				MosDepth_WES(shellScriptFile)
+				MosDepth_WES(shellScriptFile,args)
 				Picard_HSMETRICS_exome(shellScriptFile)
 	
 		shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
