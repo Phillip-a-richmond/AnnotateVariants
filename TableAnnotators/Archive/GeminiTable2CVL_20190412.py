@@ -132,30 +132,16 @@ def MakeGnomADHyperlink(chrom,pos,ref,alt):
 	base = 'https://gnomad.broadinstitute.org/variant/'
 	if 'chr' in chrom:
 		chrom = chrom[3:]
-	gnomad_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s\")'%(base,chrom,pos,ref,alt)
+	gnomad_hyperlink='%s%s-%s-%s-%s'%(base,chrom,pos,ref,alt)
 	return gnomad_hyperlink
-
-
-def MakeVarCardsHyperlink(chrom,pos,ref,alt):
-	base = 'http://159.226.67.237/sun/varcards/search/variant/'
-	if 'chr' in chrom:
-                chrom = chrom[3:]
-        varcards_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s\")'%(base,chrom,pos,ref,alt)
-        return varcards_hyperlink
 
 # OE score
 def MakeOEDict(OEFILE):
 	infile = open(OEFILE,'r')
 	Gene2OE = {}
-	headerline = infile.readline()
 	for line in infile:
 		cols = line.strip('\n').split('\t')
-		gene = cols[0]
-		oe_mis = cols[4]
-		oe_lof = cols[23]
-		pLI = cols[20]
-		Gene2OE[gene] = [oe_mis,oe_lof,pLI]
-	return Gene2OE
+
 
 # FLAGS - Just a list of genes to 'flag'
 def MakeFLAGSList(FLAGSFILE):
@@ -163,43 +149,40 @@ def MakeFLAGSList(FLAGSFILE):
 	FLAGS_GeneList = []
 	for line in infile:
 		FLAGS_GeneList.append(line.strip('\n'))
-	return FLAGS_GeneList
 
-# Gene name mapping, this is a 1-to-1
+
+# Gene name mapping
 def MakeGeneNameDict(GENENAMEFILE):
-	infile = open(GENENAMEFILE,'r')
-        Gene2NAME={}
+	infile = open(MESHOPFILE,'r')
+        Gene2MESHOP={}
         for line in infile:
-                gene,name = line.strip('\n').split('\t')
-                Gene2NAME[gene] = name
-        return Gene2NAME
+                gene,meshop = line.strip('\n').split('\t')
+                if Gene2MESHOP.has_key(gene):
+                        Gene2MESHOP[gene].append(meshop)
+                else:
+                        Gene2MESHOP[gene]=[meshop]
+        #print Gene2MESHOP
+        return Gene2MESHOP
+	return
 
 
-# Gene alias mapping, multiple lines may have multiple aliases, 
-# Will store an array here for each gene, and collapse below (similar to HPO/MESHOP)
+# Gene alias mapping
 def MakeGeneAliasDict(GENEALIASFILE):
-	infile = open(GENEALIASFILE,'r')
-        Gene2ALIAS={}
-        for line in infile:
-                gene,alias = line.strip('\n').split('\t')
-		if Gene2ALIAS.has_key(gene):
-                	Gene2ALIAS[gene].append(alias)
-		else:
-			Gene2ALIAS[gene] = [alias]
-        return Gene2ALIAS
+	return
+
+
+
 
 
 
 # This function takes in the dictionaries desribed above, reads in the gemini infile, and outputs the gemini outfile
 # NOTE: THIS IS HARD CODED TO A SPECIFIC TABLE FORMAT
-def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP,Gene2OE,FLAGS_GeneList,Gene2NAME,Gene2ALIAS,ArrayOrderFile):
+def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,GeneSummary,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP):
 	infile = open(GeminiInFileName,'r')
 	outfile = open(GeminiOutFileName,'w')
 	header = infile.readline()
 	header = header.strip('\n')
-	
-	# newline,gnomad_hyperlink,varcards_hyperlink,omim_pheno,omim_hyperlink,flags,rvis_score,rvis_pct,pLI_score,oe_mis_score,oe_lof_score,hpo,meshop,gene_name,gene_alias,gene_summary
-	outfile.write("%s\tgnomAD_Hyperlink\tVarCards_Hyperlink\tOMIM_Phenotypes\tOMIM_Entry\tFLAGS\tRVIS_Score\tRVIS_Pct\tpLI_Score\tOE_Missense\tOE_LoF\tHPO\tMeSHOP\tGene_Name\tGene_Alias\tGeneSummary\n"%header)
+	outfile.write("%s\tOMIM_Entry\tOMIM_Phenotypes\tRVIS_Score\tRVIS_Pct\tpLI_Score\tpLI_Pct\tHPO\tMeSHOP\tGeneSummary\n"%header)
 	for line in infile:
 		line = line.strip('\n')
 		cols = line.split("\t")
@@ -211,39 +194,9 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
 		# Additions 20190321
 		# add gnomad hyperlink (20190321)
-		gnomad_hyperlink = MakeGnomADHyperlink(chrom,pos,ref,alt)
+		gnomad_Hyperlink = MakeGnomADHyperlink(chrom,pos,ref,alt)
 
-		# add varcards hyperlink 
-		varcards_hyperlink = MakeVarCardsHyperlink(chrom,pos,ref,alt)
 
-		# Add flags
-		if gene in FLAGS_GeneList:
-			flags = 'FLAGS Gene'
-		else:
-			flags = '.'
-
-		# Gene Name
-		if Gene2NAME.has_key(gene):
-                        gene_name=Gene2NAME[gene]
-                else:
-                        gene_name='.'
-
-		# Gene Alias
-		if Gene2ALIAS.has_key(gene):
-                        gene_alias=';'.join(Gene2ALIAS[gene])
-                else:
-                        gene_alias='.'
-
-		# PLI, OE_missense, OE_LoF
-		if Gene2OE.has_key(gene):
-			pLI_score = Gene2OE[gene][2]
-			oe_mis_score = Gene2OE[gene][0]
-			oe_lof_score = Gene2OE[gene][1]
-		else:
-			pLI_score = '.'
-			oe_mis_score = '.'
-			oe_lof_score = '.'	
-		
 		# Check for Omim phenotype, add if there, if not make it '.'
 		if Gene2Pheno.has_key(gene):
 			omim_pheno=Gene2Pheno[gene]
@@ -261,6 +214,14 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 			hpo=";".join(Gene2HPO[gene])
 		else:
 			hpo = '.'	
+		
+		# PLI
+		if Gene2PLI.has_key(gene):
+			pLI_score = Gene2PLI[gene][0]
+			pLI_pct = Gene2PLI[gene][1]
+		else:
+			pLI_score = '.'
+			pLI_pct = '.'		
 		
 		# RVIS	
 		if Gene2RVIS.has_key(gene):
@@ -290,28 +251,19 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
 		# join the cols
 		newline = "\t".join(cols)
-		
-#		ReOrderCols(ArrayOrderFile,cols)
-		
-		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(newline,gnomad_hyperlink,varcards_hyperlink,omim_pheno,omim_hyperlink,flags,rvis_score,rvis_pct,pLI_score,oe_mis_score,oe_lof_score,hpo,meshop,gene_name,gene_alias,gene_summary))
+
+		outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(newline,omim_pheno,omim_hyperlink,rvis_score,rvis_pct,pLI_score,pLI_pct,hpo,meshop,gene_summary))
 
 		#reset variables
 		gene_summary = '.'
-		gene_name = '.'
-		gene_alias = '.'
-		gnomad_hyperlink = '.'
-		varcards_hyperlink = '.'
 		omim_pheno = '.'
 		omim_hyperlink='.'
-		flags = '.'
 		rvis_score = '.'
 		rvis_pct = '.'
 		pLI_score = '.'
-		oe_mis_score = '.'
-		oe_lof_score = '.'
+		pLI_pct = '.'			
 		hpo = '.'
 		meshop = '.'
-		
 
 #-------------#
 # Main        #
@@ -321,36 +273,33 @@ if __name__ == "__main__":
 
 # These are hard coded locations for database files. These files are small, so they are all just text files.
 # They contain gene-based information
-        SummaryFileName = '/mnt/causes-vnx1/DATABASES/RefSeqGene_Summaries_270316.txt'
-        Gene2MimFileName = '/mnt/causes-vnx1/DATABASES/OMIM_mim2gene'
-        Gene2Disease = '/mnt/causes-vnx1/DATABASES/OMIM_phenotype_genelist'
-        PLI = '/mnt/causes-vnx1/DATABASES/TOLERANCE/PLI_March2016.txt'
-        RVIS = '/mnt/causes-vnx1/DATABASES/TOLERANCE/RVIS_March2016.txt'
-        MESHOP = '/mnt/causes-vnx1/DATABASES/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
-        HPO = '/mnt/causes-vnx1/DATABASES/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
-	ALIAS = '/mnt/causes-vnx1/DATABASES/GeneNameMapping/HGNC_approved_symbol_and_alias_symbol.txt'
-	NAME = '/mnt/causes-vnx1/DATABASES/GeneNameMapping/HGNC_approved_symbol_and_approved_name.txt'
-	OE = '/mnt/causes-vnx1/DATABASES/OE/gnomad.v2.1.1.lof_metrics.by_gene.txt'
-	FLAGSFILE = '/mnt/causes-vnx1/DATABASES/FLAGS/FLAGS_genes__12920_2014_64_MOESM4_ESM.txt'
-	ArrayOrderFile = '/mnt/causes-vnx1/PIPELINES/AnnotateVariants/TableAnnotators/TemplateHeaderOrder.txt'
+    SummaryFileName = '/mnt/causes-vnx1/DATABASES/RefSeqGene_Summaries_270316.txt'
+    Gene2MimFileName = '/mnt/causes-vnx1/DATABASES/OMIM_mim2gene'
+    Gene2Disease = '/mnt/causes-vnx1/DATABASES/OMIM_phenotype_genelist'
+    PLI = '/mnt/causes-vnx1/DATABASES/TOLERANCE/PLI_March2016.txt'
+    RVIS = '/mnt/causes-vnx1/DATABASES/TOLERANCE/RVIS_March2016.txt'
+    MESHOP = '/mnt/causes-vnx1/DATABASES/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
+    HPO = '/mnt/causes-vnx1/DATABASES/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
 
     # Read in the annotations
-        GeneSummaries = GetSummaryDict(SummaryFileName)
-        Gene2Mim = GetOMIM_Gene2MimDict(Gene2MimFileName)
-        Gene2Pheno = GetOMIM_Gene2PhenoDict(Gene2Disease)
-        Gene2PLI = GetPLIDict(PLI)
-        Gene2RVIS = GetRVISDict(RVIS)
-        Gene2HPO = GetHPODict(HPO)
-        Gene2MESHOP = GetMESHOPDict(MESHOP)
-	Gene2ALIAS = MakeGeneAliasDict(ALIAS)
-	FLAGS_GeneList =  MakeFLAGSList(FLAGSFILE)
-	Gene2NAME = MakeGeneNameDict(NAME)
-	Gene2OE = MakeOEDict(OE)
-        GeminiInfile,GeminiOutfile=GetOptions()
+    GeneSummaries = GetSummaryDict(SummaryFileName)
+    Gene2Mim = GetOMIM_Gene2MimDict(Gene2MimFileName)
+    Gene2Pheno = GetOMIM_Gene2PhenoDict(Gene2Disease)
+    Gene2PLI = GetPLIDict(PLI)
+    Gene2RVIS = GetRVISDict(RVIS)
+    Gene2HPO = GetHPODict(HPO)
+    Gene2MESHOP = GetMESHOPDict(MESHOP)
+	
+    GeminiInfile,GeminiOutfile=GetOptions()
+    #GeminiInfile='/mnt/causes-data01/data/RICHMOND/AnnotateVariants/T008_compoundHet.txt'
+    #GeminiOutfile='/mnt/causes-data01/data/RICHMOND/AnnotateVariants/T008_compoundHet_annotated.txt'
  
-        AddColumnsToTable(GeminiInfile,GeminiOutfile,Gene2Pheno,Gene2Mim,GeneSummaries,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP,Gene2OE,FLAGS_GeneList,Gene2NAME,Gene2ALIAS,ArrayOrderFile)
+    AddColumnsToTable(GeminiInfile,GeminiOutfile,Gene2Pheno,Gene2Mim,GeneSummaries,Gene2PLI,Gene2RVIS,Gene2HPO,Gene2MESHOP)
 
-        sys.exit()
+
+
+
+    sys.exit()
 
 
 

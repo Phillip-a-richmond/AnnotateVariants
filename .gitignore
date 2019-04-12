@@ -1,4 +1,5 @@
-
+# Ignore Test directory
+Test/**
 # Mac
 *.DS_Store
 .AppleDouble
