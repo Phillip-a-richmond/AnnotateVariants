@@ -252,7 +252,7 @@ def Main():
 	shellScriptFile.write("# Define Tool paths. If they are in your path, simply change these full filepaths to only be the final command\n")
 	shellScriptFile.write("# For example: Change BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools to be BCFTOOLS=bcftools if it's in your path \n\n")
 	shellScriptFile.write("ANNOTVARDIR=%s\n"%args.AnnotateVariantsDir)
-	shellScriptFile.write("SNPEFFJAR=/opt/tools/snpEff/snpEff.jar\n")
+	shellScriptFile.write("SNPEFFJAR=/mnt/causes-vnx1/PIPELINES/SNPEff/snpEff/snpEff.jar\n")
 	shellScriptFile.write("BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools\n")
 	shellScriptFile.write("VCFANNO=/opt/tools/vcfanno/vcfanno\n")
 	shellScriptFile.write("VCF2DB=/opt/tools/vcf2db/vcf2db.py\n")
