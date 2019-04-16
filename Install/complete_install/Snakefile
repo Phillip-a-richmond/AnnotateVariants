@@ -1,20 +1,27 @@
 configfile: "config.yaml"
 
-miniconda = config['miniconda']
+MINICONDA3 = config['MINICONDA3']
+TOOLS = config['TOOLS']
+DATABASES = config['DATABASES']
+BIN = config['MINICONDA3'] + 'envs/AnnotateVariants/bin/'
+JAVA = BIN + 'java'
 
 rule all: 
-    input: directory("gatk-4.1.0.0")
+    input: TOOLS + "gemini_install.py"
 
 rule activate_conda: 
-    input: "environment.yml", test=config["miniconda"]
-    output: directory(miniconda + "/envs/AnnotateVariants")
+    input: "environment.yml"
+    output: directory(MINICONDA3 + "/envs/AnnotateVariants")
     shell: "conda env create -f {input}"
 
 rule install_GATK:
-    input: directory(miniconda + "/envs/AnnotateVariants")
-    output: "gatk-4.1.0.0.zip",
-            directory("gatk-4.1.0.0")
-    shell: "wget https://github.com/broadinstitute/gatk/releases/download/4.1.0.0/gatk-4.1.0.0.zip && unzip gatk-4.1.0.0.zip"
+    input: directory(MINICONDA3 + "/envs/AnnotateVariants")
+    output: directory(TOOLS + "gatk-4.1.0.0")
+    shell: "wget -P {TOOLS} https://github.com/broadinstitute/gatk/releases/download/4.1.0.0/gatk-4.1.0.0.zip && unzip {TOOLS}gatk-4.1.0.0.zip"
 
-# rule install_GEMINI: 
+rule install_GEMINI:
+    input: directory(TOOLS + "gatk-4.1.0.0")
+    output: TOOLS + "gemini_install.py"
+    shell: "wget -P {TOOLS} https://github.com/arq5x/gemini/raw/master/gemini/scripts/gemini_install.py"
+
 # rule download_db:

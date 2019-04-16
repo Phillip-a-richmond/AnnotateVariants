@@ -1,1 +1,3 @@
-miniconda: /home/tavshalom/miniconda3
+MINICONDA3: /home/tavshalom/miniconda3/
+TOOLS: /home/tavshalom/Desktop/temp/snakemake_install_test/TOOLS/
+DATABASES: /home/tavshalom/Desktop/temp/snakemake_install_test/DATABSES/
