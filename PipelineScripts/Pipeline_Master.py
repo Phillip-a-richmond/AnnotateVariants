@@ -443,7 +443,6 @@ def Main():
 	        sys.exit()
 	
 	if args.metrics_exome:
-		shellScriptFile.write("\necho \"Exome Metrics Calculations Started\"\n")
 		shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
 		shellScriptFile.write("EXOME_CAPTURE_INTERVAL=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.GRCh37-lite.interval_list \n")
 		shellScriptFile.write("METRICS_WORKING_DIR=$WORKING_DIR/METRICS/ \n")
@@ -489,6 +488,7 @@ def Main():
 			Picard_HSMETRICS_exome(shellScriptFile)
 		elif args.Type == 'Exome':
 			if args.metrics_exome:
+				shellScriptFile.write("\necho \"Exome Metrics Calculations Started, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit\"\n")
 				MosDepth_WES(shellScriptFile,args)
 				Picard_HSMETRICS_exome(shellScriptFile)
 	

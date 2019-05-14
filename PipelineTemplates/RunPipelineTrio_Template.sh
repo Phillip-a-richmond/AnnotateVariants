@@ -17,7 +17,7 @@ EMAIL=<e.g. rvdlee@cmmt.ubc.ca>
 ## DIRECTORIES AND SCRIPT PATHS
 BASE_DIR=/mnt/causes-vnx1/PIPELINES/AnnotateVariants/
 DIR_SCRIPTS=${BASE_DIR}/PipelineScripts/
-DB_DIR=/mnt/causes-vnx1/DATABASES/ \
+DB_DIR=/mnt/causes-vnx1/DATABASES/
 
 SCRIPT_MASTER=${DIR_SCRIPTS}/Pipeline_Master.py
 SCRIPT_BAM2GEMINI=${DIR_SCRIPTS}/Bam2Gemini.py
@@ -28,7 +28,7 @@ MTOOLBOX_CONFIG_FILE=${BASE_DIR}/MToolBox_config_files/MToolBox_rCRS_config_with
 DIR_RAW=/mnt/causes-vnx2/TIDE/RAW/EXOME_TIDEX/$ID_FAMILY/
 DIR_WORKING=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/$ID_FAMILY/
 
-READ_LENGTH=151 # Obtain information by running:    $DIR_SCRIPTS/read_length.sh $DIR_RAW/${ID_PROBAND}_1.fastq.gz (and other IDs, _1, _2 etc). Or for all *fast.gz:    find $DIR_RAW/ -name "*.gz" -exec $DIR_SCRIPTS/read_length.sh {}
+READ_LENGTH=151 # Obtain information by running:    $DIR_SCRIPTS/read_length.sh $DIR_RAW/${ID_PROBAND}_1.fastq.gz (and other IDs, _1, _2 etc). Or for all *fast.gz:    find $DIR_RAW/ -name "*.gz" -exec $DIR_SCRIPTS/read_length.sh {} \;
 
 mkdir -p $DIR_WORKING # Make a directory
 
@@ -71,7 +71,7 @@ python $SCRIPT_MASTER -v new \
 
 ## STEP 2) processes and annotate vcfs and convert to GEMINI database, creates "Bam2Gemini" script
 python $SCRIPT_BAM2GEMINI -G GSC -T Exome \
-        -v GVCF -V ${ID_PROBAND}_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf,${ID_MOTHER}_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf,${ID_FATHER}_BWAmem_dupremoved_realigned_HaplotypeCaller.g.vcf \
+        -v GVCF -V ${ID_PROBAND}_dupremoved_realigned_HaplotypeCaller.g.vcf,${ID_MOTHER}_dupremoved_realigned_HaplotypeCaller.g.vcf,${ID_FATHER}_dupremoved_realigned_HaplotypeCaller.g.vcf \
         -P $ID_FAMILY.ped -p 8 -m 30G -F $ID_FAMILY \
  		-E $EMAIL \
 	-D $DB_DIR \
@@ -81,9 +81,9 @@ python $SCRIPT_BAM2GEMINI -G GSC -T Exome \
 
 ## STEP 3) make a PED file
 python $PEDMAKER \
-        --proband ${ID_PROBAND}_BWAmem,${PROBAND_SEX},affected \
-        --mother ${ID_MOTHER}_BWAmem,female,unaffected \
-        --father ${ID_FATHER}_BWAmem,male,unaffected \
+        --proband ${ID_PROBAND},${PROBAND_SEX},affected \
+        --mother ${ID_MOTHER},female,unaffected \
+        --father ${ID_FATHER},male,unaffected \
         --FamilyID $ID_FAMILY \
         -O $DIR_WORKING/$ID_FAMILY.ped
 

@@ -5,6 +5,7 @@
 ## Developped by Solenne Correard on March 29, 2019
 ##Last update: SC, April 3rd, 2019
 
+library(plyr)
 
 #Open pedfile
 ResultsDirectory=getwd()
@@ -67,13 +68,16 @@ if (length(pedfiles)>1) {
 		#If there is only one proband file (Singleton)
 		proband_csv = read.csv(list_filtered_csv_p, sep="\t", header=TRUE, na.strings=c("","NA"))
 		proband_csv_ordered= proband_csv[order(proband_csv$var_Disease.Score), ]
-		write.table(proband_csv_ordered, file="MToolBox_annotated.txt", sep="\t", row.names = FALSE, quote=FALSE)
+		proband_csv_ordered_ordered= proband_csv_ordered[c(2, 1 , 3, 4, 10, 37, 11, 13, 14, 36, 38, 30, 31, 32, 33, 34, 35, 42, 43, 44, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 41, 5, 6, 7, 8, 9, 12, 15, 39)]
+		write.table(proband_csv_ordered_ordered, file="MToolBox_annotated.txt", sep="\t", row.names = FALSE, quote=FALSE)
+
 	} else if (length(list_filtered_csv_p)>1 & length(list_filtered_csv_m)==0){
 		#If there is no mother and several affected individuals	
 		csv_filtered_merged = read.csv(list_filtered_csv_p[1], sep="\t", header=TRUE, na.strings=c("","NA"))
 		for (i in 2:length(list_filtered_csv_p)){
 	    	currentFile = read.csv(list_filtered_csv_p[i], sep="\t", header=TRUE, na.strings=c("","NA"))
 	  		csv_filtered_merged = merge(csv_filtered_merged, currentFile, by=".Variant.Allele", all=TRUE)
+	  		csv_filtered_merged =rename(csv_filtered_merged, c("Sample_p.x"="Sample_p"))
 	  		}
 	} else if (length(list_filtered_csv_p)==1 & length(list_filtered_csv_m)==1){
 	  	#If there is a mother and 1 affected individual
@@ -87,6 +91,7 @@ if (length(pedfiles)>1) {
 		for (i in 2:length(list_filtered_csv_p)){
 	    	currentFile = read.csv(list_filtered_csv_p[i], sep="\t", header=TRUE, na.strings=c("","NA"))
 	  		csv_filtered_merged_p = merge(csv_filtered_merged_p, currentFile, by=".Variant.Allele", all=TRUE)
+	  		csv_filtered_merged_p =rename(csv_filtered_merged_p, c("Sample_p.x"="Sample_p"))
 	  		}
 	  	csv_filtered_merged = merge(csv_filtered_merged_p, mother_csv, by=".Variant.Allele", all.x=TRUE)	  	
 	} else {
@@ -99,8 +104,30 @@ if (length(pedfiles)>1) {
 	  	#Order the variants in the file in :
 			#Decreasing Disease.Score (High disease score top of the table - threshold for significance disease score > 0.4311)
 		csv_filtered_merged_ordered= csv_filtered_merged[order(csv_filtered_merged$var_Disease.Score.x), ]
-		csv_filtered_merged_ordered_head=head(csv_filtered_merged_ordered[,c(".Variant.Allele",colnames(csv_filtered_merged_ordered)[grep("Sample",colnames(csv_filtered_merged_ordered))],colnames(csv_filtered_merged_ordered)[grep("HF",colnames(csv_filtered_merged_ordered))],colnames(csv_filtered_merged_ordered)[grep("CI_lower.CI_upper",colnames(csv_filtered_merged_ordered))],colnames(csv_filtered_merged_ordered)[grep(".x",colnames(csv_filtered_merged_ordered))])])
-	  	write.table(csv_filtered_merged_ordered_head, file="MToolBox_annotated.txt", sep="\t", row.names = FALSE, quote=FALSE)
+
+	##Merge Samples number in one column, separated by a ","
+		csv_filtered_merged_ordered_sample= csv_filtered_merged_ordered[grep("Sample_",colnames(csv_filtered_merged_ordered))]
+		Samples=t(t(apply(csv_filtered_merged_ordered_sample, 1, paste, collapse=",")))
+		
+		##Merge HF values in one column, separated by a ","
+		csv_filtered_merged_ordered_HF= csv_filtered_merged_ordered[grep("_HF_",colnames(csv_filtered_merged_ordered))]
+		HF=t(t(apply(csv_filtered_merged_ordered_HF, 1, paste, collapse=",")))
+
+		##Merge CI values in one column, separated by a ","
+		csv_filtered_merged_ordered_CI= csv_filtered_merged_ordered[grep("_CI_lower.CI_upper_",colnames(csv_filtered_merged_ordered))]
+		CI_lower_CI_upper=t(t(apply(csv_filtered_merged_ordered_CI, 1, paste, collapse=",")))
+
+		##Merge the new data frame with the previous one
+		csv_filtered_merged_ordered_merged=cbind(csv_filtered_merged_ordered, Samples, HF, CI_lower_CI_upper)
+
+		##Select the columns of interest
+		csv_filtered_merged_ordered_head=head(csv_filtered_merged_ordered_merged[,c(".Variant.Allele", "Samples", "HF", "CI_lower_CI_upper",colnames(csv_filtered_merged_ordered_merged)[grep(".x",colnames(csv_filtered_merged_ordered_merged))])])
+		
+		##Reorder the columns to fit with the excel template
+		csv_filtered_merged_ordered_head_ordered <- csv_filtered_merged_ordered_head[c(1, 2, 3, 4, 10, 37, 11, 13, 14, 36, 38, 30, 31, 32, 33, 34, 35, 42, 43, 44, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 41, 5, 6, 7, 8, 9, 12, 15, 39)]
+
+		write.table(csv_filtered_merged_ordered_head_ordered, file="MToolBox_annotated.txt", sep="\t", row.names = FALSE, quote=FALSE)
+
 }}
 
 list_file_to_remove=list.files(pattern="MToolBox_annotated_") 	
