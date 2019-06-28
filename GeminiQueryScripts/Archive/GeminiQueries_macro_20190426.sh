@@ -1,5 +1,5 @@
 
-# ^^ Header above describes family, location of GeminiDB, location of table annotator
+# ^^ Header above describes family, location of GeminiDB, location of table annotator 
 
 # Gemini Query script
 # Phillip Richmond
@@ -7,7 +7,7 @@
 # July 10th 2018, script created with addition of gnomad exome and revised filters
 # August 30th 2018, added PrimateAI to query, fixed ClinVar to be split to pathogenic/likely pathogenic, fixed General Damaging to be split with Het/Homo
 # September 10th, 2018 - Fixed issue with general damaging which impacted reporting of variants
-# NOTES:
+# NOTES: 
 # Updates to this script should accomodate differences in how many individuals are present
 # March 21st, 2019 - Major update:
 	# Removed LOOSE DP/GQ thresholds
@@ -15,15 +15,13 @@
 	# Redid columns
 	# Added FATHMM-XF-NONCODING
 	# Added NONCODING - not coding, CADD >= 20 or FATHMM-XF >= 0.9
-	# Added pop threshold on Clinvar to get rid of actionable polymorphisms
+	# Added pop threshold on Clinvar to get rid of actionable polymorphisms 
 	# Added FATHMM-XF-NONCODING
 	# Added De Novo LOW (de novo variants without predicted HIGH/MED impact, useful for WGS
 	# Added new GEMINI location explicitly
 	# Added mendel_errors
 	# Changed strict min DP to 15
-# May 23, 2019:
-	# Set maximum number of homozygotes for cph query to 15
-
+	
 
 source /opt/tools/hpcenv.sh
 GEMINI=/mnt/causes-vnx1/DATABASES/GEMINI-2019/bin/gemini
@@ -73,8 +71,6 @@ GNOMAD_GENOME_RARE="( (gnomad_genome_af_global <= 0.01) or (gnomad_genome_af_glo
 GNOMAD_EXOME_RARE="( (gnomad_exome_af_global <= 0.01 ) or (gnomad_exome_af_global is NULL)) AND ( (gnomad_exome_hom_global <= 10) or (gnomad_exome_hom_global is NULL) )"
 GNOMAD_GENOME_DENOVO_RARE="( (gnomad_genome_ac_global <= 5) or (gnomad_genome_af_global is NULL)) AND ((gnomad_genome_hom_global <= 10) or (gnomad_genome_hom_global is NULL) )"
 GNOMAD_EXOME_DENOVO_RARE="( (gnomad_exome_ac_global <= 5) or (gnomad_exome_af_global is NULL)) AND ( (gnomad_exome_hom_global <= 10) or (gnomad_exome_hom_global is NULL) )"
-GNOMAD_GENOME_CPH_RARE="( (gnomad_genome_af_global <= 0.01) or (gnomad_genome_af_global is NULL)) AND ((gnomad_genome_hom_global <= 15) or (gnomad_genome_hom_global is NULL) )"
-GNOMAD_EXOME_CPH_RARE="( (gnomad_exome_af_global <= 0.01 ) or (gnomad_exome_af_global is NULL)) AND ( (gnomad_exome_hom_global <= 15) or (gnomad_exome_hom_global is NULL) )"
 INHOUSE_RARE='(inhousedb_ac <= 3 or inhousedb_ac is NULL)'
 
 CODING='is_coding=1'
@@ -128,19 +124,10 @@ $GEMINI autosomal_recessive \
 	$GEMINIDB > $RECESSIVE_OUT
 python $TableAnnotator -i $RECESSIVE_OUT -o ${RECESSIVE_OUT}_annotated.txt
 
-# # Compound Het Variants
-# $GEMINI comp_hets \
-# 	--columns "$COLUMNS" \
-# 	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $CONFIDENTREGION AND $SEGDUP AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND $FILTER"\
-# 	-d $STRICT_MIN_DP \
-# 	--min-gq $STRICT_MIN_GQ \
-# 	$GEMINIDB > $COMPOUND_HET_OUT
-# python $TableAnnotator -i $COMPOUND_HET_OUT -o ${COMPOUND_HET_OUT}_annotated.txt
-
-# Compound Het Variants, number of homozygotes == 15
+# Compound Het Variants
 $GEMINI comp_hets \
 	--columns "$COLUMNS" \
-	--filter "$GNOMAD_GENOME_CPH_RARE AND $GNOMAD_EXOME_CPH_RARE AND $CONFIDENTREGION AND $SEGDUP AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND $FILTER"\
+	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $CONFIDENTREGION AND $SEGDUP AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND $FILTER"\
 	-d $STRICT_MIN_DP \
 	--min-gq $STRICT_MIN_GQ \
 	$GEMINIDB > $COMPOUND_HET_OUT
@@ -226,16 +213,9 @@ python $TableAnnotator -i $RECESSIVE_OUT_LOOSE -o ${RECESSIVE_OUT_LOOSE}_annotat
 
 
 # Compound Het Variants
-# $GEMINI comp_hets \
-# 	--columns "$COLUMNS" \
-# 	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND NOT ($CONFIDENTREGION AND $SEGDUP AND $FILTER) "\
-# 	$GEMINIDB > $COMPOUND_HET_OUT_LOOSE
-# python $TableAnnotator -i $COMPOUND_HET_OUT_LOOSE -o ${COMPOUND_HET_OUT_LOOSE}_annotated.txt
-
-# Compound Het Variants, number of homozygotes == 15
 $GEMINI comp_hets \
 	--columns "$COLUMNS" \
-	--filter "$GNOMAD_GENOME_CPH_RARE AND $GNOMAD_EXOME_CPH_RARE AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND NOT ($CONFIDENTREGION AND $SEGDUP AND $FILTER) "\
+	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND NOT ($CONFIDENTREGION AND $SEGDUP AND $FILTER) "\
 	$GEMINIDB > $COMPOUND_HET_OUT_LOOSE
 python $TableAnnotator -i $COMPOUND_HET_OUT_LOOSE -o ${COMPOUND_HET_OUT_LOOSE}_annotated.txt
 
@@ -343,7 +323,7 @@ commonCODING_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
 
 echo "CODING	$CODING_VARS	$commonCODING_VARS	$rareCODING_VARS" >> $DBSTATFILE
 
-#Splicing variants
+#Splicing variants 
 SPLICING_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
 	WHERE $SPLICING AND $SEGDUP AND $FILTER AND $CONFIDENTREGION" $GEMINIDB`
 rareSPLICING_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
@@ -463,7 +443,7 @@ python $TableAnnotator -i $NONCODING_HITS -o ${NONCODING_HITS}_annotated.txt
 
 
 # Integrate into single file
-# Header
+# Header 
 CVL=$WORKING_DIR${FAMILY_ID}_CVL.tsv
 DATE=`date`
 echo "FAMILY:	$FAMILY_ID" > $CVL
@@ -479,7 +459,7 @@ echo "--------------------------------------------------------------------------
 echo "" >> $CVL
 
 # De novo
-echo "De Novo (Strict)" >> $CVL
+echo "De Novo (Strict)" >> $CVL 
 cat ${DENOVO_OUT}_annotated.txt >> $CVL
 
 echo "De Novo (Loose)" >> $CVL
@@ -510,7 +490,7 @@ cat ${COMPOUND_HET_OUT_LOOSE}_annotated.txt >> $CVL
 echo "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" >> $CVL
 echo "" >> $CVL
 
-# Dominant
+# Dominant 
 echo "Autosomal Dominant (Strict)" >> $CVL
 cat ${AUTODOM_OUT}_annotated.txt >> $CVL
 
@@ -596,12 +576,12 @@ echo "" >> $CVL
 
 # De novo low
 echo "De Novo Low (Strict)" >> $CVL
-cat ${DENOVO_LOW_OUT}_annotated.txt >> $CVL
+cat ${DENOVO_LOW_OUT}_annotated.txt >> $CVL 
 
 echo "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" >> $CVL
 echo "" >> $CVL
 
-# Splicing Candidates
+# Splicing Candidates 
 
 echo "Splicing Candidates">> $CVL
 cat ${SPLICING_HITS}_annotated.txt >> $CVL
@@ -620,7 +600,7 @@ echo "--------------------------------------------------------------------------
 
 
 # Integrate into single file that can be run in excel macro to create tabs
-# Header
+# Header 
 CVL_macro=$WORKING_DIR${FAMILY_ID}_CVL_macro.tsv
 DATE=`date`
 echo "Nothing	FAMILY:	$FAMILY_ID" > $CVL_macro
@@ -686,7 +666,7 @@ echo "Nothing" >> $CVL_macro
 echo "Nothing	==========================================================================================================================================================================================================================================" >> $CVL_macro
 echo "Nothing" >> $CVL_macro
 
-# Dominant
+# Dominant 
 echo "Autosomal Dom (Heterozygous)	Autosomal Dominant (Strict)" >> $CVL_macro
 #cat ${AUTODOM_OUT}_annotated.txt >> $CVL_macro
 perl -ne 'print "Autosomal Dom (Heterozygous)\t$_" unless /^gene\s+Gene_Name\s+OMIM_Phenotypes/' ${AUTODOM_OUT}_annotated.txt >> $CVL_macro
@@ -816,7 +796,7 @@ echo "Nothing" >> $CVL_macro
 echo "Nothing	==========================================================================================================================================================================================================================================" >> $CVL_macro
 echo "Nothing" >> $CVL_macro
 
-# Splicing Candidates
+# Splicing Candidates 
 
 echo "Splicing Candidates	Splicing Candidates">> $CVL_macro
 #cat ${SPLICING_HITS}_annotated.txt >> $CVL_macro
@@ -861,3 +841,4 @@ rm $CLINVAR_HITS
 rm $SPLICING_HITS
 rm $NONCODING_HITS
 rm $MENDEL_ERRORS_OUT
+

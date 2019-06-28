@@ -95,7 +95,8 @@ You can run a test analysis by following the instructions within the [Test](http
 ### The Future 
 + TIDEX-Tool (jacques & alice) for better analysis
 
-
+### Additional Contributors
+Bhavi Modi, Robin van der Lee, and Solenne Correard are contributors to this project development within the Wasserman lab at BCCHR/CMMT in Vancouver, BC, Canada.
 
 
 

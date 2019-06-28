@@ -190,7 +190,7 @@ def GATK_Coverage(shellScriptFile):
 	shellScriptFile.write("$JAVA -jar $GATKJAR -T DepthOfCoverage -omitBaseOutput -omitLocusTable -R $GENOME_FASTA -I $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' -o $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_Coverage'\n")
 
 # MosDepth depth of coverage assessment
-def MosDepth_WGS(shellScriptFile):
+def MosDepth_WGS(shellScriptFile,args):
 	shellScriptFile.write("\n#MosDepth \n\n")
 	shellScriptFile.write("$MOSDEPTH -n -q 0:1:10:20:40:60:100: -t $NSLOTS \\\n")
 	shellScriptFile.write("$WORKING_DIR$SAMPLE_ID $WORKING_DIR${SAMPLE_ID}_dupremoved_realigned.sorted.bam \n")
