@@ -63,8 +63,8 @@ def GetArgs():
 	parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
 	parser.add_argument("-V","--VCF",help="Will run GATK Variant calling to produce a VCF",action='store_true')
 	parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="/mnt/causes-vnx1/PIPELINES/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh")
-	parser.add_argument("--metrics-exome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit was used",action='store_true',default=False)
-	parser.add_argument("--metrics-genome",help="Calculate genome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics",action='store_true',default=False)
+	parser.add_argument("--metrics_exome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit was used",action='store_true',default=False)
+	parser.add_argument("--metrics_genome",help="Calculate genome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics",action='store_true',default=False)
 	parser.add_argument("-E","--Email",help="Email address",type=str)
 	args = parser.parse_args()
 	return args
@@ -486,11 +486,11 @@ def Main():
 		if args.mtoolbox != "":
 			MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile)
 		if (args.Type == "Genome"):
-			if args.metrics-genome:
-			MosDepth_WGS(shellScriptFile,args)
-			Picard_HSMETRICS_exome(shellScriptFile)
+			if args.metrics_genome:
+				MosDepth_WGS(shellScriptFile,args)
+				Picard_HSMETRICS_exome(shellScriptFile)
 		elif args.Type == 'Exome':
-			if args.metrics-exome:
+			if args.metrics_exome:
 				shellScriptFile.write("\necho \"Exome Metrics Calculations Started, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit\"\n")
 				MosDepth_WES(shellScriptFile,args)
 				Picard_HSMETRICS_exome(shellScriptFile)
