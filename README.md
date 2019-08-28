@@ -3,6 +3,9 @@
 
 > This is a pipeline for variant annotation in the diagnosis of rare genetic disorders. It relies on open source data and has instructions for software installs.
 
+## Current Version
+[![DOI](https://zenodo.org/badge/103580004.svg)](https://zenodo.org/badge/latestdoi/103580004)
+
 ## Overview
 1. [Pipeline Summary & Diagram](#pipeline-summary-and-diagram)
 
