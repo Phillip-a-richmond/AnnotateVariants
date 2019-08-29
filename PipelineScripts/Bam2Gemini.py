@@ -146,6 +146,21 @@ def MergeVCF_withVCFLIST(shellScriptFile,VCFS):
 	shellScriptFile.write("-o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf \n")
 	shellScriptFile.write("\n#Get Rid of non-chr chromosomes\n")
 
+
+def MergeVCF_withVCFLIST_BCFTools(shellScriptFile,VCFS):
+        shellScriptFile.write("\n# Merge VCFs\n\n")
+	shellScriptFile.write("# First bgzip them all\n")
+	for i in range(1,len(VCFS)+1,1):
+		shellScriptFile.write("$BGZIP -c $WORKING_DIR${SAMPLE%d_VCF} > $WORKING_DIR${SAMPLE%d_VCF}.gz \n"%i)
+		shellScriptFile.write("$TABIX $WORKING_DIR${SAMPLE%d_VCF}.gz \n"%i)
+	shellScriptFile.write("# And now merge with BCFTools \n")
+	shellScriptFile.write("$BCFTOOLS merge \\\n")
+	shellScriptFile.write("-0 -m all -o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf \\\n")
+	for i in range(1,len(VCFS)+1,1):
+		shellScriptFile.write("$WORKING_DIR${SAMPLE%d_VCF}.gz \\\n"%i)
+	shellScriptFile.write("\n")
+
+
 # Doesn't matter if you have your own VCF list (either version) or a BAM list
 # You'll still need to normalize your merged VCF
 def MergedVCF2NormVCF(shellScriptFile):
@@ -333,7 +348,7 @@ def Main():
 			if args.Singleton:
 				Singleton_RenameVCF2MergedVCF(shellScriptFile)
 			else:
-				MergeVCF_withVCFLIST(shellScriptFile,VCFS)
+				MergeVCF_withVCFLIST_BCFTools(shellScriptFile,VCFS)
 			print "2) Normalize and run SNPeff"
 			MergedVCF2NormVCF(shellScriptFile)
 			print "3) Filter with BCFTools soft-filter"
