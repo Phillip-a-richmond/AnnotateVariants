@@ -151,7 +151,7 @@ def MergeVCF_withVCFLIST_BCFTools(shellScriptFile,VCFS):
         shellScriptFile.write("\n# Merge VCFs\n\n")
 	shellScriptFile.write("# First bgzip them all\n")
 	for i in range(1,len(VCFS)+1,1):
-		shellScriptFile.write("$BGZIP -c $WORKING_DIR${SAMPLE%d_VCF} > $WORKING_DIR${SAMPLE%d_VCF}.gz \n"%i)
+		shellScriptFile.write("$BGZIP -c $WORKING_DIR${SAMPLE%d_VCF} > $WORKING_DIR${SAMPLE%d_VCF}.gz \n"%(i,i))
 		shellScriptFile.write("$TABIX $WORKING_DIR${SAMPLE%d_VCF}.gz \n"%i)
 	shellScriptFile.write("# And now merge with BCFTools \n")
 	shellScriptFile.write("$BCFTOOLS merge \\\n")
@@ -159,6 +159,20 @@ def MergeVCF_withVCFLIST_BCFTools(shellScriptFile,VCFS):
 	for i in range(1,len(VCFS)+1,1):
 		shellScriptFile.write("$WORKING_DIR${SAMPLE%d_VCF}.gz \\\n"%i)
 	shellScriptFile.write("\n")
+
+# Assuming they are already compressed
+def MergeVCF_withVCFZLIST_BCFTools(shellScriptFile,VCFS):
+        shellScriptFile.write("\n# Merge VCFs\n\n")
+	shellScriptFile.write("# First TABIX them all\n")
+        for i in range(1,len(VCFS)+1,1):
+                shellScriptFile.write("$TABIX $WORKING_DIR${SAMPLE%d_VCF} \n"%i)
+        shellScriptFile.write("# Merge with BCFTools. It's fine if they aren't haplotypecaller (hc) \n")
+        shellScriptFile.write("$BCFTOOLS merge \\\n")
+        shellScriptFile.write("-0 -m all -o $WORKING_DIR${FAMILY_ID}.merged.hc.vcf \\\n")
+        for i in range(1,len(VCFS)+1,1):
+                shellScriptFile.write("$WORKING_DIR${SAMPLE%d_VCF} \\\n"%i)
+        shellScriptFile.write("\n")
+
 
 
 # Doesn't matter if you have your own VCF list (either version) or a BAM list
@@ -358,6 +372,22 @@ def Main():
 			print "5) Create a gemini database"
 			VCF2DB(shellScriptFile)
 	
+		elif args.vcftype == 'VCFZ':
+			print "You have chosen a script which will do the following:"
+                        print "1) Merge the VCFZs into a single merged VCF"
+                        if args.Singleton:
+                                Singleton_RenameVCF2MergedVCF(shellScriptFile)
+                        else:
+                                MergeVCF_withVCFZLIST_BCFTools(shellScriptFile,VCFS)
+                        print "2) Normalize and run SNPeff"
+                        MergedVCF2NormVCF(shellScriptFile)
+                        print "3) Filter with BCFTools soft-filter"
+                        FilterVCF(shellScriptFile)
+                        print "4) Annotate with VCFAnno"
+                        RunVCFAnno(shellScriptFile,args.DatabaseDir)
+                        print "5) Create a gemini database"
+                        VCF2DB(shellScriptFile)
+
 	elif args.BAMLIST:
 		if args.vcftype == 'GVCF':
 			if args.Singleton:
