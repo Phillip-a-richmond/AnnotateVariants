@@ -488,7 +488,7 @@ def Main():
 		if (args.Type == "Genome"):
 			if args.metrics_genome:
 				MosDepth_WGS(shellScriptFile,args)
-				Picard_HSMETRICS_exome(shellScriptFile)
+				Picard_HSMETRICS_genome(shellScriptFile)
 		elif args.Type == 'Exome':
 			if args.metrics_exome:
 				shellScriptFile.write("\necho \"Exome Metrics Calculations Started, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit\"\n")
