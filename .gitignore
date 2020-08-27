@@ -7,5 +7,7 @@ Test/**
 Icon
 ._*
 ~$*
+# Ignore opt directory (where tools are installed)
+opt/
 
 
