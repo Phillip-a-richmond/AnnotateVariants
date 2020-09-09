@@ -30,6 +30,15 @@ import sys, os, argparse
 	# Removed SV Calling from this pipeline. Scripts getting too dirty and long
 	# SV Calling is now handled within Bam2SV.py	
 
+# September 9th 2020
+        # Overhaul of the code for the new GPCC cluster.
+        # This means: 
+            # Adding SLURM
+            # Moving filepaths
+            # changing assumed DATABASES directory
+            # Dropping hg19, adding GRCh38-lite
+            
+
 
 ##################
 ### Initialize ###

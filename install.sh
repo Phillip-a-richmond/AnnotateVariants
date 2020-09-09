@@ -80,6 +80,7 @@ function createDatabaseDirectory()
 	# Get Reference Genome Files 
 	## GRCh37
 	mkdir -p $DB_DIR/GRCh37/
+	cd $DB_DIR/GRCh37/
 	wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa
 	wget http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome/GRCh37-lite.fa.fai
 
@@ -101,5 +102,5 @@ function getDatabases()
 	echo "not yet"
 }
 
-#buildAnnotateVariants
-createDatabaseDirectory
+buildAnnotateVariants
+#createDatabaseDirectory

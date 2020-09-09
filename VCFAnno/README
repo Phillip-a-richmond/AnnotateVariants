@@ -1,0 +1,10 @@
+As of September 2020, the VCFAnno config will expect a specific directory structure.
+
+The structure is simple:
+
+Assume a starting point given to VCFAnno of /mnt/common/DATABASES/REFERENCES/<GENOME_VERSION>/
+
+Databases inside this directory contain files relevant to a specific coordinate system.
+
+Inside of this path will be subdirectories containing different databases, sometimes split by version.
+

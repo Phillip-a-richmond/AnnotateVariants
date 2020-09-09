@@ -1,8 +1,13 @@
-# This script will fetch the fasta files 
-conda activate STR_environment
+##############################################################
+# Step 1 - Load the Conda environment from AnnotateVariants ##
+##############################################################
+
+MINI_CONDA_INSTALL_DIR=/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/opt/miniconda3
+source ${MINI_CONDA_INSTALL_DIR}/etc/profile.d/conda.sh
+conda activate /mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/opt/AnnotateVariantsEnvironment
 
 # Where do you want them
-GENOME_DIR=/project/st-wasserww-1/GENOME/
+GENOME_DIR=/mnt/common/DATABASES/REFERENCES/
 mkdir -p $GENOME_DIR
 cd $GENOME_DIR
 
