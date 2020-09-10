@@ -12,6 +12,7 @@
 	# new gnomad
 	# spliceAI
 	# FATHMM-XF-noncoding functional
+# Overhaul for GPCC, with reduced annotation fields
 
 ## ClinVar (Auto-updating)
 [[annotation]]
@@ -48,14 +49,24 @@ names=["CADD_v1.6_indel"]
 columns=[6]
 ops=["self"]
 
-# gnomAD v3.0 Genome Allele Frequency (all) and Homozygous Count (all)
-[[annotation]]
-file="GNOMAD/V3/gnomad.genomes.r3.0.sites.vcf.gz"
-fields = ["AF","nhomalt","AC","AN"]
-names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global"]
-ops = ["self","self","self","self"]
 
-# dbSNP v154
+#gnomAD Genome Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
+# Updated to v2.1
+[[annotation]]
+file="GNOMAD/v2.1.1/gnomad.genomes.r2.1.1.sites.vcf.gz"
+fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global","gnomad_genome_popmax","gnomad_genome_an_popmax","gnomad_genome_ac_popmax","gnomad_genome_af_popmax","gnomad_genome_hom_popmax","gnomad_genome_af_controls","gnomad_genome_hom_controls"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self"]
+
+#gnomAD Exome Allele Frequency
+[[annotation]]
+file="GNOMAD/v2.1.1/gnomad.exomes.r2.1.1.sites.vcf.gz"
+fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_ac_global","gnomad_exome_an_global","gnomad_exome_popmax","gnomad_exome_an_popmax","gnomad_exome_ac_popmax","gnomad_exome_af_popmax","gnomad_exome_hom_popmax","gnomad_exome_af_controls","gnomad_exome_hom_controls"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self"]
+
+
+# dbSNP 
 [[annotation]]
 file="DBSNP/All_20180423.vcf.gz"
 fields = ["ID"]
@@ -75,4 +86,6 @@ file="COSMIC/CosmicNonCodingMuts.vcf.gz"
 fields=["ID","CNT"]
 names=["cosmic_coding_ids","cosmic_count_observed"]
 ops=["uniq","self"]
+
+
 
