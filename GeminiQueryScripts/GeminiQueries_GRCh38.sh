@@ -20,8 +20,10 @@
 	# Changed strict min DP to 15
 # May 23, 2019:
 	# Set maximum number of homozygotes for cph query to 15
-# Overhaul for GPCC cluster
+# Overhaul for GPCC cluster, GRCh38 version
 # September 11, 2020 (never forget)
+	# GRCh38: CADDv1.4, CADDv1.6, gnomADv3, clinvar, 
+
 
 # Load the environment
 ANNOTATE_VARIANTS_DIR=/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/
@@ -93,26 +95,11 @@ UNFILTER='filter is not NULL'
 CONFIDENTREGION='confidentregion = 1'
 SEGDUP='in_segdup=0'
 
-# Chose 0.5 based on spliceAI manuscript
-# https://www.cell.com/cell/pdf/S0092-8674(18)31629-5.pdf
-SPLICEAI='((spliceai_acceptorgain >= 0.5) OR (spliceai_acceptorloss >= 0.5 ) OR (spliceai_donorgain >= 0.5) OR (spliceai_donorloss >= 0.5 ))'
-
 CADD='((cadd >= 20) OR (cadd_indel >= 20))'
-FATHMM_NONCODING='(fathmm_xf_noncoding >= 0.9)'
-NONCODING="($FATHMM_NONCODING OR $CADD) AND (NOT $CODING)"
+NONCODING="($CADD) AND (NOT $CODING)"
 
 STRICT_MIN_DP=15
 STRICT_MIN_GQ=30
-
-# Dropping in pipeline update 20190321
-#LOOSE_MIN_DP=15
-#LOOSE_MIN_GQ=20
-
-# STRICT FILTER
-# --filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $CONFIDENTREGION AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND $FILTER"\
-
-# LOOSE FILTER
-# --filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED)"
 
 #########################################################################################
 
@@ -128,15 +115,6 @@ $GEMINI autosomal_recessive \
 	--min-gq $STRICT_MIN_GQ \
 	$GEMINIDB > $RECESSIVE_OUT
 python $TableAnnotator -i $RECESSIVE_OUT -o ${RECESSIVE_OUT}_annotated.txt
-
-# # Compound Het Variants
-# $GEMINI comp_hets \
-# 	--columns "$COLUMNS" \
-# 	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $CONFIDENTREGION AND $SEGDUP AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND $FILTER"\
-# 	-d $STRICT_MIN_DP \
-# 	--min-gq $STRICT_MIN_GQ \
-# 	$GEMINIDB > $COMPOUND_HET_OUT
-# python $TableAnnotator -i $COMPOUND_HET_OUT -o ${COMPOUND_HET_OUT}_annotated.txt
 
 # Compound Het Variants, number of homozygotes == 15
 $GEMINI comp_hets \
@@ -226,13 +204,6 @@ $GEMINI autosomal_recessive \
 python $TableAnnotator -i $RECESSIVE_OUT_LOOSE -o ${RECESSIVE_OUT_LOOSE}_annotated.txt
 
 
-# Compound Het Variants
-# $GEMINI comp_hets \
-# 	--columns "$COLUMNS" \
-# 	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND NOT ($CONFIDENTREGION AND $SEGDUP AND $FILTER) "\
-# 	$GEMINIDB > $COMPOUND_HET_OUT_LOOSE
-# python $TableAnnotator -i $COMPOUND_HET_OUT_LOOSE -o ${COMPOUND_HET_OUT_LOOSE}_annotated.txt
-
 # Compound Het Variants, number of homozygotes == 15
 $GEMINI comp_hets \
 	--columns "$COLUMNS" \
@@ -246,13 +217,6 @@ $GEMINI de_novo \
 	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $INHOUSE_RARE AND ($IMPACT_HIGH OR $IMPACT_MED) AND NOT ($CONFIDENTREGION AND $SEGDUP AND $FILTER) "\
 	$GEMINIDB > $DENOVO_OUT_LOOSE
 python $TableAnnotator -i $DENOVO_OUT_LOOSE -o ${DENOVO_OUT_LOOSE}_annotated.txt
-
-# De novo LOW - Remove Loose version of this, too long
-#$GEMINI de_novo \
-#	--columns "$COLUMNS" \
-#	--filter "$GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE AND $INHOUSE_RARE AND NOT ($IMPACT_HIGH OR $IMPACT_MED) AND NOT ($CONFIDENTREGION AND $SEGDUP AND $FILTER) "\
-#	$GEMINIDB > $DENOVO_LOW_OUT_LOOSE
-#python $TableAnnotator -i $DENOVO_OUT_LOOSE -o ${DENOVO_LOW_OUT_LOOSE}_annotated.txt
 
 # X Dominant
 $GEMINI x_linked_dominant  \
@@ -374,16 +338,6 @@ commonGENEHANCER_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
 
 echo "GENEHANCER	$GENEHANCER_VARS	$commonGENEHANCER_VARS	$rareGENEHANCER_VARS" >> $DBSTATFILE
 
-
-# Splicing Variants
-SPLICEAI_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
-        WHERE $SPLICEAI AND $SEGDUP AND $FILTER AND $CONFIDENTREGION" $GEMINIDB`
-rareSPLICEAI_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
-        WHERE $SPLICEAI AND $SEGDUP AND $FILTER AND $CONFIDENTREGION AND $GNOMAD_GENOME_RARE AND $GNOMAD_EXOME_RARE"  $GEMINIDB`
-commonSPLICEAI_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \
-        WHERE $SPLICEAI AND $SEGDUP AND $FILTER AND $CONFIDENTREGION AND ($GNOMAD_GENOME_COMMON OR $GNOMAD_EXOME_COMMON)"  $GEMINIDB`
-
-echo "SPLICEAI	$SPLICEAI_VARS	$commonSPLICEAI_VARS	$rareSPLICEAI_VARS" >> $DBSTATFILE
 
 # CADD >= 20
 CADD_VARS=`$GEMINI query -q "SELECT COUNT(*) FROM variants \

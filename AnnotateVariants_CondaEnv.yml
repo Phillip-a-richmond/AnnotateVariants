@@ -5,6 +5,7 @@ name: AnnotateVariantsEnvironment
 channels:
  - conda-forge 
  - bioconda
+ - intel
 dependencies:
  - pybedtools
  - vcfanno=0.3.2
@@ -20,3 +21,6 @@ dependencies:
  - vt
  - ensembl-vep
  - snpeff
+ - bowtie2
+ - tcl
+ - bedtools
