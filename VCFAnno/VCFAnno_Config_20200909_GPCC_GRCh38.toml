@@ -57,21 +57,21 @@ ops = ["self","self","self","self"]
 
 # dbSNP v154
 [[annotation]]
-file="DBSNP/All_20180423.vcf.gz"
+file="DBSNP/dbSNP_All_v154.vcf.gz"
 fields = ["ID"]
 names=["rs_ids"]
 ops=["concat"]
 
 # Cosmic Coding variants
 [[annotation]]
-file="COSMIC/CosmicCodingMuts.vcf.gz"
+file="COSMIC/CosmicCodingMuts.normal.vcf.gz"
 fields=["ID","CNT"]
 names=["cosmic_coding_ids","cosmic_count_observed"]
 ops=["uniq"]
 
 # Cosmic NonCoding variants
 [[annotation]]
-file="COSMIC/CosmicNonCodingMuts.vcf.gz"
+file="COSMIC/CosmicNonCodingMuts.normal.vcf.gz"
 fields=["ID","CNT"]
 names=["cosmic_coding_ids","cosmic_count_observed"]
 ops=["uniq","self"]

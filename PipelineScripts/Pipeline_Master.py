@@ -69,7 +69,7 @@ def GetArgs():
 	parser.add_argument("-R","--readlength",help="The length of the reads in integer form",default=100)
 	parser.add_argument("-T","--Type",help="Exome || Genome",required=True)
 	parser.add_argument("-S","--scheduler",help="Which scheduler you want to submit to.  This will determine the format of the shell script. Options: PBS || SGE",type=str)
-	parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GSC || hg19",required=True)
+	parser.add_argument("-G","--GENOME",help="Which Genome version do you want to use? Options are GRCh38 || GRCh37",required=True)
 	parser.add_argument("-V","--VCF",help="Will run GATK Variant calling to produce a VCF",action='store_true')
 	parser.add_argument("--mtoolbox",help="Provide an MToolBox config file here to perform a mitochondrial variant analysis, e.g. /path/to/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh",default="/mnt/causes-vnx1/PIPELINES/AnnotateVariants/MToolBox_config_files/MToolBox_rCRS_config_with_markdup_and_indelrealign_RvdL.sh")
 	parser.add_argument("--metrics_exome",help="Calculate exome coverage and other metrics using Mosdepth and Picard CalculateHsMetrics, assuming the Agilent_SureSelect_Human_All_Exon_V4 capture kit was used",action='store_true',default=False)
@@ -247,9 +247,8 @@ def MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile):
 	shellScriptFile.write("date\n")
 	shellScriptFile.write("\n# Run MToolBox for mitochondrial variant analysis \n")
 	shellScriptFile.write("SAMPLE=\'%s\'\n"%sampleID)
-	shellScriptFile.write("MTOOLBOX_PATH=/opt/tools/MToolBox-1.0/ \n")
-	shellScriptFile.write("#MTOOLBOX_PATH=/mnt/home/BCRICWH.LAN/rvanderlee/MToolBox-1.1/ \n")
-	shellScriptFile.write("PATH=$MTOOLBOX_PATH/MToolBox/:$MTOOLBOX_PATH:$PATH \n")
+	shellScriptFile.write("MTOOLBOX_PATH=/mnt/common/MToolBox/ \n")
+	shellScriptFile.write("PATH=$MTOOLBOX_PATH:$MTOOLBOX_PATH:$PATH \n")
 	shellScriptFile.write("MTOOLBOX_WORKING_DIR=$WORKING_DIR/MToolBox_${SAMPLE}/ \n")
 	shellScriptFile.write("mkdir -p $MTOOLBOX_WORKING_DIR/ \n")
 	shellScriptFile.write(" \n")
@@ -272,55 +271,6 @@ def MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile):
 	shellScriptFile.write("echo \"Changing working directory to back to $PWD_CURRENT...\" \n")
 	shellScriptFile.write("cd $PWD_CURRENT \n")
 	shellScriptFile.write(" \n")
-
-
-###### Old Pipeline, Legacy Commands ######
-
-# Part of the old pipeline, maintaining for legacy purposes. Not updating this
-def Bowtie2():
-	#Map with Bowtie2
-	shellScriptFile.write("\n#Map with Bowtie2\n")
-	shellScriptFile.write("/opt/tools/bowtie2-2.2.6/bowtie2  -x $BOWTIE2_INDEX -1 $FASTQR1 -2 $FASTQR2 -S $WORKING_DIR${SAMPLE_ID}.sam  -p $NSLOTS --very-sensitive -X 1000 --met-stderr --rg-id $SAMPLE_ID --rg \"SM:$SAMPLE_ID\tPL:illumina\" 2> $WORKING_DIR${SAMPLE_ID}.stderr\n\n")
-	shellScriptFile.write("\n#Fix Read Names\n")
-	shellScriptFile.write("#python /mnt/causes-vnx1/PipelineControl/FixSamReadNames.py $WORKING_DIR${SAMPLE_ID}.sam $WORKING_DIR${SAMPLE_ID}fixed.sam\n")
-	shellScriptFile.write("#mv $WORKING_DIR$SAMPLE_ID\'fixed.sam\' $WORKING_DIR${SAMPLE_ID}.sam\n")
-
-#SNP calling mpileup
-def VarCall(shellScriptFile):
-	shellScriptFile.write("\n#SNPcalling Mpileup\n")
-	shellScriptFile.write("#/opt/tools/samtools-1.2/samtools mpileup -Bgf $GENOME_FASTA $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' | /opt/tools/bcftools-1.2/bcftools call -vc - > $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.bcf\'\n")
-	shellScriptFile.write("#/opt/tools/bcftools-1.2/vcfutils.pl varFilter -Q 30 -a 2 $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.bcf\' | awk \'(match ($1, \"##\") || $6 > 30)\' > $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_mpileup.vcf\'\n")
-
-#old mpileup
-	shellScriptFile.write("\n#SNP calling Mpileupv0.1.19\n")
-	shellScriptFile.write("/opt/tools/samtools-0.1.19/samtools mpileup -Bgf $GENOME_FASTA $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned.sorted.bam' | /opt/tools/samtools-0.1.19/bcftools/bcftools view -gvc - > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.bcf'")
-	shellScriptFile.write("\n/opt/tools/samtools-0.1.19/bcftools/vcfutils.pl varFilter -Q20 -a 3 $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.bcf' | awk '(match ($1,\"##\") || $6 > 30)' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf'\n")
-
-# Part of the old pipeline
-def IndelRemoval(shellScriptFile):
-	shellScriptFile.write("\n#Indel Removal\n")
-	shellScriptFile.write("/opt/tools/tabix-0.2.6/bgzip -c $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz' \n")
-	shellScriptFile.write("/opt/tools/tabix-0.2.6/tabix $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz'\n")
-	shellScriptFile.write("/opt/tools/bcftools-1.2/bcftools filter -e \"TYPE='indel' && IS=1\"  $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup.vcf.gz' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf' \n")
-
-# Added DJA 2016/06/15
-def SNVMetrics(shellScriptFile):
-	shellScriptFile.write("\n#SNV Metrics\n")
-	shellScriptFile.write("java -jar /opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar -T VariantEval --eval $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf\' --out $WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_v0.1.19mpileup_rmindelIS1.vcf_metrics\' --dbsnp /opt/tools/GATK-3.4-46/resources/dbsnp_138.hg19_noM.vcf --intervals /mnt/causes-vnx1/mwenifumbo/ExomeCapture/hg19_RefSeq_050116_CodingExons_nohap.interval_list -R $GENOME_FASTA \n")
-
-def SummaryStats(shellScriptFile):
-	#Parse Stats
-	shellScriptFile.write("\n#Parse Stats\n")
-	shellScriptFile.write("python /mnt/causes-vnx1/PipelineControl/ParseStats.py %s %s %s %s > $WORKING_DIR$SAMPLE_ID'_summaryStats.txt'\n"%(sampleID,workingDir,R1fastq,R2fastq))
-
-def Platypus(shellScriptFile):
-	shellScriptFile.write("\n#SNP Calling Platypus\n")
-	shellScriptFile.write("python /opt/tools/Platypus-0.8.1/Platypus.py callVariants --nCPU=$NSLOTS --refFile=$GENOME_FASTA --bamFiles=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned.sorted.bam\' --output=$WORKING_DIR$SAMPLE_ID\'_dupremoved_realigned_Platypus.vcf\'\n")
-	shellScriptFile.write("\n#Sort platypus file\n")
-	shellScriptFile.write("mkdir $WORKING_DIR'tmp/' \n")
-	shellScriptFile.write("/opt/tools/vcftools-0.1.14/bin/vcf-sort -c -p $NSLOTS -t $WORKING_DIR'tmp/' $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf' > $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus_sorted.vcf'\n")
-	shellScriptFile.write("mv $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus_sorted.vcf'  $WORKING_DIR$SAMPLE_ID'_dupremoved_realigned_Platypus.vcf'\n")
-
 
 
 # This is the main part of the program. Here I'll parse out what's necessary to run, and add it to the script sequentially
@@ -424,56 +374,34 @@ def Main():
 	shellScriptFile.write("FASTQR1=\'%s\'\n"%R1fastq)
 	shellScriptFile.write("FASTQR2=\'%s\'\n"%R2fastq)
 
-	if args.version=='new':
-		shellScriptFile.write("\nSAMPLE_ID=\'%s\'\n"%sampleID)
+	if args.GENOME=='GRCh37':
+	        shellScriptFile.write("GENOME_FASTA=\'/mnt/common/DATABASES/REFERENCES/GRCh37/GENOME/GRCh37-lite.fa\'\n")
+	        shellScriptFile.write("BWA_INDEX=\'/mnt/common/DATABASES/REFERENCES/GRCh37/GENOME/GRCh37-lite.fa\'\n")
+	        shellScriptFile.write("GENOMEFILE=\'/mnt/common/DATABASES/REFERENCES/GRCh37/GENOME/GRCh37-lite.genome\'\n")
 	
-	elif args.version=='old':
-		shellScriptFile.write("\nSAMPLE_ID=\'%s_bowtie2\'\n"%sampleID)
-		shellScriptFile.write("BOWTIE2_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19\'\n")
-	
-	else:
-		print "You have specified a wrong value for version.  Must be either old or new"
-		print "Unless you're running with 'neither'"
-		shellScriptFile.write("\nSAMPLE_ID=\'%s\'\n"%sampleID)
-	
-	if args.GENOME=='hg19':
-	        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa.fa\'\n")
-	        shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa\'\n")
-	        shellScriptFile.write("GENOMEFILE=\'/mnt/causes-vnx1/GENOMES/hg19/hg19_bwa.genome\'\n")
-	        shellScriptFile.write("CHROM=\'/mnt/causes-vnx1/GENOMES/hg19/FASTA/\'\n")
-	
-	elif args.GENOME=='GSC':
-	        shellScriptFile.write("GENOME_FASTA=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
-		shellScriptFile.write("BWA_INDEX=\'/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.fa\'\n")
-		shellScriptFile.write("CHROM=\'/mnt/causes-vnx1/GENOMES/GSC/SplitByChrom/\'\n")
-		shellScriptFile.write("GENOMEFILE=/mnt/causes-vnx1/GENOMES/GSC/GRCh37-lite.genome\n\n")
+	elif args.GENOME=='GRCh38':
+	        shellScriptFile.write("GENOME_FASTA=\'/mnt/common/DATABASES/REFERENCES/GRCh38/GENOME/GRCh38-lite.fa\'\n")
+	        shellScriptFile.write("BWA_INDEX=\'/mnt/common/DATABASES/REFERENCES/GRCh38/GENOME/GRCh38-lite.fa\'\n")
+	        shellScriptFile.write("GENOMEFILE=\'/mnt/common/DATABASES/REFERENCES/GRCh38/GENOME/GRCh38-lite.genome\'\n")
 
 	else:
-	        print "You did not choose a viable genome version, choose either GSC or hg19"
+	        print "You did not choose a viable genome version, choose either GRCh37 or GRCh38"
 	        sys.exit()
 	
-	if args.metrics_exome:
-		shellScriptFile.write("EXOME_CAPTURE_BED=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.bed \n")
-		shellScriptFile.write("EXOME_CAPTURE_INTERVAL=/mnt/causes-vnx2/TIDE/PROCESS/EXOME_TIDEX/Agilent_SureSelect_Human_All_Exon_V4/S03723314_Covered_chrnameswithoutchr.GRCh37-lite.interval_list \n")
-		shellScriptFile.write("METRICS_WORKING_DIR=$WORKING_DIR/METRICS/ \n")
-		shellScriptFile.write("mkdir -p $METRICS_WORKING_DIR \n")
-		shellScriptFile.write(" \n")
-	
-
 
         # Make some variables for tools which are used within this pipeline
         shellScriptFile.write("# Define Tool paths. If they are in your path, simply change these full filepaths to only be the final command\n")
         shellScriptFile.write("# For example: Change BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools to be BCFTOOLS=bcftools if it's in your path \n\n")
-        shellScriptFile.write("BCFTOOLS=/opt/tools/bcftools-1.8/bin/bcftools\n")
-        shellScriptFile.write("GATKJAR=/opt/tools/GATK-3.4-46/GenomeAnalysisTK.jar\n")
-        shellScriptFile.write("JAVA=/opt/tools/jdk1.7.0_79/bin/java\n")
-        shellScriptFile.write("BGZIP=/opt/tools/tabix/bgzip\n")
-        shellScriptFile.write("TABIX=/opt/tools/tabix/tabix\n")
-	shellScriptFile.write("BWA=/opt/tools/bwa-0.7.12/bwa\n")
-	shellScriptFile.write("SAMTOOLS=/opt/tools/samtools-1.2/samtools\n")
-	shellScriptFile.write("PICARD=/opt/tools/picard-tools-1.139/picard.jar\n")
-	shellScriptFile.write("MOSDEPTH=/opt/tools/mosdepth-0.2.2/mosdepth\n")
-	shellScriptFile.write("FASTQC=/opt/tools/FastQC/fastqc\n")
+        shellScriptFile.write("BCFTOOLS=bcftools\n")
+        shellScriptFile.write("GATKJAR=$EBROOTGATK/GenomeAnalysisTK.jar\n")
+        shellScriptFile.write("JAVA=java\n")
+        shellScriptFile.write("BGZIP=bgzip\n")
+        shellScriptFile.write("TABIX=tabix\n")
+	shellScriptFile.write("BWA=bwa\n")
+	shellScriptFile.write("SAMTOOLS=samtools\n")
+	shellScriptFile.write("PICARD=$EBROOTPICARD/picard.jar\n")
+	shellScriptFile.write("MOSDEPTH=mosdepth\n")
+	shellScriptFile.write("FASTQC=fastqc\n")
 
 	#####################
 	# Pipeline Commands #
@@ -506,22 +434,6 @@ def Main():
 	
 		shellScriptFile.write("\n echo \"Primary Analysis Finished\"\n")
 		shellScriptFile.write("date\n")
-	
-	# Not changing anything for exome vs. genome here	
-	elif args.version == 'old':
-		FastQC(shellScriptFile)
-		Bowtie2(shellScriptFile)
-		Sam2Bam(shellScriptFile)
-		DupRemove(shellScriptFile)
-	        Realign(shellScriptFile)
-	        VarCall(shellScriptFile)
-	        SummaryStats(shellScriptFile)
-	        IndelRemoval(shellScriptFile)
-		ReadMetrics(shellScriptFile)
-		SNVMetrics(shellScriptFile)
-		CleanUp(shellScriptFile)
-		ValidateSAM(shellScriptFile)
-		GATK_Coverage(shellScriptFile)
 	
 	elif args.version == 'neither':
 		print "Not putting down the primary analysis"
