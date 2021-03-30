@@ -23,7 +23,7 @@ import re
 
 def GetOptions():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i","--InFile",help="This is a file that has come as an output from the GEMINI query/built-in functions (e.g. de novo)",type=str)
+    parser.add_argument("-i","--InFile",help="This is a file that has come as an output from the GEMINI query/built-in functions (e.g. de novo)",type=str,required=True)
     parser.add_argument("-o","--OutFile",help="Output Gemini Table file with Additional Annotations",type=str)
     args = parser.parse_args()
     infilename=args.InFile
@@ -398,18 +398,18 @@ if __name__ == "__main__":
 
 # These are hard coded locations for database files. These files are small, so they are all just text files.
 # They contain gene-based information
-        SummaryFileName = '/mnt/causes-vnx1/DATABASES/RefSeqGene_Summaries_270316.txt'
-        Gene2MimFileName = '/mnt/causes-vnx1/DATABASES/OMIM_mim2gene'
-        Gene2Disease = '/mnt/causes-vnx1/DATABASES/OMIM_phenotype_genelist'
-        PLI = '/mnt/causes-vnx1/DATABASES/TOLERANCE/PLI_March2016.txt'
-        RVIS = '/mnt/causes-vnx1/DATABASES/TOLERANCE/RVIS_March2016.txt'
-        MESHOP = '/mnt/causes-vnx1/DATABASES/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
-        HPO = '/mnt/causes-vnx1/DATABASES/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
-	ALIAS = '/mnt/causes-vnx1/DATABASES/GeneNameMapping/HGNC_approved_symbol_and_alias_symbol.txt'
-	NAME = '/mnt/causes-vnx1/DATABASES/GeneNameMapping/HGNC_approved_symbol_and_approved_name.txt'
-	OE = '/mnt/causes-vnx1/DATABASES/OE/gnomad.v2.1.1.lof_metrics.by_gene.txt'
-	FLAGSFILE = '/mnt/causes-vnx1/DATABASES/FLAGS/FLAGS_genes__12920_2014_64_MOESM4_ESM.txt'
-	ArrayOrderFile = '/mnt/causes-vnx1/PIPELINES/AnnotateVariants/TableAnnotators/TemplateHeaderOrder.txt'
+        SummaryFileName = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/GeneSymbolGeneNameGeneSummary.txt'
+        Gene2MimFileName = '/mnt/common/DATABASES/GENERIC/OMIM/OMIM_mim2gene'
+        Gene2Disease = '/mnt/common/DATABASES/GENERIC/OMIM/OMIM_phenotype_genelist'
+        PLI = '/mnt/common/DATABASES/GENERIC/PLI/PLI_March2016.txt'
+        RVIS = '/mnt/common/DATABASES/GENERIC/PLI/RVIS_March2016.txt'
+        MESHOP = '/mnt/common/DATABASES/GENERIC/MESHOPS/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
+        HPO = '/mnt/common/DATABASES/GENERIC/HPO/ALL_SOURCES_ALL_FREQUENCIES_genes_to_phenotype.txt'
+	ALIAS = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/HGNC_approved_symbol_and_alias_symbol.txt'
+	NAME = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/HGNC_approved_symbol_and_approved_name.txt'
+	OE = '/mnt/common/DATABASES/GENERIC/OE/gnomad.v2.1.1.lof_metrics.by_gene.txt'
+	FLAGSFILE = '/mnt/common/DATABASES/GENERIC/FLAGS/FLAGS_genes__12920_2014_64_MOESM4_ESM.txt'
+	ArrayOrderFile = '/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/TableAnnotators/TemplateHeaderOrder_2021-03-16.txt'
 
     # Read in the annotations
         GeneSummaries = GetSummaryDict(SummaryFileName)
