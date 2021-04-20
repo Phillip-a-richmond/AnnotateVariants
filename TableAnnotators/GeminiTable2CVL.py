@@ -39,8 +39,9 @@ def GetSummaryDict(SummaryFileName):
     SummaryFile = open(SummaryFileName,'r')
     SummaryForGenes = {}
     for line in SummaryFile:
-        Number,Symbol,Summary = line.strip('\n').split("\t")
+        Symbol,Number,Summary = line.strip('\n').split("\t")
         SummaryForGenes[Symbol]=Summary
+    #print(SummaryForGenes)
     return SummaryForGenes
 
 ## Get a dictionary for the OMIM gene map, gene is key, value is Mim#
@@ -340,6 +341,7 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
  		# Check for gene summary, if there, add it, if not, make it '.' 
 		if GeneSummary.has_key(gene):
+                        #print(gene_summary)
 			gene_summary=GeneSummary[gene]
 		else:
 			gene_summary='.'

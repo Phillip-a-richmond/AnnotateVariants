@@ -275,7 +275,6 @@ def MToolBox(shellScriptFile,sampleID,mtoolboxConfigFile):
 
 # This is the main part of the program. Here I'll parse out what's necessary to run, and add it to the script sequentially
 def Main():
-
 	args=GetArgs()
 
 	# Define some variables here based on the arguments you just read in

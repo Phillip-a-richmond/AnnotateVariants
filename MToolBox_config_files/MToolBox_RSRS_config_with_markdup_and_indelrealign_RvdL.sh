@@ -5,4 +5,4 @@ vcf_name=RSRS_with_markdup_and_indelrealign
 output_name=. # output dir within current working dir
 
 UseMarkDuplicates=true
-UseIndelRealigner=true
+UseIndelRealigner=false

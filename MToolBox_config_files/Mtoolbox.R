@@ -22,7 +22,7 @@ if (length(pedfiles)>1) {
 	Number_of_affected=nrow(Affected)
 	
 	for (i in (1: Number_of_affected)){
-		Proband_ID_i<- gsub("_BWAmem", "", Affected[i,2])
+		Proband_ID_i<- gsub("_GRCh38", "", Affected[i,2])
 		
 		##Open the csv files
 		MToolBox_files=list.files(pattern="MToolBox_")
@@ -47,7 +47,7 @@ if (length(pedfiles)>1) {
 			}
 		}
 	#Create the filtered csv for mother of the family
-	Mother_ID <- gsub("_BWAmem", "", Affected[1,4])
+	Mother_ID <- gsub("_GRCh38", "", Affected[1,4])
 	if (Mother_ID=="-9") {
 		print ("No Mother in the ped file")
 	} else {
