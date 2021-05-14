@@ -131,18 +131,21 @@ def GetMESHOPDict(MESHOPFILE):
 # Added 20190321
 def MakeGnomADHyperlink(chrom,pos,ref,alt):
 	base = 'https://gnomad.broadinstitute.org/variant/'
+        end = '?dataset=gnomad_r3'
 	if 'chr' in chrom:
 		chrom = chrom[3:]
-	gnomad_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s\")'%(base,chrom,pos,ref,alt)
+	gnomad_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s%s\")'%(base,chrom,pos,ref,alt,end)
 	return gnomad_hyperlink
 
+def MakeClinvarHyperlink(clinvarID):
+        base = 'https://www.ncbi.nlm.nih.gov/clinvar/variation/'
+        clinvar_hyperlink = '=HYPERLINK(\"%s%s\")'%(base,clinvarID)
+        return clinvar_hyperlink
 
-def MakeVarCardsHyperlink(chrom,pos,ref,alt):
-	base = 'http://159.226.67.237/sun/varcards/search/variant/'
-	if 'chr' in chrom:
-                chrom = chrom[3:]
-        varcards_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s\")'%(base,chrom,pos,ref,alt)
-        return varcards_hyperlink
+def MakeGeneCardsHyperlink(gene):
+	base = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene='
+        genecards_hyperlink='=HYPERLINK(\"%s%s\")'%(base,gene)
+        return genecards_hyperlink
 
 # OE score
 def MakeOEDict(OEFILE):
@@ -202,7 +205,7 @@ def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
 	
 	for line in infile:
 		FinalArrayOrder.append(line.strip('\n'))
-	#print FinalArrayOrder
+	print FinalArrayOrder
 
 	# Next, I'll read in the array header to a dictionary, where a key is e.g. 'gene' or 'chrom'
 	# and the value is the position within the existing array
@@ -210,7 +213,7 @@ def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
 	for i in range(len(INARRAYHEADER)):
 		HeaderDict[INARRAYHEADER[i]] = i
 
-	#print HeaderDict
+	print HeaderDict
 
 	# I'm going to build an empty array and repopulate it according to the final array order
 	dummyarray = range(len(FinalArrayOrder))
@@ -219,7 +222,7 @@ def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
 	for i in range(len(FinalArrayOrder)):
 		val = FinalArrayOrder[i]
 		dummyarray[i] = INARRAYVALS[HeaderDict[val]]
-	#print dummyarray
+	print dummyarray
 	ReorderedCols=dummyarray
 	return FinalArrayOrder,ReorderedCols
 
@@ -239,8 +242,9 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
 	# This is the existing header, and I'll add the new features to this array
 	headercols = header.split('\t')
-	headercols.append('gnomAD_Hyperlink')
-	headercols.append('VarCards_Hyperlink')
+	headercols.append('gnomad_hyperlink')
+	headercols.append('genecards_hyperlink')
+        headercols.append('clinvar_hyperlink')
 	headercols.append('OMIM_Phenotypes')
 	headercols.append('OMIM_Entry')
 	headercols.append('FLAGS')
@@ -271,13 +275,22 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		pos = cols[2]
 		ref = cols[3]
 		alt = cols[4]
+                # added 2021-05-10, just after gene to make it easy
+                clinvarID = cols[6]
+                # If there is no clinvarID, then this gets input as a NoneType, but need it to be a blank string
+                if clinvarID == None:
+                    clinvarID = '.'
+                    cols[6] = '.'
 
 		# Additions 20190321
 		# add gnomad hyperlink (20190321)
 		gnomad_hyperlink = MakeGnomADHyperlink(chrom,pos,ref,alt)
 
-		# add varcards hyperlink 
-		varcards_hyperlink = MakeVarCardsHyperlink(chrom,pos,ref,alt)
+		# add genecards hyperlink  (2021-05-10)
+		genecards_hyperlink = MakeGeneCardsHyperlink(gene)
+
+                # add clinvar hyperlink (2021-05-10)
+                clinvar_hyperlink = MakeClinvarHyperlink(clinvarID)
 
 		# Add flags
 		if gene in FLAGS_GeneList:
@@ -348,15 +361,16 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
 		# Fix some formatting stuff for Excel
 		# Exon number
-		cols[6]="\'%s"%cols[6]
+		cols[8]="\'%s"%cols[8]
 		# Gene name
-		#cols[5]="\'%s"%cols[5]
+		cols[5]="\'%s"%cols[5]
 
 		# join the cols
 		newline = "\t".join(cols)
 		
 		cols.append(gnomad_hyperlink)
-		cols.append(varcards_hyperlink)
+		cols.append(genecards_hyperlink)
+                cols.append(clinvar_hyperlink)
 		cols.append(omim_pheno)
 		cols.append(omim_hyperlink)
 		cols.append(flags)
@@ -372,6 +386,10 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		cols.append(gene_summary)
 		
 		FinalOrderHeader,ReorderedCols = ReOrderCols(ArrayOrderFile,headercols,cols)
+                # make empty cells '.'
+                for i in range(len(ReorderedCols)):
+                    if (ReorderedCols[i]=='') or (ReorderedCols[i]==' ') or (ReorderedCols[i]==None) or (ReorderedCols[i]=='None') or (ReorderedCols[i]=="'") or (ReorderedCols[i]=='.'):
+                        ReorderedCols[i]='None'
 		outfile.write("%s\n"%'\t'.join(ReorderedCols))
 
 		#reset variables
@@ -379,7 +397,8 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		gene_name = '.'
 		gene_alias = '.'
 		gnomad_hyperlink = '.'
-		varcards_hyperlink = '.'
+		genecards_hyperlink = '.'
+                clinvar_hyperlink = '.'
 		omim_pheno = '.'
 		omim_hyperlink='.'
 		flags = '.'
@@ -411,7 +430,7 @@ if __name__ == "__main__":
 	NAME = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/HGNC_approved_symbol_and_approved_name.txt'
 	OE = '/mnt/common/DATABASES/GENERIC/OE/gnomad.v2.1.1.lof_metrics.by_gene.txt'
 	FLAGSFILE = '/mnt/common/DATABASES/GENERIC/FLAGS/FLAGS_genes__12920_2014_64_MOESM4_ESM.txt'
-	ArrayOrderFile = '/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/TableAnnotators/TemplateHeaderOrder_2021-03-16.txt'
+	ArrayOrderFile = '/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/TableAnnotators/TemplateHeaderOrder_2021-05-10.txt'
 
     # Read in the annotations
         GeneSummaries = GetSummaryDict(SummaryFileName)

@@ -16,9 +16,9 @@
 ## ClinVar (Auto-updating)
 [[annotation]]
 file="ClinVar/clinvar.vcf.gz"
-fields=["CLNSIG", "CLNDN","CLNDISDB"]
-names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
-ops=["self","self","self"]
+fields=["ID","CLNSIG", "CLNDN","CLNDISDB"]
+names=["clinvar_variation_id","clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+ops=["self","self","self","self"]
 
 # CADD v1.4
 [[annotation]]
