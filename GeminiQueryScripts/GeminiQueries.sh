@@ -1,6 +1,3 @@
-
-# ^^ Header above describes family, location of GeminiDB, location of table annotator
-
 # Gemini Query script
 # Phillip Richmond
 # ChangeLog:
@@ -23,11 +20,15 @@
 	# Changed strict min DP to 15
 # May 23, 2019:
 	# Set maximum number of homozygotes for cph query to 15
+# Overhaul for GPCC cluster
+# September 11, 2020 (never forget)
 
-
-source /opt/tools/hpcenv.sh
-GEMINI=/mnt/causes-vnx1/DATABASES/GEMINI-2019/bin/gemini
-MTOOLBOX_RSCRIPT=/mnt/causes-vnx1/PIPELINES/AnnotateVariants/MToolBox_config_files/Mtoolbox.R
+# Load the environment
+ANNOTATE_VARIANTS_DIR=/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/
+source $ANNOTATE_VARIANTS_DIR/opt/miniconda3/etc/profile.d/conda.sh
+conda activate $ANNOTATE_VARIANTS_DIR/opt/AnnotateVariantsEnvironment/
+GEMINI=gemini
+MTOOLBOX_RSCRIPT=$ANNOTATE_VARIANTS_DIR/MToolBox_config_files/Mtoolbox.R
 
 ## Change to working directory
 cd $WORKING_DIR

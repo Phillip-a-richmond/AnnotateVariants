@@ -1,70 +1,118 @@
-gene
-Gene_Name
-OMIM_Phenotypes
-OMIM_Entry
-clinvar_disease_name
-clinvar_pathogenic
-chrom
-start
-end
-ref
-alt
-rs_ids
-exon
-aa_change
-codon_change
-transcript
-biotype
-impact
-impact_severity
-primateai
-cadd
-cadd_indel
-pp2hdiv
-pp2hvar
-fathmm_xf_noncoding
-fitcons
-genehancer
-RVIS_Score
-RVIS_Pct
-pLI_Score
-OE_Missense
-OE_LoF
-ccr
-spliceai_acceptorgain
-spliceai_acceptorloss
-spliceai_donorgain
-spliceai_donorloss
-VarCards_Hyperlink
-inhousedb_ac
-gnomAD_Hyperlink
-gnomad_exome_ac_global
-gnomad_exome_af_global
-gnomad_exome_hom_global
-gnomad_exome_popmax
-gnomad_exome_af_popmax
-gnomad_exome_hom_popmax
-gnomad_exome_af_controls
-gnomad_exome_hom_controls
-gnomad_genome_ac_global
-gnomad_genome_af_global
-gnomad_genome_hom_global
-gnomad_genome_popmax
-gnomad_genome_af_popmax
-gnomad_genome_hom_popmax
-gnomad_genome_af_controls
-gnomad_genome_hom_controls
-filter
-in_segdup
-confidentregion
-FLAGS
-gts
-gt_ref_depths
-gt_alt_depths
-gt_alt_freqs
-gt_quals
-clinvar_dbinfo
-HPO
-MeSHOP
-Gene_Alias
-GeneSummary
+variants            variant_id                    INTEGER   
+variants            chrom                         VARCHAR(10)
+variants            start                         INTEGER   
+variants            end                           INTEGER   
+variants            vcf_id                        VARCHAR(12)
+variants            ref                           TEXT      
+variants            alt                           TEXT      
+variants            qual                          FLOAT     
+variants            filter                        VARCHAR(10)
+variants            type                          VARCHAR(8)
+variants            sub_type                      VARCHAR(20)
+variants            call_rate                     FLOAT     
+variants            num_hom_ref                   INTEGER   
+variants            num_het                       INTEGER   
+variants            num_hom_alt                   INTEGER   
+variants            num_unknown                   INTEGER   
+variants            aaf                           FLOAT     
+variants            hwe                           FLOAT     
+variants            inbreeding_coef               FLOAT     
+variants            pi                            FLOAT     
+variants            gene                          VARCHAR(20)
+variants            ensembl_gene_id               VARCHAR(20)
+variants            transcript                    VARCHAR(20)
+variants            is_exonic                     BOOLEAN   
+variants            is_coding                     BOOLEAN   
+variants            is_lof                        BOOLEAN   
+variants            is_splicing                   BOOLEAN   
+variants            is_canonical                  BOOLEAN   
+variants            exon                          VARCHAR(8)
+variants            codon_change                  TEXT      
+variants            aa_change                     TEXT      
+variants            aa_length                     VARCHAR(8)
+variants            biotype                       TEXT      
+variants            impact                        VARCHAR(41)
+variants            impact_so                     VARCHAR(41)
+variants            impact_severity               VARCHAR(4)
+variants            polyphen_pred                 VARCHAR(20)
+variants            polyphen_score                FLOAT     
+variants            sift_pred                     VARCHAR(29)
+variants            sift_score                    FLOAT     
+variants            cadd_v1_4                     TEXT      
+variants            cadd_v1_4_indel               VARCHAR(5)
+variants            cadd_v1_6                     TEXT      
+variants            cadd_v1_6_indel               TEXT      
+variants            clinvar_dbinfo                TEXT      
+variants            clinvar_disease_name          TEXT      
+variants            clinvar_pathogenic            TEXT      
+variants            cosmic_coding_ids             TEXT      
+variants            cosmic_count_observed         FLOAT     
+variants            gnomad_genome_ac_global       INTEGER   
+variants            gnomad_genome_af_global       FLOAT     
+variants            gnomad_genome_an_global       INTEGER   
+variants            gnomad_genome_hom_global      INTEGER   
+variants            gnomad_nhomalt                FLOAT     
+variants            gnomad_nhomalt_filter         BOOLEAN   
+variants            gnomad_popmax_af              FLOAT     
+variants            gnomad_popmax_af_filter       BOOLEAN   
+variants            rs_ids                        VARCHAR(5)
+variants            vepclin_sig                   VARCHAR(5)
+variants            vepdomains                    TEXT      
+variants            vepexisting_variation         VARCHAR(5)
+variants            vepmaxentscan_alt             FLOAT     
+variants            vepmaxentscan_diff            FLOAT     
+variants            vepmaxentscan_ref             FLOAT     
+variants            veppubmed                     TEXT      
+variants            vepprotein_position           VARCHAR(5)
+variants            vepspliceai_pred_dp_ag        FLOAT     
+variants            vepspliceai_pred_dp_al        FLOAT     
+variants            vepspliceai_pred_dp_dg        FLOAT     
+variants            vepspliceai_pred_dp_dl        FLOAT     
+variants            vepspliceai_pred_ds_ag        FLOAT     
+variants            vepspliceai_pred_ds_al        FLOAT     
+variants            vepspliceai_pred_ds_dg        FLOAT     
+variants            vepspliceai_pred_ds_dl        FLOAT     
+variants            vepspliceai_pred_symbol       TEXT      
+variants            allele                        VARCHAR(48)
+variants            feature_type                  VARCHAR(10)
+variants            intron                        VARCHAR(10)
+variants            hgvsc                         TEXT      
+variants            hgvsp                         VARCHAR(34)
+variants            cdna_position                 VARCHAR(13)
+variants            cds_position                  VARCHAR(10)
+variants            existing_variation            VARCHAR(29)
+variants            distance                      VARCHAR(10)
+variants            strand                        VARCHAR(10)
+variants            flags                         VARCHAR(28)
+variants            symbol_source                 VARCHAR(29)
+variants            hgnc_id                       VARCHAR(10)
+variants            ccds                          VARCHAR(13)
+variants            ensp                          VARCHAR(18)
+variants            gene_pheno                    VARCHAR(10)
+variants            nearest                       VARCHAR(17)
+variants            domains                       TEXT      
+variants            hgvs_offset                   VARCHAR(10)
+variants            clin_sig                      VARCHAR(16)
+variants            somatic                       VARCHAR(10)
+variants            pheno                         VARCHAR(10)
+variants            pubmed                        VARCHAR(10)
+variants            maxentscan_alt                VARCHAR(10)
+variants            maxentscan_diff               VARCHAR(10)
+variants            maxentscan_ref                VARCHAR(10)
+variants            spliceai_pred_dp_ag           VARCHAR(10)
+variants            spliceai_pred_dp_al           VARCHAR(10)
+variants            spliceai_pred_dp_dg           VARCHAR(10)
+variants            spliceai_pred_dp_dl           VARCHAR(10)
+variants            spliceai_pred_ds_ag           VARCHAR(10)
+variants            spliceai_pred_ds_al           VARCHAR(10)
+variants            spliceai_pred_ds_dg           VARCHAR(10)
+variants            spliceai_pred_ds_dl           VARCHAR(10)
+variants            spliceai_pred_symbol          VARCHAR(13)
+variants            gts                           BLOB      
+variants            gt_types                      BLOB      
+variants            gt_phases                     BLOB      
+variants            gt_depths                     BLOB      
+variants            gt_ref_depths                 BLOB      
+variants            gt_alt_depths                 BLOB      
+variants            gt_quals                      BLOB      
+variants            gt_alt_freqs                  BLOB      

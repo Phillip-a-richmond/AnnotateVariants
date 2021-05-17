@@ -1,0 +1,106 @@
+# This is the file read by VCFAnno that links to the database files for each annotation
+# It is maintained by Phillip Richmond (phillip.a.richmond@gmail.com)
+# If an annotation contains any post-annotations, then they will proceed the annotation call
+# I have made new annotations here at the top of this file, while the ones that I took from Brent Pedersen are usually pointing to GEMINI-2019 databases
+# Last edits: April 19 2018 (PAR)
+# Last edits: July 16 2018 (PAR) - added gnomad exome, dropped exac, 
+# Last edits: August 20 2018 (PAR) - Moved away from /mnt/causes-data01/ to /mnt/causes-vnx1/
+# Last edits: August 22nd 2018 (PAR) - Added eQTL
+# Last edits: January 31st 2019 (PAR) - updated gnomAD, added CADD v1.4
+# Last edits: February 28th, 2019 (PAR) - added CCR regions
+# Last edits: March 21st, 2019 (PAR) It's my mothafuckin birthday!! But really, this was a huge update which was tested for functionality
+	# new gnomad
+	# spliceAI
+	# FATHMM-XF-noncoding functional
+
+## ClinVar (Auto-updating)
+[[annotation]]
+file="ClinVar/clinvar.vcf.gz"
+fields=["CLNSIG", "CLNDN","CLNDISDB"]
+names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+ops=["self","self","self"]
+
+# CADD v1.4
+[[annotation]]
+file="CADD/V1.4/whole_genome_SNVs.tsv.gz"
+names=["CADD_v1.4"]
+columns=[6]
+ops=["self"]
+
+## CADD InDel v1.4
+[[annotation]]
+file="CADD/V1.4/InDels.tsv.gz"
+names=["CADD_v1.4_indel"]
+columns=[6]
+ops=["self"]
+
+# CADD v1.6
+[[annotation]]
+file="CADD/V1.6/whole_genome_SNVs.tsv.gz"
+names=["CADD_v1.6"]
+columns=[6]
+ops=["self"]
+
+## CADD InDel v1.6
+[[annotation]]
+file="CADD/V1.6/gnomad.genomes.r3.0.indel.tsv.gz"
+names=["CADD_v1.6_indel"]
+columns=[6]
+ops=["self"]
+
+# gnomAD v3.0 Genome Allele Frequency (all) and Homozygous Count (all)
+[[annotation]]
+file="GNOMAD/V3/gnomad.genomes.r3.0.sites.vcf.gz"
+fields = ["AF","nhomalt","AC","AN"]
+names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global"]
+ops = ["self","self","self","self"]
+
+# dbSNP v154
+[[annotation]]
+file="DBSNP/All_20180418.vcf.gz"
+fields = ["ID"]
+names=["rs_ids"]
+ops=["concat"]
+
+# Cosmic Coding variants
+[[annotation]]
+file="COSMIC/CosmicCodingMuts.normal.vcf.gz"
+fields=["ID","CNT"]
+names=["cosmic_coding_ids","cosmic_count_observed"]
+ops=["uniq","uniq"]
+
+# Cosmic NonCoding variants
+[[annotation]]
+file="COSMIC/CosmicNonCodingVariants.normal.vcf.gz"
+fields=["ID","CNT"]
+names=["cosmic_coding_ids","cosmic_count_observed"]
+ops=["uniq","self"]
+
+#SpliceAI Indel
+#[[annotation]]
+#file="SPLICEAI/spliceai_scores.masked.indel.hg38.vcf.gz"
+#fields = ["SpliceAI"]
+#names = ["SpliceAI_NonSeparated_indel"]
+#ops = ["self"]
+#
+#SpliceAI SNV
+[[annotation]]
+file="SPLICEAI/spliceai_scores.masked.snv.hg38.vcf.gz"
+fields = ["SpliceAI"]
+names = ["SpliceAI_NonSeparated_snv"]
+ops = ["self"]
+
+##SpliceAI Indel Final
+#[[postannotation]]
+#fields=["SpliceAI_NonSeparated_indel"]
+#ops="lua:split(SpliceAI_NonSeparated_indel,'|')"
+#name=["ALLELE_spliceai_indel","SYMBOL_spliceai_indel","DS_AG_spliceai_indel","DS_AL_spliceai_indel","DS_DG_spliceai_indel","DS_DL_spliceai_indel","DP_AG_spliceai_indel","DP_AL_spliceai_indel","DP_DG_spliceai_indel","DP_DL_spliceai_indel"]
+#
+##SpliceAI SNV Final
+[[postannotation]]
+fields=["SpliceAI_NonSeparated_snv"]
+op = "lua:split(SpliceAI_NonSeparated_snv,'|')"
+name =["ALLELE_spliceai_snv","SYMBOL_spliceai_snv","DS_AG_spliceai_snv","DS_AL_spliceai_snv","DS_DG_spliceai_snv","DS_DL_spliceai_snv","DP_AG_spliceai_snv","DP_AL_spliceai_snv","DP_DG_spliceai_snv","DP_DL_spliceai_snv"]
+
+#
+

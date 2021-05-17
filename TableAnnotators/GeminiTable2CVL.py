@@ -23,7 +23,7 @@ import re
 
 def GetOptions():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i","--InFile",help="This is a file that has come as an output from the GEMINI query/built-in functions (e.g. de novo)",type=str)
+    parser.add_argument("-i","--InFile",help="This is a file that has come as an output from the GEMINI query/built-in functions (e.g. de novo)",type=str,required=True)
     parser.add_argument("-o","--OutFile",help="Output Gemini Table file with Additional Annotations",type=str)
     args = parser.parse_args()
     infilename=args.InFile
@@ -39,8 +39,9 @@ def GetSummaryDict(SummaryFileName):
     SummaryFile = open(SummaryFileName,'r')
     SummaryForGenes = {}
     for line in SummaryFile:
-        Number,Symbol,Summary = line.strip('\n').split("\t")
+        Symbol,Number,Summary = line.strip('\n').split("\t")
         SummaryForGenes[Symbol]=Summary
+    #print(SummaryForGenes)
     return SummaryForGenes
 
 ## Get a dictionary for the OMIM gene map, gene is key, value is Mim#
@@ -130,18 +131,21 @@ def GetMESHOPDict(MESHOPFILE):
 # Added 20190321
 def MakeGnomADHyperlink(chrom,pos,ref,alt):
 	base = 'https://gnomad.broadinstitute.org/variant/'
+        end = '?dataset=gnomad_r3'
 	if 'chr' in chrom:
 		chrom = chrom[3:]
-	gnomad_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s\")'%(base,chrom,pos,ref,alt)
+	gnomad_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s%s\")'%(base,chrom,pos,ref,alt,end)
 	return gnomad_hyperlink
 
+def MakeClinvarHyperlink(clinvarID):
+        base = 'https://www.ncbi.nlm.nih.gov/clinvar/variation/'
+        clinvar_hyperlink = '=HYPERLINK(\"%s%s\")'%(base,clinvarID)
+        return clinvar_hyperlink
 
-def MakeVarCardsHyperlink(chrom,pos,ref,alt):
-	base = 'http://159.226.67.237/sun/varcards/search/variant/'
-	if 'chr' in chrom:
-                chrom = chrom[3:]
-        varcards_hyperlink='=HYPERLINK(\"%s%s-%s-%s-%s\")'%(base,chrom,pos,ref,alt)
-        return varcards_hyperlink
+def MakeGeneCardsHyperlink(gene):
+	base = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene='
+        genecards_hyperlink='=HYPERLINK(\"%s%s\")'%(base,gene)
+        return genecards_hyperlink
 
 # OE score
 def MakeOEDict(OEFILE):
@@ -201,7 +205,7 @@ def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
 	
 	for line in infile:
 		FinalArrayOrder.append(line.strip('\n'))
-	#print FinalArrayOrder
+	print FinalArrayOrder
 
 	# Next, I'll read in the array header to a dictionary, where a key is e.g. 'gene' or 'chrom'
 	# and the value is the position within the existing array
@@ -209,7 +213,7 @@ def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
 	for i in range(len(INARRAYHEADER)):
 		HeaderDict[INARRAYHEADER[i]] = i
 
-	#print HeaderDict
+	print HeaderDict
 
 	# I'm going to build an empty array and repopulate it according to the final array order
 	dummyarray = range(len(FinalArrayOrder))
@@ -218,7 +222,7 @@ def ReOrderCols(ORDERFILE,INARRAYHEADER,INARRAYVALS):
 	for i in range(len(FinalArrayOrder)):
 		val = FinalArrayOrder[i]
 		dummyarray[i] = INARRAYVALS[HeaderDict[val]]
-	#print dummyarray
+	print dummyarray
 	ReorderedCols=dummyarray
 	return FinalArrayOrder,ReorderedCols
 
@@ -238,8 +242,9 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
 	# This is the existing header, and I'll add the new features to this array
 	headercols = header.split('\t')
-	headercols.append('gnomAD_Hyperlink')
-	headercols.append('VarCards_Hyperlink')
+	headercols.append('gnomad_hyperlink')
+	headercols.append('genecards_hyperlink')
+        headercols.append('clinvar_hyperlink')
 	headercols.append('OMIM_Phenotypes')
 	headercols.append('OMIM_Entry')
 	headercols.append('FLAGS')
@@ -270,13 +275,22 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		pos = cols[2]
 		ref = cols[3]
 		alt = cols[4]
+                # added 2021-05-10, just after gene to make it easy
+                clinvarID = cols[6]
+                # If there is no clinvarID, then this gets input as a NoneType, but need it to be a blank string
+                if clinvarID == None:
+                    clinvarID = '.'
+                    cols[6] = '.'
 
 		# Additions 20190321
 		# add gnomad hyperlink (20190321)
 		gnomad_hyperlink = MakeGnomADHyperlink(chrom,pos,ref,alt)
 
-		# add varcards hyperlink 
-		varcards_hyperlink = MakeVarCardsHyperlink(chrom,pos,ref,alt)
+		# add genecards hyperlink  (2021-05-10)
+		genecards_hyperlink = MakeGeneCardsHyperlink(gene)
+
+                # add clinvar hyperlink (2021-05-10)
+                clinvar_hyperlink = MakeClinvarHyperlink(clinvarID)
 
 		# Add flags
 		if gene in FLAGS_GeneList:
@@ -340,21 +354,23 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 
  		# Check for gene summary, if there, add it, if not, make it '.' 
 		if GeneSummary.has_key(gene):
+                        #print(gene_summary)
 			gene_summary=GeneSummary[gene]
 		else:
 			gene_summary='.'
 
 		# Fix some formatting stuff for Excel
 		# Exon number
-		cols[6]="\'%s"%cols[6]
+		cols[8]="\'%s"%cols[8]
 		# Gene name
-		#cols[5]="\'%s"%cols[5]
+		cols[5]="\'%s"%cols[5]
 
 		# join the cols
 		newline = "\t".join(cols)
 		
 		cols.append(gnomad_hyperlink)
-		cols.append(varcards_hyperlink)
+		cols.append(genecards_hyperlink)
+                cols.append(clinvar_hyperlink)
 		cols.append(omim_pheno)
 		cols.append(omim_hyperlink)
 		cols.append(flags)
@@ -370,6 +386,10 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		cols.append(gene_summary)
 		
 		FinalOrderHeader,ReorderedCols = ReOrderCols(ArrayOrderFile,headercols,cols)
+                # make empty cells '.'
+                for i in range(len(ReorderedCols)):
+                    if (ReorderedCols[i]=='') or (ReorderedCols[i]==' ') or (ReorderedCols[i]==None) or (ReorderedCols[i]=='None') or (ReorderedCols[i]=="'") or (ReorderedCols[i]=='.'):
+                        ReorderedCols[i]='None'
 		outfile.write("%s\n"%'\t'.join(ReorderedCols))
 
 		#reset variables
@@ -377,7 +397,8 @@ def AddColumnsToTable(GeminiInFileName,GeminiOutFileName,Gene2Pheno,Gene2Mim,Gen
 		gene_name = '.'
 		gene_alias = '.'
 		gnomad_hyperlink = '.'
-		varcards_hyperlink = '.'
+		genecards_hyperlink = '.'
+                clinvar_hyperlink = '.'
 		omim_pheno = '.'
 		omim_hyperlink='.'
 		flags = '.'
@@ -398,18 +419,18 @@ if __name__ == "__main__":
 
 # These are hard coded locations for database files. These files are small, so they are all just text files.
 # They contain gene-based information
-        SummaryFileName = '/mnt/causes-vnx1/DATABASES/RefSeqGene_Summaries_270316.txt'
-        Gene2MimFileName = '/mnt/causes-vnx1/DATABASES/OMIM_mim2gene'
-        Gene2Disease = '/mnt/causes-vnx1/DATABASES/OMIM_phenotype_genelist'
-        PLI = '/mnt/causes-vnx1/DATABASES/TOLERANCE/PLI_March2016.txt'
-        RVIS = '/mnt/causes-vnx1/DATABASES/TOLERANCE/RVIS_March2016.txt'
-        MESHOP = '/mnt/causes-vnx1/DATABASES/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
-        HPO = '/mnt/causes-vnx1/DATABASES/ALL_SOURCES_FREQUENT_FEATURES_genes_to_phenotype.txt'
-	ALIAS = '/mnt/causes-vnx1/DATABASES/GeneNameMapping/HGNC_approved_symbol_and_alias_symbol.txt'
-	NAME = '/mnt/causes-vnx1/DATABASES/GeneNameMapping/HGNC_approved_symbol_and_approved_name.txt'
-	OE = '/mnt/causes-vnx1/DATABASES/OE/gnomad.v2.1.1.lof_metrics.by_gene.txt'
-	FLAGSFILE = '/mnt/causes-vnx1/DATABASES/FLAGS/FLAGS_genes__12920_2014_64_MOESM4_ESM.txt'
-	ArrayOrderFile = '/mnt/causes-vnx1/PIPELINES/AnnotateVariants/TableAnnotators/TemplateHeaderOrder.txt'
+        SummaryFileName = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/GeneSymbolGeneNameGeneSummary.txt'
+        Gene2MimFileName = '/mnt/common/DATABASES/GENERIC/OMIM/OMIM_mim2gene'
+        Gene2Disease = '/mnt/common/DATABASES/GENERIC/OMIM/OMIM_phenotype_genelist'
+        PLI = '/mnt/common/DATABASES/GENERIC/PLI/PLI_March2016.txt'
+        RVIS = '/mnt/common/DATABASES/GENERIC/PLI/RVIS_March2016.txt'
+        MESHOP = '/mnt/common/DATABASES/GENERIC/MESHOPS/gene2pubmedBG-hum-gene2pubmed-gene-mesh-p_ONLYMESHDISEAS_P-valuecorrected_withGeneSymbols.txt'
+        HPO = '/mnt/common/DATABASES/GENERIC/HPO/ALL_SOURCES_ALL_FREQUENCIES_genes_to_phenotype.txt'
+	ALIAS = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/HGNC_approved_symbol_and_alias_symbol.txt'
+	NAME = '/mnt/common/DATABASES/GENERIC/GeneNameMapping/HGNC_approved_symbol_and_approved_name.txt'
+	OE = '/mnt/common/DATABASES/GENERIC/OE/gnomad.v2.1.1.lof_metrics.by_gene.txt'
+	FLAGSFILE = '/mnt/common/DATABASES/GENERIC/FLAGS/FLAGS_genes__12920_2014_64_MOESM4_ESM.txt'
+	ArrayOrderFile = '/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/TableAnnotators/TemplateHeaderOrder_2021-05-10.txt'
 
     # Read in the annotations
         GeneSummaries = GetSummaryDict(SummaryFileName)

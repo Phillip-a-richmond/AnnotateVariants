@@ -1,0 +1,91 @@
+# This is the file read by VCFAnno that links to the database files for each annotation
+# It is maintained by Phillip Richmond (phillip.a.richmond@gmail.com)
+# If an annotation contains any post-annotations, then they will proceed the annotation call
+# I have made new annotations here at the top of this file, while the ones that I took from Brent Pedersen are usually pointing to GEMINI-2019 databases
+# Last edits: April 19 2018 (PAR)
+# Last edits: July 16 2018 (PAR) - added gnomad exome, dropped exac, 
+# Last edits: August 20 2018 (PAR) - Moved away from /mnt/causes-data01/ to /mnt/causes-vnx1/
+# Last edits: August 22nd 2018 (PAR) - Added eQTL
+# Last edits: January 31st 2019 (PAR) - updated gnomAD, added CADD v1.4
+# Last edits: February 28th, 2019 (PAR) - added CCR regions
+# Last edits: March 21st, 2019 (PAR) It's my mothafuckin birthday!! But really, this was a huge update which was tested for functionality
+	# new gnomad
+	# spliceAI
+	# FATHMM-XF-noncoding functional
+# Overhaul for GPCC, with reduced annotation fields
+
+## ClinVar (Auto-updating)
+[[annotation]]
+file="ClinVar/clinvar.vcf.gz"
+fields=["CLNSIG", "CLNDN","CLNDISDB"]
+names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+ops=["self","self","self"]
+
+# CADD v1.4
+[[annotation]]
+file="CADD/V1.4/whole_genome_SNVs.tsv.gz"
+names=["CADD_v1.4"]
+columns=[6]
+ops=["self"]
+
+## CADD InDel v1.4
+[[annotation]]
+file="CADD/V1.4/InDels.tsv.gz"
+names=["CADD_v1.4_indel"]
+columns=[6]
+ops=["self"]
+
+# CADD v1.6
+[[annotation]]
+file="CADD/V1.6/whole_genome_SNVs.tsv.gz"
+names=["CADD_v1.6"]
+columns=[6]
+ops=["self"]
+
+## CADD InDel v1.6
+[[annotation]]
+file="CADD/V1.6/gnomad.genomes.r3.0.indel.tsv.gz"
+names=["CADD_v1.6_indel"]
+columns=[6]
+ops=["self"]
+
+
+#gnomAD Genome Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
+# Updated to v2.1
+[[annotation]]
+file="GNOMAD/v2.1.1/gnomad.genomes.r2.1.1.sites.vcf.gz"
+fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global","gnomad_genome_popmax","gnomad_genome_an_popmax","gnomad_genome_ac_popmax","gnomad_genome_af_popmax","gnomad_genome_hom_popmax","gnomad_genome_af_controls","gnomad_genome_hom_controls"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self"]
+
+#gnomAD Exome Allele Frequency
+[[annotation]]
+file="GNOMAD/v2.1.1/gnomad.exomes.r2.1.1.sites.vcf.gz"
+fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_ac_global","gnomad_exome_an_global","gnomad_exome_popmax","gnomad_exome_an_popmax","gnomad_exome_ac_popmax","gnomad_exome_af_popmax","gnomad_exome_hom_popmax","gnomad_exome_af_controls","gnomad_exome_hom_controls"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self"]
+
+
+# dbSNP 
+[[annotation]]
+file="DBSNP/All_20180423.vcf.gz"
+fields = ["ID"]
+names=["rs_ids"]
+ops=["concat"]
+
+# Cosmic Coding variants
+[[annotation]]
+file="COSMIC/CosmicCodingMuts.vcf.gz"
+fields=["ID","CNT"]
+names=["cosmic_coding_ids","cosmic_count_observed"]
+ops=["uniq"]
+
+# Cosmic NonCoding variants
+[[annotation]]
+file="COSMIC/CosmicNonCodingMuts.vcf.gz"
+fields=["ID","CNT"]
+names=["cosmic_coding_ids","cosmic_count_observed"]
+ops=["uniq","self"]
+
+
+

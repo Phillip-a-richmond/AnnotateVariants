@@ -1,0 +1,217 @@
+# This is the file read by VCFAnno that links to the database files for each annotation
+# It is maintained by Phillip Richmond (phillip.a.richmond@gmail.com)
+# If an annotation contains any post-annotations, then they will proceed the annotation call
+# I have made new annotations here at the top of this file, while the ones that I took from Brent Pedersen are usually pointing to GEMINI databases
+# Last edits: April 19 2018 (PAR)
+# Last edits: July 16 2018 (PAR) - added gnomad exome, dropped exac, 
+# Last edits: August 20 2018 (PAR) - Moved away from /mnt/causes-data01/ to /mnt/causes-vnx1/
+# Last edits: August 22nd 2018 (PAR) - Added eQTL
+
+# eQTL GTEX WholeBlood
+[[annotation]]
+file='/mnt/causes-vnx1/DATABASES/eQTL/Whole_Blood_v7GTEXeQTL_sorted.vcf.gz'
+fields = ["GENES"]
+names = ["eQTL_GTEX_WholeBloodv7"]
+ops = ["self"]
+
+# GeneHancer
+[[annotation]]
+file='/mnt/causes-vnx1/DATABASES/ENHANCERS/GeneHancer_hg19.sorted.bed.gz'
+columns = [5]
+names = ["GeneHancer"]
+ops = ["self"]
+
+# PrimateAI
+[[annotation]]
+file='/mnt/causes-vnx1/DATABASES/PrimateAI_scores_v0.2_final.tsv.gz'
+columns=[11]
+names = ["PrimateAI"]
+ops = ["self"]
+
+
+# FATHMM-XF Noncoding
+#[[annotation]]
+#file = "/mnt/causes-vnx1/DATABASES/fathmm_xf_noncoding.vcf.gz"
+#columns = [5]
+#names = ["FATHMM-XF-NONCODING"]
+#ops = ["self"]
+
+# FATHMM-XF Coding, these need to be proper vcfs I think
+#[[annotation]]
+#file = "/mnt/causes-vnx1/DATABASES/fathmm_xf_coding.vcf.gz"
+#columns = [5]
+#names = ["FATHMM-XF-CODING"]
+#ops = ["self"]
+
+#gnomAD Genome Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GNOMAD/gnomad.genomes.r2.0.2.sites.wholeGenome.norm.vcf.gz"
+fields = ["AF","Hom","AF_AFR","Hom_AFR","AF_AMR","Hom_AMR","AF_ASJ","Hom_ASJ","AF_EAS","Hom_EAS","AF_FIN","Hom_FIN","AF_NFE","Hom_NFE","AF_OTH","Hom_OTH"]
+names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_af_afr","gnomad_genome_hom_afr","gnomad_genome_af_amr","gnomad_genome_hom_amr","gnomad_genome_af_asj","gnomad_genome_hom_asj","gnomad_genome_af_eas","gnomad_genome_hom_eas","gnomad_genome_af_fin","gnomad_genome_hom_fin","gnomad_genome_af_nfe","gnomad_genome_hom_nfe","gnomad_genome_af_oth","gnomad_genome_hom_oth"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self","self","self","self","self","self"]
+
+#gnomAD Exome Allele Frequency
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GNOMAD/gnomad.exomes.r2.0.2.sites.norm.vcf.gz"
+fields = ["AF","Hom","AF_AFR","Hom_AFR","AF_AMR","Hom_AMR","AF_ASJ","Hom_ASJ","AF_EAS","Hom_EAS","AF_FIN","Hom_FIN","AF_NFE","Hom_NFE","AF_OTH","Hom_OTH"]
+names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_af_afr","gnomad_exome_hom_afr","gnomad_exome_af_amr","gnomad_exome_hom_amr","gnomad_exome_af_asj","gnomad_exome_hom_asj","gnomad_exome_af_eas","gnomad_exome_hom_eas","gnomad_exome_af_fin","gnomad_exome_hom_fin","gnomad_exome_af_nfe","gnomad_exome_hom_nfe","gnomad_exome_af_oth","gnomad_exome_hom_oth"]
+ops = ["self","self","self","self","self","self","self","self","self","self","self","self","self","self","self","self"]
+
+
+#Count from in-house database, added by Phil Richmond
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/InHouseDatabase/MergedVCF.20170911.norm.vcf.gz"
+fields = ["AC"]
+names = ["InHouseDB_AC"]
+ops = ["self"]
+
+# Exome Sequencing Project
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/ESP6500SI.all.snps_indels.tidy.v2.vcf.gz"
+fields=["EA_AC", "AA_AC", "TAC"]
+names=["af_esp_ea_float", "af_esp_aa_float", "af_esp_all_float"]
+ops=["lua:ratio(vals)", "lua:ratio(vals)", "lua:ratio(vals)"]
+
+# dbSNP rsIds
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/dbsnp.b147.20160601.tidy.vcf.gz"
+fields=["ID"]
+names=["rs_ids"]
+ops=["concat"]
+
+# 1k Genomes
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5a.20130502.sites.tidy.vcf.gz"
+fields=["AMR_AF", "EAS_AF", "SAS_AF", "AFR_AF", "EUR_AF", "AF"]
+names=["af_1kg_amr", "af_1kg_eas", "af_1kg_sas", "af_1kg_afr", "af_1kg_eur", "af_1kg_all"]
+ops=["max", "max", "max", "max", "max", "max"]
+
+# ClinVar (Auto-updating)
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/clinvar.vcf.gz"
+fields=["CLNSIG", "CLNDN","CLNDISDB"]
+names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+ops=["self","self","self"]
+
+# Cosmic variants
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/cosmic-v68-GRCh37.tidy.vcf.gz"
+fields=["ID"]
+names=["cosmic_ids"]
+ops=["uniq"]
+
+# Fitcons
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19_fitcons_fc-i6-0_V1-01.bed.gz"
+columns=[4]
+names=["fitcons_float"]
+ops=["mean"]
+
+# not sure what these are, encode I guess?
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/encode.6celltypes.consensus.bedg.gz"
+#chrom   start   end     gm12878 h1hesc  helas3  hepg2   huvec   k562
+columns=[4,5,6,7,8,9]
+ops=["concat","concat", "concat", "concat", "concat", "concat"]
+names=[ "encode_consensus_gm12878", "encode_consensus_h1hesc", "encode_consensus_helas3", "encode_consensus_hepg2", "encode_consensus_huvec", "encode_consensus_k562"]
+
+# Gwas hits
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19.gwas.bed.gz"
+columns=[4]
+names=["gwas_pubmed_trait"]
+ops=["uniq"]
+
+# Repeat masked regions
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19.rmsk.bed.gz"
+columns=[4]
+names=["rmsk"]
+ops=["uniq"]
+
+# GERP Elements
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19.gerp.elements.bed.gz"
+columns=[4]
+names=["gerp_elements"]
+ops=["mean"]
+
+#CpG Islands
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19.CpG.bed.gz"
+columns=[2]
+names=["cpg_island"]
+ops=["flag"]
+
+#Seg Dups
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19.segdup.bed.gz"
+columns=[2]
+names=["in_segdup"]
+ops=["flag"]
+
+# RLCRs
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/RLCRs_no_repeatMaster.bed.gz"
+columns=[2]
+names=["in_rlcr"]
+ops=["flag"]
+
+# DGV hits
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/hg19.dgv.bed.gz"
+columns=[4]
+names=["dgv"]
+ops=["uniq"]
+
+# TFBSs (NEED TO UPDATE THIS TO JASPAR)
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/wgEncodeRegTfbsClusteredV2.cell_count.20130213.bed.gz"
+columns=[4]
+names=["tfbs"]
+ops=["uniq"]
+
+# HapMap II
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/genetic_map_HapMapII_GRCh37.gz"
+columns=[4, 5]
+ops=["mean", "mean"]
+names=["hapmap1", "hapmap2"]
+
+# DNAse open regions
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/stam.125cells.dnaseI.hg19.bed.gz"
+columns=[5, 6]
+ops=["mean", "uniq"]
+names=["stam_mean", "stam_names"]
+
+# Not sure what this is, CSE - HiSeq?
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/GEMINI/gemini_data/cse-hiseq-8_4-2013-02-20.bed.gz"
+columns=[2]
+ops=["flag"]
+names=["cse-hiseq"]
+
+# CADD
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/CADD/whole_genome_SNVs.tsv.gz"
+names=["CADD"]
+columns=[6]
+ops=["self"]
+
+# PolyPhen2
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/PolyPhen2/polyphen2.txt.gz"
+names=["pp2hdiv", "pp2hvar"]
+columns=[5, 6]
+ops=["max", "max"]
+
+# High Confidence Regions
+[[annotation]]
+file="/mnt/causes-vnx1/DATABASES/ConfidentRegions/ConfidentRegions.bed.gz"
+columns=[2]
+names=["ConfidentRegion"]
+ops=["flag"]
+
+
+

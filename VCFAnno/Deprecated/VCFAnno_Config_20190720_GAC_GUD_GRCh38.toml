@@ -1,0 +1,151 @@
+# This is the file read by VCFAnno that links to the database files for each annotation
+# It is maintained by Phillip Richmond (phillip.a.richmond@gmail.com)
+# If an annotation contains any post-annotations, then they will proceed the annotation call
+# I have made new annotations here at the top of this file, while the ones that I took from Brent Pedersen are usually pointing to GEMINI-2019 databases
+# Last edits: April 19 2018 (PAR)
+# Last edits: July 16 2018 (PAR) - added gnomad exome, dropped exac, 
+# Last edits: August 20 2018 (PAR) - Moved away from /mnt/causes-data01/ to /mnt/causes-vnx1/
+# Last edits: August 22nd 2018 (PAR) - Added eQTL
+# Last edits: January 31st 2019 (PAR) - updated gnomAD, added CADD v1.4
+# Last edits: February 28th, 2019 (PAR) - added CCR regions
+# Last edits: March 21st, 2019 (PAR) It's my mothafuckin birthday!! But really, this was a huge update which was tested for functionality
+	# new gnomad
+	# spliceAI
+	# FATHMM-XF-noncoding functional
+
+##gnomAD Genome Allele Frequency (all) and Homozygous Count (all), added by Phil Richmond
+## Updated to v2.1
+#[[annotation]]
+#file="GNOMAD/v2.1/gnomad.genomes.r2.1.sites.vcf.gz"
+#fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+#names = ["gnomad_genome_af_global","gnomad_genome_hom_global","gnomad_genome_ac_global","gnomad_genome_an_global","gnomad_genome_popmax","gnomad_genome_an_popmax","gnomad_genome_ac_popmax","gnomad_genome_af_popmax","gnomad_genome_hom_popmax","gnomad_genome_af_controls","gnomad_genome_hom_controls"]
+#ops = ["self","self","self","self","self","self","self","self","self","self","self"]
+#
+##gnomAD Exome Allele Frequency
+#[[annotation]]
+#file="GNOMAD/v2.1/gnomad.exomes.r2.1.sites.vcf.gz"
+#fields = ["AF","nhomalt","AC","AN","popmax","AN_popmax","AC_popmax","AF_popmax","nhomalt_popmax","controls_AF","controls_nhomalt"]
+#names = ["gnomad_exome_af_global","gnomad_exome_hom_global","gnomad_exome_ac_global","gnomad_exome_an_global","gnomad_exome_popmax","gnomad_exome_an_popmax","gnomad_exome_ac_popmax","gnomad_exome_af_popmax","gnomad_exome_hom_popmax","gnomad_exome_af_controls","gnomad_exome_hom_controls"]
+#ops = ["self","self","self","self","self","self","self","self","self","self","self"]
+
+## ClinVar (Auto-updating)
+[[annotation]]
+file="GRCh38/clinvar.vcf.gz"
+fields=["CLNSIG", "CLNDN","CLNDISDB"]
+names=["clinvar_pathogenic","clinvar_disease_name","clinvar_dbInfo"]
+ops=["self","self","self"]
+#
+## Cosmic variants
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/cosmic-v68-GRCh37.tidy.vcf.gz"
+#fields=["ID"]
+#names=["cosmic_ids"]
+#ops=["uniq"]
+#
+## Fitcons
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19_fitcons_fc-i6-0_V1-01.bed.gz"
+#columns=[4]
+#names=["fitcons_float"]
+#ops=["mean"]
+#
+## not sure what these are, encode I guess?
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/encode.6celltypes.consensus.bedg.gz"
+##chrom   start   end     gm12878 h1hesc  helas3  hepg2   huvec   k562
+#columns=[4,5,6,7,8,9]
+#ops=["concat","concat", "concat", "concat", "concat", "concat"]
+#names=[ "encode_consensus_gm12878", "encode_consensus_h1hesc", "encode_consensus_helas3", "encode_consensus_hepg2", "encode_consensus_huvec", "encode_consensus_k562"]
+#
+## Gwas hits
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19.gwas.bed.gz"
+#columns=[4]
+#names=["gwas_pubmed_trait"]
+#ops=["uniq"]
+#
+## Repeat masked regions
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19.rmsk.bed.gz"
+#columns=[4]
+#names=["rmsk"]
+#ops=["uniq"]
+#
+## GERP Elements
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19.gerp.elements.bed.gz"
+#columns=[4]
+#names=["gerp_elements"]
+#ops=["mean"]
+#
+##CpG Islands
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19.CpG.bed.gz"
+#columns=[2]
+#names=["cpg_island"]
+#ops=["flag"]
+#
+##Seg Dups
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19.segdup.bed.gz"
+#columns=[2]
+#names=["in_segdup"]
+#ops=["flag"]
+#
+## RLCRs
+#[[annotation]]
+#file="RLCRs_no_repeatMaster.bed.gz"
+#columns=[2]
+#names=["in_rlcr"]
+#ops=["flag"]
+#
+## DGV hits
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/hg19.dgv.bed.gz"
+#columns=[4]
+#names=["dgv"]
+#ops=["uniq"]
+#
+## TFBSs (NEED TO UPDATE THIS TO JASPAR)
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/wgEncodeRegTfbsClusteredV2.cell_count.20130213.bed.gz"
+#columns=[4]
+#names=["tfbs"]
+#ops=["uniq"]
+#
+## HapMap II
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/genetic_map_HapMapII_GRCh37.gz"
+#columns=[4, 5]
+#ops=["mean", "mean"]
+#names=["hapmap1", "hapmap2"]
+#
+## DNAse open regions
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/stam.125cells.dnaseI.hg19.bed.gz"
+#columns=[5, 6]
+#ops=["mean", "uniq"]
+#names=["stam_mean", "stam_names"]
+#
+## Not sure what this is, CSE - HiSeq?
+#[[annotation]]
+#file="GEMINI-2019/gemini_data/cse-hiseq-8_4-2013-02-20.bed.gz"
+#columns=[2]
+#ops=["flag"]
+#names=["cse-hiseq"]
+#
+# CADD
+# Updated to v1.4
+[[annotation]]
+file="GRCh38/CADD/v1.4/whole_genome_SNVs.tsv.gz"
+names=["CADD"]
+columns=[6]
+ops=["self"]
+#
+## CADD InDel
+[[annotation]]
+file="GRCh38/CADD/v1.4/InDels.tsv.gz"
+names=["CADD_indel"]
+columns=[6]
+ops=["self"]
+

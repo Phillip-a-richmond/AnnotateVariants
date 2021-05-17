@@ -17,10 +17,10 @@ import sys, os, argparse
 ##################
 
 if len(sys.argv) < 2:
-	print "Re-run with the -h option"
-	print "Typical Running Command:"
-	print "python MakePED.py --proband TIDEX1000_BWAmem,male,affected --father TIDEX1002_BWAmem,male,unaffected --mother TIDEX1001_BWAmem,female,unaffected --family T272 -O T272.ped"
-	print "WARNING: Only works for single-family set ups, and is currently limited to one sibling, and does not use ethnicity information."
+	print("Re-run with the -h option")
+	print("Typical Running Command:")
+	print("python MakePED.py --proband TIDEX1000_BWAmem,male,affected --father TIDEX1002_BWAmem,male,unaffected --mother TIDEX1001_BWAmem,female,unaffected --family T272 -O T272.ped")
+	print ("WARNING: Only works for single-family set ups, and is currently limited to one sibling, and does not use ethnicity information.")
 	sys.exit()
 
 
@@ -42,7 +42,7 @@ outfile = open(args.outfile,'w')
 TranslateDict = {'affected':2,'unaffected':1,'male':1,'female':2}
 
 # Write the header
-outfile.write("#family_id\tsample_id\tpaternal_id\tmaternal_id\tsex\tphenotype\tethnicity\n")
+#outfile.write("#family_id\tsample_id\tpaternal_id\tmaternal_id\tsex\tphenotype\n")
 
 
 
@@ -50,26 +50,26 @@ outfile.write("#family_id\tsample_id\tpaternal_id\tmaternal_id\tsex\tphenotype\t
 if args.father:
 	fatherCols = args.father.split(',')
 	fatherID = fatherCols[0]
-	outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,fatherCols[0],'-9','-9',TranslateDict[fatherCols[1]],TranslateDict[fatherCols[2]],'-9'))
+	outfile.write("%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,fatherCols[0],'0','0',TranslateDict[fatherCols[1]],TranslateDict[fatherCols[2]]))
 else: 
-	fatherID = '-9'
+	fatherID = '0'
 
 # Add the mother
 if args.mother:
 	motherCols = args.mother.split(',')
 	motherID = motherCols[0]
-	outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,motherCols[0],'-9','-9',TranslateDict[motherCols[1]],TranslateDict[motherCols[2]],'-9'))
+	outfile.write("%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,motherCols[0],'0','0',TranslateDict[motherCols[1]],TranslateDict[motherCols[2]]))
 else:
-	motherID = '-9'
+	motherID = '0'
 
 
 # Add the proband
 probandCols = args.proband.split(',')
-outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,probandCols[0],fatherID,motherID,TranslateDict[probandCols[1]],TranslateDict[probandCols[2]],'-9'))
+outfile.write("%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,probandCols[0],fatherID,motherID,TranslateDict[probandCols[1]],TranslateDict[probandCols[2]]))
 
 # Write out sibling
 if args.sibling:
 	siblingCols = args.sibling.split(',')
-	outfile.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,siblingCols[0],fatherID,motherID,TranslateDict[siblingCols[1]],TranslateDict[siblingCols[2]],'-9'))
+	outfile.write("%s\t%s\t%s\t%s\t%s\t%s\n"%(args.FamilyID,siblingCols[0],fatherID,motherID,TranslateDict[siblingCols[1]],TranslateDict[siblingCols[2]]))
 
 
