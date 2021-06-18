@@ -11,3 +11,5 @@ Icon
 opt/
 
 
+# Ignore test case1 directory (local testing)
+Test/Case1/

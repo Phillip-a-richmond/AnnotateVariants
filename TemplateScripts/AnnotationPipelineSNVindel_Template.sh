@@ -87,7 +87,7 @@ AF_CUTOFF=af_cutoff
 # Normalize VCF
 $BCFTOOLS norm \
 	-f $GENOME_DIR/$GENOME_FASTA \
-	--threads @NSLOTS \
+	--threads $NSLOTS \
 	-m - \
 	-O z \
 	--output $INVCF_NORM \
