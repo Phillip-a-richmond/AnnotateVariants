@@ -18,7 +18,7 @@ EMAIL=prichmond@bcchr.ca
 SEQ_TYPE=WGS
 
 # FAMILY INFO
-FAMILY_ID=IBS049
+FAMILY_ID=IBS049-single
 RAW_DIR=/mnt/common/OPEN_DATA/POLARIS_RAW/
 RAW_DIR_VAR="\/mnt\/common\/OPEN_DATA\/POLARIS_RAW\/"
 WORKING_DIR=/mnt/scratch/Public/TESTING/GenomicsPipelineTest/
@@ -64,6 +64,10 @@ PEDMAKER=$ANNOTATE_VARIANTS_DIR/PipelineScripts/MakePED.py
 EHDN_DIR_VAR='\/mnt\/common\/Precision\/ExpansionHunterDenovo\/ExpansionHunterDenovo-v0.9.0-linux_x86_64\/'
 ANNOVAR_DIR_VAR='\/mnt\/common\/WASSERMAN_SOFTWARE\/annovar\/'
 EHDN_BACKGROUND_DIR_VAR='\/mnt\/common\/DATABASES\/REFERENCES\/GRCh38\/ExpansionHunterDeNovo\/EHdn_v0.9.0_1000G_hg38\/'
+SMOOVE_SIF_VAR='\/mnt\/common\/Precision\/Smoove\/smoove_latest.sif'
+ANNOTSV_DIR_VAR='\/mnt\/common\/Precision\/AnnotSV\/'
+
+
 
 # For EHdn
 MINICONDA_DIR_VAR='\/mnt\/common\/Precision\/Miniconda2\/'
@@ -318,11 +322,36 @@ sed -i "s/annovar_dir/$ANNOVAR_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TE
 sed -i "s/ehdn_dir_var/$EHDN_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
 sed -i "s/ehdn_background_dir/$EHDN_BACKGROUND_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
 
-exit
+
+###########
 # Step 10 #
-# ExpansionHunter 3
+###########
+
+# Smoove + AnnotSV
+STEP10_TEMPLATE=RunSmooveAnnotSV_Template.sh
+
+## Input: dupremoved.sorted.bam, all of them in the working directory
+## Output: Annotated Smoove TSV
+
+## Copy the template
+cp ${TEMPLATE_DIR}/$STEP10_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+## Copy the smoove.sh script (no edits required)
+cp ${TEMPLATE_DIR}/smoove.sh ${WORKING_DIR}/smoove.sh
 
 
+## Edit the template
+sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/smoove_sif/$SMOOVE_SIF_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/smoove_sh/$SMOOVE_SH_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+
+exit
 
 
 

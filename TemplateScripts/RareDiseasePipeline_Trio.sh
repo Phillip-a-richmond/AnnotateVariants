@@ -17,28 +17,42 @@ EMAIL=prichmond@bcchr.ca
 SEQ_TYPE=WGS
 
 # FAMILY INFO
-FAMILY_ID=EPGEN055
-RAW_DIR=/mnt/scratch/Precision/EPGEN/RAW/$FAMILY_ID/
-RAW_DIR_VAR="\/mnt\/scratch\/Precision\/EPGEN\/RAW\/$FAMILY_ID\/"
-WORKING_DIR=/mnt/scratch/Precision/EPGEN/PROCESS/${FAMILY_ID}/
-WORKING_DIR_VAR="\/mnt\/scratch\/Precision\/EPGEN\/PROCESS\/${FAMILY_ID}\/"
+FAMILY_ID=IBS049
+RAW_DIR=/mnt/common/OPEN_DATA/POLARIS_RAW/
+RAW_DIR_VAR="\/mnt\/common\/OPEN_DATA\/POLARIS_RAW\/"
+WORKING_DIR=/mnt/scratch/Public/TESTING/GenomicsPipelineTest/
+WORKING_DIR_VAR="\/mnt\/scratch\/Public\/TESTING\/GenomicsPipelineTest\/"
 PED=$WORKING_DIR/${FAMILY_ID}.ped
 
 # PROBAND INFO
-PROBAND_SEX=male
-PROBAND_ID=EPGEN055-01
-PROBAND_FASTQR1=EPGEN055-01_1.fastq.gz
-PROBAND_FASTQR2=EPGEN055-01_2.fastq.gz
+PROBAND_SEX=female
+PROBAND_ID=HG01772
+PROBAND_FASTQR1=ERR2304565_1.fastq.gz
+PROBAND_FASTQR2=ERR2304565_2.fastq.gz
 
 #MOTHER_INFO
-MOTHER_ID=EPGEN055-02
-MOTHER_FASTQR1=EPGEN055-02_1.fastq.gz
-MOTHER_FASTQR2=EPGEN055-02_2.fastq.gz
+MOTHER_ID=HG01770
+MOTHER_PRESENT=true
+MOTHER_AFFECTED=unaffected
+MOTHER_FASTQR1=ERR1955435_1.fastq.gz
+MOTHER_FASTQR2=ERR1955435_2.fastq.gz
 
 #FATHER_INFO
-FATHER_ID=EPGEN055-03
-FATHER_FASTQR1=EPGEN055-03_1.fastq.gz
-FATHER_FASTQR2=EPGEN055-03_2.fastq.gz
+FATHER_ID=HG01771
+FATHER_PRESENT=true
+FATHER_AFFECTED=unaffected
+FATHER_FASTQR1=ERR1955499_1.fastq.gz
+FATHER_FASTQR2=ERR1955499_2.fastq.gz
+
+
+# SIBLING INFO
+SIBLING_PRESENT=false
+SIBLING_AFFECTED=unaffected
+SIBLING_SEX=.
+SIBLING_ID=.
+SIBLING_FASTQR1=.
+SIBLING_FASTQR2=.
+
 
 # HPO Ids (for exomiser, keep in this format):
 # "['HP:#######','HP:#######',...,'HP:#######']
@@ -73,7 +87,9 @@ PEDMAKER=$ANNOTATE_VARIANTS_DIR/PipelineScripts/MakePED.py
 EHDN_DIR_VAR='\/mnt\/common\/Precision\/ExpansionHunterDenovo\/ExpansionHunterDenovo-v0.9.0-linux_x86_64\/'
 ANNOVAR_DIR_VAR='\/mnt\/common\/WASSERMAN_SOFTWARE\/annovar\/'
 EHDN_BACKGROUND_DIR_VAR='\/mnt\/common\/DATABASES\/REFERENCES\/GRCh38\/ExpansionHunterDeNovo\/EHdn_v0.9.0_1000G_hg38\/'
-
+SMOOVE_SIF_VAR='\/mnt\/common\/Precision\/Smoove\/smoove_latest.sif'
+SMOOVE_SH_VAR='\/mnt\/common\/WASSERMAN_SOFTWARE\/AnnotateVariants\/TemplateScripts\/smoove.sh'
+ANNOTSV_DIR_VAR='\/mnt\/common\/Precision\/AnnotSV\/'
 
 # For EHdn
 MINICONDA_DIR_VAR='\/mnt\/common\/Precision\/Miniconda2\/'
@@ -373,12 +389,33 @@ sed -i "s/annovar_dir/$ANNOVAR_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TE
 sed -i "s/ehdn_dir_var/$EHDN_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
 sed -i "s/ehdn_background_dir/$EHDN_BACKGROUND_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
 
-exit
+###########
 # Step 10 #
-# ExpansionHunter 3
+###########
+
+# Smoove + AnnotSV
+STEP10_TEMPLATE=RunSmooveAnnotSV_Template.sh
+
+## Input: dupremoved.sorted.bam, all of them in the working directory
+## Output: Annotated Smoove TSV
+
+## Copy the template
+cp ${TEMPLATE_DIR}/$STEP10_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+## Copy the smoove.sh script (no edits required)
+cp ${TEMPLATE_DIR}/smoove.sh ${WORKING_DIR}/smoove.sh
 
 
-
+## Edit the template
+sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/smoove_sif/$SMOOVE_SIF_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/smoove_sh/$SMOOVE_SH_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 
 
 # Step 11 #
