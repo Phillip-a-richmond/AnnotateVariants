@@ -68,6 +68,10 @@ if [ "$FATHER_PRESENT" = true ] ; then
         echo "Father is present"
 fi
 
+# GeneList (For targeted annotation of SVs over specific genes)
+# Note: 2021-09-10, adding this in, but only reflects in MELT AnnotSV and smoove annotsv
+GENELIST_BOOL=true
+GENELIST="\/mnt\/scratch\/Precision\/EPGEN\/PROCESS\/EPGEN_Genes.txt"
 
 # HPO Ids (for exomiser, keep in this format):
 # "['HP:#######','HP:#######',...,'HP:#######']
@@ -432,9 +436,34 @@ sed -i "s/mother_boolean/$MOTHER_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP8_
 sed -i "s/father_boolean/$FATHER_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP8_TEMPLATE}
 sed -i "s/sibling_id/$SIBLING_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP8_TEMPLATE}
 
-
 ##########
 # Step 9 #
+##########
+
+# Call Mobile Element Insertions (MEIs) + Anno: MELT + AnnotSV
+STEP9_TEMPLATE=MELTAnnotSV_Template.sh
+
+## Input: Dupremoved.sorted.bam
+## Output: ALU.vcf, LINE.vcf, SINE.vcf
+
+## Copy the template
+cp ${TEMPLATE_DIR}/$STEP9_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+
+## Edit the template
+sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/genelist_bool/$GENELIST_BOOL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/genelist/$GENELIST/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
+
+
+##########
+# Step 10 #
 ##########
 
 # ExpansionHunter v5 (known pathogenic)
@@ -442,83 +471,83 @@ sed -i "s/sibling_id/$SIBLING_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP8_TEMPLATE
 ## Output: ALU.vcf, LINE.vcf, SINE.vcf
 
 ## Copy the template
-STEP9_TEMPLATE=RunExpansionHunter_Template.sh
-cp ${TEMPLATE_DIR}/$STEP9_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-
-## Edit the template
-sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/eh5_var/$EH5_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/eh5_catalog_var/$EH5_CATALOG_VAR" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/proband_id/$PROBAND_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/father_id/$FATHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/mother_id/$MOTHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-
-# Here I pass the booleans to the script so it can decide who to run
-sed -i "s/sibling_boolean/$SIBLING_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/mother_boolean/$MOTHER_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/father_boolean/$FATHER_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-sed -i "s/sibling_id/$SIBLING_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TEMPLATE}
-
-
-###########
-# Step 10 #
-###########
-
-# ExpansionHunter Denovo (REs) + Anno
-STEP10_TEMPLATE=RunExpansionHunterDenovo_Template.sh
-
-## Input: dupremoved.sorted.bam
-## Output: EHdn annotated tsv
-
-## Copy the template
+STEP10_TEMPLATE=RunExpansionHunter_Template.sh
 cp ${TEMPLATE_DIR}/$STEP10_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 
 ## Edit the template
 sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/miniconda_dir/$MINICONDA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/proband_id/$PROBAND_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/mother_id/$MOTHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/father_id/$FATHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/eh5_var/$EH5_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/eh5_catalog_var/$EH5_CATALOG_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
 sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/annovar_dir/$ANNOVAR_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/ehdn_dir_var/$EHDN_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
-sed -i "s/ehdn_background_dir/$EHDN_BACKGROUND_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/proband_id/$PROBAND_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/father_id/$FATHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/mother_id/$MOTHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+
+# Here I pass the booleans to the script so it can decide who to run
+sed -i "s/sibling_boolean/$SIBLING_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/mother_boolean/$MOTHER_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/father_boolean/$FATHER_PRESENT/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+sed -i "s/sibling_id/$SIBLING_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP10_TEMPLATE}
+
 
 ###########
 # Step 11 #
 ###########
 
+# ExpansionHunter Denovo (REs) + Anno
+STEP11_TEMPLATE=RunExpansionHunterDenovo_Template.sh
+
+## Input: dupremoved.sorted.bam
+## Output: EHdn annotated tsv
+
+## Copy the template
+cp ${TEMPLATE_DIR}/$STEP11_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+
+## Edit the template
+sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/miniconda_dir/$MINICONDA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/proband_id/$PROBAND_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/mother_id/$MOTHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/father_id/$FATHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/annovar_dir/$ANNOVAR_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/ehdn_dir_var/$EHDN_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/ehdn_background_dir/$EHDN_BACKGROUND_DIR_VAR/g"  ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+
+###########
+# Step 12 #
+###########
+
 # Smoove + AnnotSV
-STEP11_TEMPLATE=RunSmooveAnnotSV_Template.sh
+STEP12_TEMPLATE=RunSmooveAnnotSV_Template.sh
 
 ## Input: dupremoved.sorted.bam, all of them in the working directory
 ## Output: Annotated Smoove TSV
 
 ## Copy the template
-cp ${TEMPLATE_DIR}/$STEP11_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+cp ${TEMPLATE_DIR}/$STEP12_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
 ## Copy the smoove.sh script (no edits required)
 cp ${TEMPLATE_DIR}/smoove.sh ${WORKING_DIR}/smoove.sh
 
 
 ## Edit the template
-sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/smoove_sif/$SMOOVE_SIF_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
-sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_TEMPLATE}
+sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/smoove_sif/$SMOOVE_SIF_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
 
 
 
@@ -527,7 +556,6 @@ sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP11_T
 # Step 12 #
 ###########
 
-# ExpansionHunterv5 + REViewer
 # Parliament2 (SVs) + Anno
 
 

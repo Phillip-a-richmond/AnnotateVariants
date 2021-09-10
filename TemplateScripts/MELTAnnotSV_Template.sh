@@ -1,6 +1,6 @@
 #!/bin/bash
   
-#SBATCH --mail-user=prichmond@bcchr.ca
+#SBATCH --mail-user=email_address
 #SBATCH --mail-type=ALL
 
 ## CPU Usage
@@ -18,26 +18,27 @@
 # Set up #
 ##########
 
-# Load environment 
-ANNOTATE_VARIANTS_DIR=/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/
-source $ANNOTATE_VARIANTS_DIR/opt/miniconda3/etc/profile.d/conda.sh
-conda activate $ANNOTATE_VARIANTS_DIR/opt/AnnotateVariantsEnvironment/
-
-# Number of threads
-NSLOTS=$SLURM_CPUS_PER_TASK
+# Load env for bcftools
+ANNOTATEVARIANTS_INSTALL=annotate_variants_dir
+source $ANNOTATEVARIANTS_INSTALL/opt/miniconda3/etc/profile.d/conda.sh
+conda activate $ANNOTATEVARIANTS_INSTALL/opt/AnnotateVariantsEnvironment
+export ANNOTSV=annotsv_dir
 
 # Here working dir is the MELT subdirectory, assumes you have run MELT
-WORKING_DIR=/mnt/scratch/Public/TESTING/GenomicsPipelineTest/MELT/
+WORKING_DIR=working_dir/MELT/
 
 ## Set working space
 cd $WORKING_DIR
 
 #### GRCh38 #### 
 echo "GRCh38 genome"
-GENOME=GRCh38
-FASTA_DIR=/mnt/common/DATABASES/REFERENCES/GRCh38/GENOME/1000G/
-FASTA_FILE=GRCh38_full_analysis_set_plus_decoy_hla.fa
-FAMILY_ID=EPGEN029
+GENOME=genome_build
+FASTA_DIR=fasta_dir
+FASTA_FILE=fasta_file
+GENELIST_BOOL=genelist_bool
+GENELIST=genelist
+
+FAMILY_ID=family_id
 
 # BGZip the sub VCFs
 bgzip ALU.final_comp.vcf
@@ -60,13 +61,14 @@ bcftools concat -a \
        LINE1.final_comp.vcf.gz \
 	-o MergedMEI.vcf
 
-export ANNOTSV=/mnt/common/Precision/AnnotSV/
 # Annotate with targetd approach for epilepsy genes
-$ANNOTSV/bin/AnnotSV -SVinputFile MergedMEI.vcf \
-	-genomeBuild $GENOME \
-        -candidateGenesFile /mnt/scratch/Precision/EPGEN/PROCESS/EPGEN_Genes.txt \
-        -candidateGenesFiltering yes \
-       	-outputFile ${FAMILY_ID}_MergedMEI.epilepsygenes.annotated.tsv 
+if [ "$GENELIST_BOOL" = true ]; then
+	$ANNOTSV/bin/AnnotSV -SVinputFile MergedMEI.vcf \
+		-genomeBuild $GENOME \
+	        -candidateGenesFile $GENELIST \
+	        -candidateGenesFiltering yes \
+	       	-outputFile ${FAMILY_ID}_MergedMEI.candidategenes.annotated.tsv 
+fi
 
 $ANNOTSV/bin/AnnotSV -SVinputFile MergedMEI.vcf \
 	-genomeBuild $GENOME \
