@@ -67,6 +67,7 @@ cd $WORKING_DIR
 # Here I'm pulling with singularity, and recoding the variable GEMINI to equal the call to Gemini in the singularity container
 # This assumes a data directory has been specified, as seen above
 module load singularity
+export SINGULARITY_CACHEDIR=$PWD
 singularity pull docker://quay.io/biocontainers/gemini:0.20.0--py27_0
 GEMINI="singularity run -B /usr/lib/locale/:/usr/lib/locale/ -B $DATA_DIR:/data/ gemini_0.20.0--py27_0.sif  gemini" 
 MTOOLBOX_RSCRIPT=$ANNOTATE_VARIANTS_DIR/MToolBox_config_files/Mtoolbox.R

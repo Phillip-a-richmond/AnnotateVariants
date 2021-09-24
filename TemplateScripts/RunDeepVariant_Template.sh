@@ -28,6 +28,7 @@ source $ANNOTATEVARIANTS_INSTALL/opt/miniconda3/etc/profile.d/conda.sh
 conda activate $ANNOTATEVARIANTS_INSTALL/opt/AnnotateVariantsEnvironment
 
 # Pull latest version, if you already have it, this will be skipped
+export SINGULARITY_CACHEDIR=$PWD
 singularity pull docker://google/deepvariant:"${BIN_VERSION}"
 
 # Number of threads

@@ -52,6 +52,10 @@ BAM_DIR=$WORKING_DIR
 FAMILY_ID=family_id
 PED=$FAMILY_ID.ped
 
+# ANNOTSV Stuff
+
+export ANNOTSV=annotsv_dir
+
 # Smooooooove 
 # smoove - /mnt/common/Precision/Smoove/smoove_latest.sif
 singularity run \
@@ -64,11 +68,19 @@ singularity run \
 	
 
 # AnnotSV
-export ANNOTSV=annotsv_dir
+## If GeneList
+if [ "$GENELIST_BOOL" = true ]; then
+	$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/results-smoove/${FAMILY_ID}-smoove.genotyped.vcf.gz \
+		-genomeBuild $GENOME \
+	        -candidateGenesFile $GENELIST \
+                -candidateGenesFiltering yes \
+	       	-outputFile ${FAMILY_ID}-smoove-annotsv-candidateGenes 
+fi
+
+
+## Normal
 $ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/results-smoove/${FAMILY_ID}-smoove.genotyped.vcf.gz \
 	-genomeBuild $GENOME \
-	-overlap 80 \
-	-reciprocal yes \
        	-outputFile ${FAMILY_ID}-smoove-annotsv 
 
 

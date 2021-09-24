@@ -97,15 +97,16 @@ echo "BWA mem ran in $runtime"
 Start=`date +%s`
 
 samtools view -@ $NSLOTS -ubS $WORKING_DIR${SAMPLE_ID}.sam \
-        | samtools sort - -@ $NSLOTS  -T $WORKING_DIR${SAMPLE_ID}.sorted -O BAM -o $WORKING_DIR${SAMPLE_ID}.sorted.bam
+        | samtools sort - -@ $NSLOTS -m 6G -T $WORKING_DIR${SAMPLE_ID}.sorted -O BAM -o $WORKING_DIR${SAMPLE_ID}.sorted.bam
 samtools index $WORKING_DIR${SAMPLE_ID}.sorted.bam
 
 End=`date +%s`
 runtime=$((End-Start))
 echo "$SAMPLE_ID,Samtools,$runtime" >> $LOGFILE
 echo "Samtools ran in $runtime"
-
-rm $WORKING_DIR${SAMPLE_ID}.sam
+if [ -f $WORKING_DIR${SAMPLE_ID}.sorted.bam ]; then
+	rm $WORKING_DIR${SAMPLE_ID}.sam
+fi
 
 ######################
 # Picard Dup Removal #
@@ -118,7 +119,7 @@ source /cm/shared/BCCHR-apps/env_vars/unset_BCM.sh
 source /cvmfs/soft.computecanada.ca/config/profile/bash.sh
 module load picard
 
-java -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+java -Xmx40G -jar $EBROOTPICARD/picard.jar MarkDuplicates \
 	R=$BWA_INDEX \
 	I=$WORKING_DIR${SAMPLE_ID}.sorted.bam \
 	O=$WORKING_DIR${SAMPLE_ID}.dupremoved.sorted.bam \
@@ -131,5 +132,7 @@ conda activate $ANNOTATEVARIANTS_INSTALL/opt/AnnotateVariantsEnvironment
 
 samtools index $WORKING_DIR${SAMPLE_ID}.dupremoved.sorted.bam
 
-rm $WORKING_DIR${SAMPLE_ID}.sorted.bam
+if [ -f $WORKING_DIR${SAMPLE_ID}.dupremoved.sorted.bam.bai ]; then
+	rm $WORKING_DIR${SAMPLE_ID}.sorted.bam
+fi
 exit

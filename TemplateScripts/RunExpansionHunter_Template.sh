@@ -2,7 +2,6 @@
 
 #SBATCH --mail-user=prichmond@bcchr.ca
 #SBATCH --mail-type=ALL
-#SBATCH -p dev_q
 
 ## CPU Usage
 #SBATCH --mem=128G
@@ -20,7 +19,7 @@
 ##########
 
 # Run ExpansionHunter DeNovo 
-EH5=e5h_var
+EH5=eh5_var
 # eh5/mnt/common/Precision/ExpansionHunter/ExpansionHunter-v5.0.0-linux_x86_64/bin/ExpansionHunter
 CATALOG=eh5_catalog_var
 # /mnt/common/Precision/ExpansionHunter/ExpansionHunter-v5.0.0-linux_x86_64/variant_catalog/hg38/variant_catalog.json

@@ -35,6 +35,8 @@ echo "GRCh38 genome"
 GENOME=genome_build
 FASTA_DIR=fasta_dir
 FASTA_FILE=fasta_file
+
+# ANNOTSV Stuff
 GENELIST_BOOL=genelist_bool
 GENELIST=genelist
 
@@ -67,12 +69,12 @@ if [ "$GENELIST_BOOL" = true ]; then
 		-genomeBuild $GENOME \
 	        -candidateGenesFile $GENELIST \
 	        -candidateGenesFiltering yes \
-	       	-outputFile ${FAMILY_ID}_MergedMEI.candidategenes.annotated.tsv 
+	       	-outputFile ${FAMILY_ID}_MergedMEI-candidateGenes-annotsv 
 fi
 
 $ANNOTSV/bin/AnnotSV -SVinputFile MergedMEI.vcf \
 	-genomeBuild $GENOME \
-       	-outputFile ${FAMILY_ID}_MergedMEI.annotated.tsv 
+       	-outputFile ${FAMILY_ID}_MergedMEI-annotsv
 
 
 

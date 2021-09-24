@@ -548,22 +548,34 @@ sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEM
 sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
 sed -i "s/smoove_sif/$SMOOVE_SIF_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
 sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
-
-
-
+sed -i "s/genelist_bool/$GENELIST_BOOL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
+sed -i "s/genelist/$GENELIST/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP12_TEMPLATE}
 
 ###########
-# Step 12 #
+# Step 13 #
 ###########
 
-# Parliament2 (SVs) + Anno
+# Run Manta for SV calling
+STEP13_TEMPLATE=RunMantaTrio_Template.sh
 
+## Copy the template
+cp ${TEMPLATE_DIR}/$STEP13_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
 
+## Input: dupremoved.sorted.bam
+## Output: Smoove Annotated Manta SV
 
-
-# Experimental stuff?
-# Scripts still in development # ...
-
-
-
+## Edit the template
+sed -i "s/miniconda3_dir/$MINICONDA3_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/fasta_dir/$FASTA_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/fasta_file/$FASTA_FILE/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/genome_build/$GENOME_BUILD/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/proband_id/$PROBAND_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/mother_id/$MOTHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/father_id/$FATHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/genelist_bool/$GENELIST_BOOL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/genelist/$GENELIST/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
 
