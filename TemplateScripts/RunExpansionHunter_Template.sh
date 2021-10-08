@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --mail-user=prichmond@bcchr.ca
+#SBATCH --mail-user=email_address
 #SBATCH --mail-type=ALL
 
 ## CPU Usage

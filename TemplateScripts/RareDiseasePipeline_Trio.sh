@@ -53,6 +53,10 @@ SIBLING_ID=.
 SIBLING_FASTQR1=.
 SIBLING_FASTQR2=.
 
+# GeneList (For targeted annotation of SVs over specific genes)
+# Note: 2021-09-10, adding this in, but only reflects in MELT AnnotSV and smoove annotsv
+GENELIST_BOOL=true
+GENELIST="\/mnt\/scratch\/Precision\/EPGEN\/PROCESS\/EPGEN_Genes.txt"
 
 # HPO Ids (for exomiser, keep in this format):
 # "['HP:#######','HP:#######',...,'HP:#######']
@@ -398,7 +402,7 @@ sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP9_TE
 
 # ExpansionHunter v5 (known pathogenic)
 ## Input: Dupremoved.sorted.bam
-## Output: ALU.vcf, LINE.vcf, SINE.vcf
+## Output: VCF,bam,json from EH
 
 ## Copy the template
 STEP10_TEMPLATE=RunExpansionHunter_Template.sh
@@ -509,3 +513,4 @@ sed -i "s/father_id/$FATHER_ID/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
 sed -i "s/annotsv_dir/$ANNOTSV_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
 sed -i "s/genelist_bool/$GENELIST_BOOL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
 sed -i "s/genelist/$GENELIST/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}
+sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP13_TEMPLATE}

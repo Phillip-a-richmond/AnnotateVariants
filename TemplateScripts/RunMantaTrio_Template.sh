@@ -78,6 +78,11 @@ cd $ANALYSIS_DIR
         -g 64
 
 ## Step 3 - Annotate
+ANNOTATEVARIANTS_INSTALL=annotate_variants_dir
+source $ANNOTATEVARIANTS_INSTALL/opt/miniconda3/etc/profile.d/conda.sh
+conda activate $ANNOTATEVARIANTS_INSTALL/opt/AnnotateVariantsEnvironment
+
+
 ### With GeneList
 if [ "$GENELIST_BOOL" = true ]; then
 	$ANNOTSV/bin/AnnotSV -SVinputFile $ANALYSIS_DIR/results/variants/diploidSV.vcf.gz \
@@ -87,6 +92,7 @@ if [ "$GENELIST_BOOL" = true ]; then
 	        -outputFile ${FAMILY_ID}-MANTA-annotsv-candidateGenes
 fi
 	
+
 ### Without GeneList
 $ANNOTSV/bin/AnnotSV -SVinputFile $ANALYSIS_DIR/results/variants/diploidSV.vcf.gz \
         -genomeBuild $GENOME \

@@ -53,7 +53,8 @@ FAMILY_ID=family_id
 PED=$FAMILY_ID.ped
 
 # ANNOTSV Stuff
-
+GENELIST_BOOL=genelist_bool
+GENELIST=genelist
 export ANNOTSV=annotsv_dir
 
 # Smooooooove 
