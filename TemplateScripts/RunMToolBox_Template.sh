@@ -40,12 +40,13 @@ SAMPLE=sample_id
 RAW_DIR=raw_dir
 NSLOTS=$SLURM_CPUS_PER_TASK
 
-echo $SAMPLE
-echo "${SAMPLE}_1.fastq.gz"
-echo "${SAMPLE}_2.fastq.gz"
 
-FASTQR1=$RAW_DIR${SAMPLE}_1.fastq.gz
-FASTQR2=$RAW_DIR${SAMPLE}_2.fastq.gz
+FASTQR1=${RAW_DIR}/fastqr1
+FASTQR2=${RAW_DIR}/fastqr2
+
+echo $SAMPLE
+ls $FASTQR1
+ls $FASTQR2
 
 
 # Run MToolBox for mitochondrial variant analysis 
