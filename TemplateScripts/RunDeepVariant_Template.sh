@@ -88,6 +88,7 @@ singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
   /opt/deepvariant/bin/run_deepvariant \
   --model_type=WGS \
   --ref="/genomedir/$FASTA_FILE" \
+	  --intermediate_results_dir="/output/intermediate_results_dir" \
   --reads="/bamdir/$PROBAND_BAM" \
   --output_vcf="/output/$PROBAND_VCF" \
   --output_gvcf="/output/$PROBAND_GVCF" \
@@ -106,6 +107,7 @@ if [ "$SIBLING_PRESENT" = true ] ; then
 	  /opt/deepvariant/bin/run_deepvariant \
 	  --model_type=WGS \
 	  --ref="/genomedir/$FASTA_FILE" \
+	  --intermediate_results_dir="/output/intermediate_results_dir" \
 	  --reads="/bamdir/$SIBLING_BAM" \
 	  --output_vcf="/output/$SIBLING_VCF" \
 	  --output_gvcf="/output/$SIBLING_GVCF" \
@@ -123,6 +125,7 @@ if [ "$MOTHER_PRESENT" = true ] ; then
 	  /opt/deepvariant/bin/run_deepvariant \
 	  --model_type=WGS \
 	  --ref="/genomedir/$FASTA_FILE" \
+	  --intermediate_results_dir="/output/intermediate_results_dir" \
 	  --reads="/bamdir/$MOTHER_BAM" \
 	  --output_vcf="/output/$MOTHER_VCF" \
 	  --output_gvcf="/output/$MOTHER_GVCF" \
@@ -139,6 +142,7 @@ if [ "$FATHER_PRESENT" = true ] ; then
 		docker://google/deepvariant:"${BIN_VERSION}" \
 	  /opt/deepvariant/bin/run_deepvariant \
 	  --model_type=WGS \
+	  --intermediate_results_dir="/output/intermediate_results_dir" \
 	  --ref="/genomedir/$FASTA_FILE" \
 	  --reads="/bamdir/$FATHER_BAM" \
 	  --output_vcf="/output/$FATHER_VCF" \

@@ -95,7 +95,7 @@ singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
 
 
 #GLNexus
-/mnt/common/Precision/GLNexus/glnexus_cli -c DeepVariant${SEQ_TYPE} \
+/mnt/common/Precision/GLNexus/glnexus_cli -c DeepVariant_unfiltered \
         $PROBAND_GVCF \
         $FATHER_GVCF \
         $MOTHER_GVCF \

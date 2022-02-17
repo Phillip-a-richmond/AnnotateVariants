@@ -4,8 +4,8 @@
 #SBATCH --mail-type=ALL
 
 ## CPU Usage
-#SBATCH --mem=350G
-#SBATCH --cpus-per-task=40
+#SBATCH --mem=32G
+#SBATCH --cpus-per-task=4
 #SBATCH --time=48:00:00
 #SBATCH --nodes=1
 
@@ -22,11 +22,6 @@
 ANNOTATEVARIANTS_INSTALL=/mnt/common/WASSERMAN_SOFTWARE/AnnotateVariants/
 source $ANNOTATEVARIANTS_INSTALL/opt/miniconda3/etc/profile.d/conda.sh
 conda activate $ANNOTATEVARIANTS_INSTALL/opt/AnnotateVariantsEnvironment
-
-# Smoove
-# Assumes you have a smoove.sh script copied to your BAM dir
-SMOOVE_SIF=/mnt/common/Precision/Smoove/smoove_latest.sif
-ANNOTSV=/mnt/common/Precision/AnnotSV/
 
 # Load singularity
 module load singularity
@@ -53,42 +48,100 @@ BAM_DIR=$WORKING_DIR
 # ANNOTSV Stuff
 GENELIST_BOOL=true
 GENELIST=/mnt/scratch/Precision/EPGEN/PROCESS/EPGEN_Genes.txt
-
 export ANNOTSV=/mnt/common/Precision/AnnotSV/
+
+#################
+# For Merged SV #
+#################
+
+
+##########
+# Smoove #
+##########
+#INPUT_MERGED_VCF=InHouseDB_SV_50_20211130.vcf
+#INPUT_MERGED_VCF_CLEANED=InHouseDB_SV_50_20211130_noTRA.vcf
+#INPUT_MERGED_VCF_BND=InHouseDB_SV_50_20211130_BND.vcf
+#OUTPUT=InHouseDB_SV_50_20211130_noTRA_annotsv
+#
+## Clean out TRA (from BNDs)
+#grep -v -w 'TRA' $INPUT_MERGED_VCF > $INPUT_MERGED_VCF_CLEANED
+#
+#
+## AnnotSV
+### If GeneList
+#if [ "$GENELIST_BOOL" = true ]; then
+#	$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/$INPUT_MERGED_VCF_CLEANED \
+#		-genomeBuild $GENOME \
+#	        -candidateGenesFile $GENELIST \
+#                -candidateGenesFiltering yes \
+#	       	-outputFile ${OUTPUT}-candidateGenes
+#fi
+#
+#
+## Normal
+#$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/$INPUT_MERGED_VCF_CLEANED \
+#	-genomeBuild $GENOME \
+#       	-outputFile $OUTPUT
+
+
+# Focus on BNDs
+# In development
+#grep 'SVTYPE=TRA' $INPUT_MERGED_VCF | sed -e 's/TRA/BND/g' > InHouseDB_SV_50_20211130_BND.vcf
+
+
+
+#########
+# MANTA #
+#########
+INPUT_MERGED_VCF=InHouseDB_SV_Manta_50_20211130.vcf
+INPUT_MERGED_VCF_CLEANED=InHouseDB_SV_Manta_50_20211130_noTRA.vcf
+OUTPUT=InHouseDB_SV_Manta_50_20211130_noTRA_annotsv
+
+# Clean out TRA (from BNDs)
+grep -v -w 'TRA' $INPUT_MERGED_VCF > $INPUT_MERGED_VCF_CLEANED
+
+
 # AnnotSV
-# For Merged SV
 ## If GeneList
 if [ "$GENELIST_BOOL" = true ]; then
-	$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/InHouseDB_SV_50_20210827_noTRA.vcf \
+	$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/$INPUT_MERGED_VCF_CLEANED \
 		-genomeBuild $GENOME \
 	        -candidateGenesFile $GENELIST \
                 -candidateGenesFiltering yes \
-	       	-outputFile InHouseDB_SV_50_20210827_noTRA-annotsv-candidateGenes 
+	       	-outputFile ${OUTPUT}-candidateGenes
 fi
 
 
-## Normal
-#$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/InHouseDB_SV_50_20210827_noTRA.vcf \
-#	-genomeBuild $GENOME \
-#       	-outputFile InHouseDB_SV_50_20210827_noTRA-annotsv 
+# Normal
+$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/$INPUT_MERGED_VCF_CLEANED \
+	-genomeBuild $GENOME \
+       	-outputFile $OUTPUT
+
+exit
+
+# Focus on BNDs
+# In development
+#grep 'SVTYPE=TRA' $INPUT_MERGED_VCF | sed -e 's/TRA/BND/g' > InHouseDB_SV_50_20211130_BND.vcf
 
 
-# For Merged MEI
-# AnnotSV
-# For Merged SV
+##################
+# For Merged MEI #
+##################
+INPUT_MERGED_VCF=InHouseDB_MEI_15_20211130.vcf
+OUTPUT=InHouseDB_MEI_15_20211130_annotsv
 ## If GeneList
 if [ "$GENELIST_BOOL" = true ]; then
-        $ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/InHouseDB_MEI_15_20210827.vcf \
+        $ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/$INPUT_MERGED_VCF \
                 -genomeBuild $GENOME \
                 -candidateGenesFile $GENELIST \
                 -candidateGenesFiltering yes \
-                -outputFile InHouseDB_MEI_15_20210827-annotsv-candidateGenes
+                -outputFile ${OUTPUT}-candidateGenes 
 fi
 
 
-## Normal
-#$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/InHouseDB_MEI_15_20210827.vcf \
-#        -genomeBuild $GENOME \
-#        -outputFile InHouseDB_MEI_15_20210827-annotsv
+# Normal
+$ANNOTSV/bin/AnnotSV -SVinputFile $WORKING_DIR/$INPUT_MERGED_VCF \
+        -genomeBuild $GENOME \
+        -outputFile $OUTPUT
 
 
