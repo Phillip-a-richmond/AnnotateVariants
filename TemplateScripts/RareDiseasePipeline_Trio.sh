@@ -237,6 +237,8 @@ sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${PROBAND_ID}_${STEP4_TEMPLATE}
 sed -i "s/sample_id/$PROBAND_ID/g" ${WORKING_DIR}/${PROBAND_ID}_${STEP4_TEMPLATE}
 sed -i "s/mtoolbox_dir/$MTOOLBOX_DIR/g" ${WORKING_DIR}/${PROBAND_ID}_${STEP4_TEMPLATE}
 sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${PROBAND_ID}_${STEP4_TEMPLATE}
+sed -i "s/fastqr1/$PROBAND_FASTQR1/g" ${WORKING_DIR}/${PROBAND_ID}_${STEP4_TEMPLATE}
+sed -i "s/fastqr2/$PROBAND_FASTQR2/g" ${WORKING_DIR}/${PROBAND_ID}_${STEP4_TEMPLATE}
 
 ## Mother
 ### Copy the template
@@ -250,6 +252,8 @@ sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${MOTHER_ID}_${STEP4_TEMPLATE}
 sed -i "s/sample_id/$MOTHER_ID/g" ${WORKING_DIR}/${MOTHER_ID}_${STEP4_TEMPLATE}
 sed -i "s/mtoolbox_dir/$MTOOLBOX_DIR/g" ${WORKING_DIR}/${MOTHER_ID}_${STEP4_TEMPLATE}
 sed -i "s/family_id/$FAMILY_ID/g" ${WORKING_DIR}/${MOTHER_ID}_${STEP4_TEMPLATE}
+sed -i "s/fastqr1/$MOTHER_FASTQR1/g" ${WORKING_DIR}/${MOTHER_ID}_${STEP4_TEMPLATE}
+sed -i "s/fastqr2/$MOTHER_FASTQR2/g" ${WORKING_DIR}/${MOTHER_ID}_${STEP4_TEMPLATE}
 
 
 ##########
