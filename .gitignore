@@ -13,3 +13,7 @@ opt/
 
 # Ignore test case1 directory (local testing)
 Test/Case1/
+
+# Ignore out and error files
+*out
+*error
