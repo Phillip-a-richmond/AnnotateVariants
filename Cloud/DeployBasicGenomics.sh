@@ -6,7 +6,8 @@
 ## Step 0 - get miniconda3 and docker #
 #######################################
 #
-## This Gist assumes you have Miniconda. If no Miniconda, fix your life, do step 0.
+
+## Start with miniconda
   
 function buildMiniConda3() 
 {
