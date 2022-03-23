@@ -17,3 +17,12 @@ Test/Case1/
 # Ignore out and error files
 *out
 *error
+
+# Ignore miniconda deployments
+*/miniconda3/*
+
+# ignore genome deployements
+*/Genomes/*
+
+# excord
+*excord*

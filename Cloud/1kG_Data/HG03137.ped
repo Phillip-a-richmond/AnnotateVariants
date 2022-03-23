@@ -1,0 +1,4 @@
+sampleID fatherID motherID sex
+HG03136	0	0	1
+HG03135	0	0	2
+HG03137	HG03136	HG03135	1

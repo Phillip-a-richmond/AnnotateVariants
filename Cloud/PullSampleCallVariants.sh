@@ -15,6 +15,10 @@
 # Set up #
 ##########
 
+
+# open up scratch
+sudo chmod ugo=rwx -R /scratch/
+
 # Running for this sample, Ideally would automate this from batch script to pull from file
 Sample_ID=NA21143
 
@@ -63,23 +67,47 @@ sudo apt-get -y install docker.io
 sudo docker pull google/deepvariant:"${BIN_VERSION}"
 
 # Call variants
-sudo docker run \
-	-v "${CRAM_Dir}":"/cramdir" \
-	-v "${Fasta_Dir}":"/genomedir" \
-	-v "${Output_Dir}":"/output" \
-	google/deepvariant:"${BIN_VERSION}" \
-  /opt/deepvariant/bin/run_deepvariant \
-  --model_type=${Seq_Type} \
-  --ref="/genomedir/$Fasta_File" \
-	  --intermediate_results_dir="/output/intermediate_results_dir" \
-  --reads="/cramdir/$Sample_CRAM" \
-  --output_vcf="/output/${Sample_VCF}" \
-  --output_gvcf="/output/${Sample_GVCF}" \
-  --num_shards=$SLURM_CPUS_PER_TASK 
+#sudo docker run \
+#	-v "${CRAM_Dir}":"/cramdir" \
+#	-v "${Fasta_Dir}":"/genomedir" \
+#	-v "${Output_Dir}":"/output" \
+#	google/deepvariant:"${BIN_VERSION}" \
+#  /opt/deepvariant/bin/run_deepvariant \
+#  --model_type=${Seq_Type} \
+#  --ref="/genomedir/$Fasta_File" \
+#	  --intermediate_results_dir="/output/intermediate_results_dir" \
+#  --reads="/cramdir/$Sample_CRAM" \
+#  --output_vcf="/output/${Sample_VCF}" \
+#  --output_gvcf="/output/${Sample_GVCF}" \
+#  --num_shards=$SLURM_CPUS_PER_TASK 
 
+# Get discordant reads in bed file
+
+## Get tool
+wget -O excord https://github.com/brentp/excord/releases/download/v0.2.2/excord_linux64
+chmod +x ./excord
+
+## Activate miniconda environment
+source /shared/miniconda3/etc/profile.d/conda.sh 
+conda activate /shared/miniconda3/envs/Mamba/envs/SeqTools
+
+# Make a bam file
+samtools view -@ 8 -b $CRAM_Dir/$Sample_CRAM -o $CRAM_Dir/$Sample_ID.bam
+
+samtools view -b $CRAM_Dir/$Sample_ID.bam |
+	./excord \
+	--discordantdistance 500 \
+	--fasta $Fasta_Dir/$Fasta_File \
+	/dev/stdin \
+	| LC_ALL=C sort --buffer-size 2G -k1,1 -k2,2n -k3,3n \
+	| bgzip -c $Output_Dir/$Sample_ID.bed.gz
+
+
+# Copy data back to final directory
 cp $Output_Dir/${Sample_GVCF} $Final_Dir
 cp $Output_Dir/${Sample_VCF} $Final_Dir
 
+cp $Sample_ID.bed.gz $Final_Dir
 
 exit
 

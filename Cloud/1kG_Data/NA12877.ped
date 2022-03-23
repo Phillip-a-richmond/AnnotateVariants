@@ -1,0 +1,4 @@
+sampleID fatherID motherID sex
+NA12889	0	0	1
+NA12890	0	0	2
+NA12877	NA12889	NA12890	1

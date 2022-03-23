@@ -2,16 +2,18 @@
 ## Author: Phillip Richmond (prichmond@bcchr.ca) 
 ## LICENSE: CC-BY-SA 4.0. https://creativecommons.org/licenses/by-sa/4.0/ 
 #
-#######################################
-## Step 0 - get miniconda3 and docker #
-#######################################
+#############################
+## Step 0 - get miniconda3  #
+#############################
 #
+# Set the install directory for this cloud deployment
+CloudDeployment=$PWD
 
 ## Start with miniconda
   
 function buildMiniConda3() 
 {
-        DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+        DIR=$CloudDeployment
         MINI_CONDA_INSTALL_DIR=$DIR/miniconda3
 
         wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -31,37 +33,37 @@ buildMiniConda3
 ##########################################
 #
 ### If you ran setup above, use this
-MINICONDA3=$PWD/miniconda3
+MINICONDA3=$CloudDeployment/miniconda3
 #
 ### Otherwise, where is your miniconda3
 ##MINICONDA3=/mnt/common/Precision/Miniconda3/opt/miniconda3/
 source $MINICONDA3/etc/profile.d/conda.sh
-#
-### Mamba is better, will help solve envs far faster
-#conda create -y -c conda-forge -n Mamba \
-#	mamba
-#	
-#conda activate Mamba
-#
-### Get your tools. First time I ran this it took awhile to solve, so kept fgbio separate for now.
-#mamba create -y -c bioconda -n FGbio \
-#	fgbio=1.5.1 
-#
-#### here I'm adding bwa,samtools, htslib, picard
-#mamba create -y -c bioconda -n SeqTools \
-#	samtools htslib bwa picard 
-#
-### Activate it to get our tools
-### Note, put this inside a mamba env, so need to specify the env path
-#conda activate $MINICONDA3/envs/Mamba/envs/FGbio
-#fgbio --help
-#
-### Test this environment too
-#conda activate $MINICONDA3/envs/Mamba/envs/SeqTools
-#bwa --help
-#samtools --help
-#
-#
+
+## Mamba is better, will help solve envs far faster
+conda create -y -c conda-forge -n Mamba \
+	mamba
+	
+conda activate Mamba
+
+## Get your tools. First time I ran this it took awhile to solve, so kept fgbio separate for now.
+mamba create -y -c bioconda -n FGbio \
+	fgbio=1.5.1 
+
+### here I'm adding bwa,samtools, htslib, picard
+mamba create -y -c bioconda -n SeqTools \
+	samtools htslib bwa picard 
+
+## Activate it to get our tools
+## Note, put this inside a mamba env, so need to specify the env path
+conda activate $MINICONDA3/envs/Mamba/envs/FGbio
+fgbio --help
+
+## Test this environment too
+conda activate $MINICONDA3/envs/Mamba/envs/SeqTools
+bwa --help
+samtools --help
+
+
 ########################
 # Step 2: Get new data #
 ########################
@@ -69,8 +71,8 @@ source $MINICONDA3/etc/profile.d/conda.sh
 ## Get new Fasta
 function GetFastas()
 {
-	mkdir $PWD/Genomes/
-	cd $PWD/Genomes/
+	mkdir $CloudDeployment/Genomes/
+	cd $CloudDeployment/Genomes/
 	wget -c -q https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.29_GRCh38.p14/GCA_000001405.29_GRCh38.p14_genomic.fna.gz 
 	gunzip GCA_000001405.29_GRCh38.p14_genomic.fna.gz 
 
@@ -95,9 +97,8 @@ GetFastas
 conda activate $MINICONDA3/envs/Mamba/envs/SeqTools
 
 ## Samtools faidx
-cd $PWD/Genomes/
+cd $CloudDeployment/Genomes/
 samtools faidx GCA_000001405.29_GRCh38.p14_genomic.fna
-
 samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
 
 
@@ -106,6 +107,7 @@ samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
 ###############################################
 
 ## Picard create sequence dictionary
+cd $CloudDeployment/Genomes/
 picard CreateSequenceDictionary \
 	R=GCA_000001405.29_GRCh38.p14_genomic.fna \
 	O=GCA_000001405.29_GRCh38.p14_genomic.dict
@@ -116,6 +118,7 @@ picard CreateSequenceDictionary \
 conda activate $MINICONDA3/envs/Mamba/envs/FGbio
 
 ## Collect alternate contig names from the assembly report
+cd $CloudDeployment/Genomes/
 fgbio CollectAlternateContigNames \
 	-i GCA_000001405.29_GRCh38.p14_assembly_report.txt \
 	-o GCA_000001405.29_GRCh38.p14_genomic_alternate.dict \
@@ -131,6 +134,7 @@ fgbio SortSequenceDictionary \
 ############################################
 # Step 6: change the seqnames of the fasta #
 ############################################
+cd $CloudDeployment/Genomes/
 fgbio UpdateFastaContigNames \
 	-i GCA_000001405.29_GRCh38.p14_genomic.fna \
 	-d GCA_000001405.29_GRCh38.p14_genomic_sorted_alternate.dict \
