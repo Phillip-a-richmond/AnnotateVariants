@@ -67,19 +67,19 @@ sudo apt-get -y install docker.io
 sudo docker pull google/deepvariant:"${BIN_VERSION}"
 
 # Call variants
-#sudo docker run \
-#	-v "${CRAM_Dir}":"/cramdir" \
-#	-v "${Fasta_Dir}":"/genomedir" \
-#	-v "${Output_Dir}":"/output" \
-#	google/deepvariant:"${BIN_VERSION}" \
-#  /opt/deepvariant/bin/run_deepvariant \
-#  --model_type=${Seq_Type} \
-#  --ref="/genomedir/$Fasta_File" \
-#	  --intermediate_results_dir="/output/intermediate_results_dir" \
-#  --reads="/cramdir/$Sample_CRAM" \
-#  --output_vcf="/output/${Sample_VCF}" \
-#  --output_gvcf="/output/${Sample_GVCF}" \
-#  --num_shards=$SLURM_CPUS_PER_TASK 
+sudo docker run \
+	-v "${CRAM_Dir}":"/cramdir" \
+	-v "${Fasta_Dir}":"/genomedir" \
+	-v "${Output_Dir}":"/output" \
+	google/deepvariant:"${BIN_VERSION}" \
+  /opt/deepvariant/bin/run_deepvariant \
+  --model_type=${Seq_Type} \
+  --ref="/genomedir/$Fasta_File" \
+	  --intermediate_results_dir="/output/intermediate_results_dir" \
+  --reads="/cramdir/$Sample_CRAM" \
+  --output_vcf="/output/${Sample_VCF}" \
+  --output_gvcf="/output/${Sample_GVCF}" \
+  --num_shards=$SLURM_CPUS_PER_TASK 
 
 # Get discordant reads in bed file
 

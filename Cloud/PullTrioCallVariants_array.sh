@@ -9,7 +9,7 @@
 ## Output and Stderr
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
-
+#SBATCH --array=2-21%20
 
 ##########
 # Set up #
@@ -28,7 +28,7 @@ sudo chmod ugo=rwx -R /scratch/
 
 # Running for this trio stored in a ped file. All the ped files are stored in that directory, which we will loop through in the next script
 # Setting this for dev before running the array
-SLURM_ARRAY_TASK_ID=1
+#SLURM_ARRAY_TASK_ID=1
 
 # Found this online. real useful
 # https://stackoverflow.com/questions/21668471/bash-script-create-array-of-all-files-in-a-directory
