@@ -17,6 +17,7 @@ Test/Case1/
 # Ignore out and error files
 *out
 *error
+*.tar.gz
 
 # Ignore miniconda deployments
 */miniconda3/*
