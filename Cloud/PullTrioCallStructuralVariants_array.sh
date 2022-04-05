@@ -1,9 +1,8 @@
 #!/bin/bash
 
-
 ## CPU Usage
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=32
 ## Output and Stderr
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
@@ -18,6 +17,12 @@
 sudo chmod ugo=rwx -R /scratch/
 sudo chmod ugo=rwx -R /shared/
 
+# Set a log file
+# Timing from here to end of script
+FullRunStart=`date +%s`
+echo "Timestamp. Starting analysis: $date"
+echo "In seconds: $FullRunStart"
+
 ##########
 # Part 1 #
 ##########
@@ -26,7 +31,7 @@ sudo chmod ugo=rwx -R /shared/
 
 # Running for this trio stored in a ped file. All the ped files are stored in that directory, which we will loop through in the next script
 # Setting this for dev before running the array
-SLURM_ARRAY_TASK_ID=1
+SLURM_ARRAY_TASK_ID=2
 
 # Found this online. real useful
 # https://stackoverflow.com/questions/21668471/bash-script-create-array-of-all-files-in-a-directory
@@ -54,11 +59,18 @@ Working_Dir=/shared/$childid
 mkdir -p $Working_Dir
 cd $Working_Dir
 
+Final_Dir=/shared/SVs/
+mkdir -p $Final_Dir
+
 ##########
 # Part 2 #
 ##########
 
 # Download the data for father, mother, child from s3, and rename it
+Start=`date +%s`
+echo "Timestamp. Step2-Start: Downloading data, $date"
+echo "In seconds: $Start"
+
 
 # download father data
 aws s3 cp --dryrun --recursive --no-sign-request s3://1000genomes/data/$fatherid/alignment/ .
@@ -98,9 +110,21 @@ Seq_Type=WGS
 Fasta_Dir=/shared/AnnotateVariants/Cloud/Genomes/
 Fasta_File=GRCh38_full_analysis_set_plus_decoy_hla.fa
 
+End=`date +%s`
+runtime=$((End-Start))
+echo "Timestamp. Step2-End: Downloading data, $date"
+echo "In seconds: $End"
+echo "Step2 Runtime: $runtime"
+
+
 ##########
 # Part 3 #
 ##########
+
+Start=`date +%s`
+echo "Timestamp. Step3-Start: Running Manta, $date"
+echo "In seconds: $Start"
+
 
 # here I will Manta joint for the trio
 
@@ -120,13 +144,26 @@ configManta.py \
 ## Step 2 - Execute config script
 cd $Working_Dir
 ./runWorkflow.py \
-        -j 32 \
-        -g 64
+        -j 64 \
+        -g 128
+
+## Manta copy data back
+cp $Working_Dir/results/variants/diploidSV.vcf.gz $Final_Dir/${childid}_Manta_diploidSV.vcf.gz
+
+End=`date +%s`
+runtime=$((End-Start))
+echo "Timestamp. Step3-End: Running Manta,  $date"
+echo "In seconds: $End"
+echo "Step3 Runtime: $runtime"
 
 
 ##########
 # Part 4 #
 ##########
+
+Start=`date +%s`
+echo "Timestamp. Step4-Start: Running smoove, $date"
+echo "In seconds: $Start"
 
 # Get Docker
 sudo apt -y update
@@ -140,52 +177,71 @@ cp /shared/AnnotateVariants/Cloud/smoove.sh $Working_Dir
 sudo docker run \
         -v "${CRAM_Dir}":"/cramdir" \
         -v "${Fasta_Dir}":"/genomedir" \
-        -v "${Output_Dir}":"/output" \
-        -it brentp/smoove \
-        bash /bamdir/smoove.sh 32 $childid $Fasta_File \
+        -v "${Working_Dir}":"/output" \
+        brentp/smoove \
+        bash /cramdir/smoove.sh 32 $childid $Fasta_File 
 
+## Smoove copy data back
+cp $Working_Dir/results-smoove/${childid}-smoove.genotyped.vcf.gz $Final_Dir
+
+End=`date +%s`
+runtime=$((End-Start))
+echo "Timestamp. Step4-End: Running smoove,  $date"
+echo "In seconds: $End"
+echo "Step4 Runtime: $runtime"
 
 ##########
 # Part 5 #
 ##########
 
-
-# Copy Variant data back to /shared/
-## Smoove
-cp $Output_Dir/results-smoove/${childid}-smoove.genotyped.vcf.gz $Final_Dir
-
-## Manta
-cp $Output_Dir/results/variants/diploidSV.vcf.gz $Final_Dir/${childid}_Manta_diploidSV.vcf.gz
-
-
-exit
-
-##########
-# Part 6 #
-##########
+Start=`date +%s`
+echo "Timestamp. Step5-Start: Excord,  $date"
+echo "In seconds: $Start"
 
 # Get discordant reads in bed file
 
 ## Get tool
-wget -O excord https://github.com/brentp/excord/releases/download/v0.2.2/excord_linux64
+wget -c -q -O excord https://github.com/brentp/excord/releases/download/v0.2.2/excord_linux64
 chmod +x ./excord
 
 ## Activate miniconda environment
-source /shared/miniconda3/etc/profile.d/conda.sh 
-conda activate /shared/miniconda3/envs/Mamba/envs/SeqTools
+source /shared/AnnotateVariants/Cloud/miniconda3/etc/profile.d/conda.sh
+conda activate /shared/AnnotateVariants/Cloud/miniconda3/envs/Mamba/envs/SeqTools
+
+Sample_ID=$childid
+Sample_CRAM=$Sample_ID.cram
 
 # Make a bam file
-samtools view -@ 8 -b $CRAM_Dir/$Sample_CRAM -o $CRAM_Dir/$Sample_ID.bam
+samtools view -@ 64 \
+       	-b $CRAM_Dir/$Sample_CRAM \
+	-T $Fasta_Dir/$Fasta_File \
+	-o $CRAM_Dir/$Sample_ID.bam
 
-samtools view -b $CRAM_Dir/$Sample_ID.bam |
-        ./excord \
+samtools index -@ 64 $CRAM_Dir/$Sample_ID.bam
+
+samtools view -b $CRAM_Dir/$Sample_ID.bam | \
+        $CRAM_Dir/excord \
         --discordantdistance 500 \
         --fasta $Fasta_Dir/$Fasta_File \
         /dev/stdin \
         | LC_ALL=C sort --buffer-size 2G -k1,1 -k2,2n -k3,3n \
-        | bgzip -c $Output_Dir/$Sample_ID.bed.gz
-
+        | bgzip -c $CRAM_Dir/$Sample_ID.bed.gz
 
 cp $Sample_ID.bed.gz $Final_Dir
 
+End=`date +%s`
+runtime=$((End-Start))
+echo "Timestamp. Step5-End: Running smoove,  $date"
+echo "In seconds: $End"
+echo "Step5 Runtime: $runtime"
+
+FullRunEnd=$End
+FullRuntime=$((FullRunEnd-FullRunStart))
+echo "Timestamp. Final. $date"
+echo "In seconds: $FullRunEnd"
+echo "Full Runtime: $FullRuntime"
+
+
+
 exit
+
