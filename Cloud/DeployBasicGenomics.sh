@@ -63,6 +63,10 @@ conda activate $MINICONDA3/envs/Mamba/envs/SeqTools
 bwa --help
 samtools --help
 
+# Excord
+wget -c -q -O excord https://github.com/brentp/excord/releases/download/v0.2.2/excord_linux64
+chmod +x ./excord
+
 
 ########################
 # Step 2: Get new data #
