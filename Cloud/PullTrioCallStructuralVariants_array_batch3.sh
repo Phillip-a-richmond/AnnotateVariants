@@ -6,7 +6,7 @@
 ## Output and Stderr
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
-#SBATCH --array=1-50%25
+#SBATCH --array=201-300%50
 
 ##########
 # Set up #
@@ -15,7 +15,7 @@
 
 # open up scratch
 sudo chmod ugo=rwx -R /scratch/
-sudo chmod ugo=rwx -R /shared/
+sudo chmod ugo=rwx -R /shared/SVOutput/
 
 # Set a log file
 # Timing from here to end of script
