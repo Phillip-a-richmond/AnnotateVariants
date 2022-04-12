@@ -2,16 +2,18 @@
 
 ## CPU Usage
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=2
 ## Output and Stderr
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
-# #SBATCH --array=201-300%50
+# #SBATCH --array=1-25%25
 
 ##########
 # Set up #
 ##########
 
+# Where is AnnotateVariants
+AnnotateVariantsDir=/shared/AnnotateVariants/
 
 # open up scratch
 sudo chmod ugo=rwx -R /scratch/
@@ -39,7 +41,7 @@ SLURM_ARRAY_TASK_ID=0
 shopt -s nullglob
 
 # Pulling from our list of ped files here
-pedfiles=(/shared/AnnotateVariants/Cloud/1kG_Data/*ped)
+pedfiles=($AnnotateVariantsDir/Cloud/1kG_Data/*ped)
 pedfile=${pedfiles[$SLURM_ARRAY_TASK_ID]}
 echo $pedfile
 
@@ -103,7 +105,7 @@ mkdir -p $Final_Dir
 echo "GRCh38 genome"
 Genome=GRCh38
 Seq_Type=WGS
-Fasta_Dir=/shared/AnnotateVariants/Cloud/Genomes/
+Fasta_Dir=$AnnotateVariantsDir/Cloud/Genomes/
 Fasta_File=GRCh38_full_analysis_set_plus_decoy_hla.fa
 
 End=`date +%s`
@@ -118,26 +120,53 @@ echo "Step2 Runtime: $runtime"
 # Part 3 #
 ##########
 
+
 Start=`date +%s`
 currentTime=`date`
-echo "Timestamp. Step3-Start: Excord,  $currentTime"
+echo "Timestamp. Step3-Start child: Excord,  $currentTime"
 echo "In seconds: $Start"
 
 # Get discordant reads in bed file
 
-## Get tool
-wget -c -q -O excord https://github.com/brentp/excord/releases/download/v0.2.2/excord_linux64
-chmod +x ./excord
-
 ## Activate miniconda environment
-source /shared/AnnotateVariants/Cloud/miniconda3/etc/profile.d/conda.sh
-conda activate /shared/AnnotateVariants/Cloud/miniconda3/envs/Mamba/envs/SeqTools
+source $AnnotateVariantsDir/Cloud/miniconda3/etc/profile.d/conda.sh
+conda activate $AnnotateVariantsDir/Cloud/miniconda3/envs/Mamba/envs/SeqTools
+EXCORD=$AnnotateVariantsDir/Cloud/excord
 
+## Child
 Sample_ID=$childid
 Sample_CRAM=$Sample_ID.cram
 
 samtools view -b -u -T $Fasta_Dir/$Fasta_File $CRAM_Dir/$Sample_ID.cram | \
-        $CRAM_Dir/excord \
+        $EXCORD \
+        --discordantdistance 500 \
+        --fasta $Fasta_Dir/$Fasta_File \
+        /dev/stdin \
+        | LC_ALL=C sort --buffer-size 2G -k1,1 -k2,2n -k3,3n \
+        | bgzip -c > $CRAM_Dir/$Sample_ID.bed.gz
+
+cp $CRAM_Dir/$Sample_ID.bed.gz $Final_Dir
+
+
+End=`date +%s`
+runtime=$((End-Start))
+currentTime=`date`
+echo "Timestamp. Step3-End child: Running excord,  $currentTime"
+echo "In seconds: $End"
+echo "Step3 Runtime: $runtime"
+
+
+## Mother
+Start=`date +%s`
+currentTime=`date`
+echo "Timestamp. Step3-Start mother: Excord,  $currentTime"
+echo "In seconds: $Start"
+
+Sample_ID=$motherid
+Sample_CRAM=$Sample_ID.cram
+
+samtools view -b -u -T $Fasta_Dir/$Fasta_File $CRAM_Dir/$Sample_ID.cram | \
+        $EXCORD \
         --discordantdistance 500 \
         --fasta $Fasta_Dir/$Fasta_File \
         /dev/stdin \
@@ -149,10 +178,36 @@ cp $CRAM_Dir/$Sample_ID.bed.gz $Final_Dir
 End=`date +%s`
 runtime=$((End-Start))
 currentTime=`date`
-echo "Timestamp. Step3-End: Running excord,  $currentTime"
+echo "Timestamp. Step3-End mother: Running excord,  $currentTime"
 echo "In seconds: $End"
 echo "Step3 Runtime: $runtime"
 
+## Father
+Start=`date +%s`
+currentTime=`date`
+echo "Timestamp. Step3-Start father: Excord,  $currentTime"
+echo "In seconds: $Start"
+
+Sample_ID=$fatherid
+Sample_CRAM=$Sample_ID.cram
+
+samtools view -b -u -T $Fasta_Dir/$Fasta_File $CRAM_Dir/$Sample_ID.cram | \
+        $EXCORD \
+        --discordantdistance 500 \
+        --fasta $Fasta_Dir/$Fasta_File \
+        /dev/stdin \
+        | LC_ALL=C sort --buffer-size 2G -k1,1 -k2,2n -k3,3n \
+        | bgzip -c > $CRAM_Dir/$Sample_ID.bed.gz
+
+cp $CRAM_Dir/$Sample_ID.bed.gz $Final_Dir
+
+
+End=`date +%s`
+runtime=$((End-Start))
+currentTime=`date`
+echo "Timestamp. Step3-End father: Running excord,  $currentTime"
+echo "In seconds: $End"
+echo "Step3 Runtime: $runtime"
 
 FullRunEnd=$End
 currentTime=`date`
