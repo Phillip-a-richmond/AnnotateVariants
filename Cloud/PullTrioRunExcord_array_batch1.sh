@@ -6,7 +6,7 @@
 ## Output and Stderr
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
-# #SBATCH --array=1-25%25
+#SBATCH --array=1-50%25
 
 ##########
 # Set up #
@@ -21,7 +21,7 @@ sudo chmod ugo=rwx -R /shared/SVOutput/
 mkdir -p $Final_Dir
 
 # For active processing
-ScratchDir=/shared/
+ScratchDir=/scratch/
 
 
 # Set a log file
@@ -39,7 +39,8 @@ echo "In seconds: $FullRunStart"
 
 # Running for this trio stored in a ped file. All the ped files are stored in that directory, which we will loop through in the next script
 # Setting this for dev before running the array
-SLURM_ARRAY_TASK_ID=0
+# When running array, make sure you comment this out.
+# SLURM_ARRAY_TASK_ID=0
 
 # Found this online. real useful
 # https://stackoverflow.com/questions/21668471/bash-script-create-array-of-all-files-in-a-directory
@@ -66,7 +67,7 @@ echo $childid
 Working_Dir=$ScratchDir/$childid
 
 # open up scratch, only needed if running w/ onboard NVMe
-# sudo chmod ugo=rwx -R $ScratchDir
+sudo chmod ugo=rwx -R $ScratchDir
 
 mkdir -p $Working_Dir
 cd $Working_Dir
@@ -106,7 +107,6 @@ mv ./ERR*/$childid*cram.crai $childid.cram.crai
 
 # Where we pull the reads to, this is on the scratch space (onboard NVMe) 
 CRAM_Dir=$Working_Dir
-
 
 #### GRCh38 #### 
 echo "GRCh38 genome"

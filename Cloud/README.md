@@ -57,6 +57,13 @@ Need to dig into that more.
 
 Running this now (2022-04-11).
 
+Main script:
+```
+PullTrioRunExcord_complete.sh
+```
+
+This script is going to pull a trio, run excord on all 3 individuals, and then copy results back to shared drive.
+
 
 
 
