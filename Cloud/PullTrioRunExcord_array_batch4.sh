@@ -6,7 +6,7 @@
 ## Output and Stderr
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
-#SBATCH --array=51-100%50
+#SBATCH --array=501-602%100
 
 ##########
 # Set up #
