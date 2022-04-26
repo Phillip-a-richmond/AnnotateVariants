@@ -5,12 +5,6 @@ conda activate AWS
 # Run this first
 # aws configure 
 
-# When prompted enter:
-# Access Key: AKIATU3SOCMUUKIB2HHD
-# SecretAccessKey: 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
-# region: ca-central-1
-# none
-
 
 # Run the copy
 ## Dry run
