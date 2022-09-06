@@ -4,9 +4,12 @@ def GetOptions():
     parser = argparse.ArgumentParser()
     parser.add_argument("-I","--Input",help="Input AnnotSV tsv",required=True)
     parser.add_argument("-O","--Output",help="Filtered AnnotSV file")
+    parser.add_argument("-F","--FatherID",help="Father ID", required=True)
+    parser.add_argument("-M","--MotherID",help="Mother ID", required=True)
+    parser.add_argument("-P","--ProbandID",help="Proband ID", required=True)
     args = parser.parse_args()
 
-    return args.Input,args.Output,
+    return args.Input,args.Output,args.FatherID,args.MotherID,args.ProbandID
 
 # This currently just filters for unique variants to a single sample (should be mostly de novos)
     # infile looks like:
@@ -14,7 +17,7 @@ def GetOptions():
     # 1_789465_224014609_DUP_1	1	789465	224014609	223225129	DUP	EPGEN029-01_GRCh38,EPGEN029-02_GRCh38,EPGEN029-03_GRCh38,EPGEN067-01_GRCh38,EPGEN067-02_GRCh38,EPGEN067-03_GRCh38,EPGEN083-01_GRCh38,EPGEN083-02_GRCh38,EPGEN083-03_GRCh38,EPGEN090-01_GRCh38,EPGEN090-02_GRCh38,EPGEN090-03_GRCh38,EPGEN101-01_GRCh38,EPGEN101-02_GRCh38,EPGEN101-03_GRCh38,EPGEN159-01_GRCh38,EPGEN159-02_GRCh38,EPGEN159-03_GRCh38,EPGEN216-01_GRCh38,EPGEN216-02_GRCh38,EPGEN216-03_GRCh38	384	N	<DUP>
 
 
-def FilterAnnotSV(inputfile,outputfile):
+def FilterAnnotSV(inputfile,outputfile,father_id,mother_id,proband_id):
     infile = open(inputfile,'r')
     outfile = open(outputfile,'w')
     for line in infile.readlines():
@@ -23,9 +26,9 @@ def FilterAnnotSV(inputfile,outputfile):
         # parse Samples_ID to remove any hit in more than one sample
         if ',' in Samples_ID:
             continue
-        if '-02' in Samples_ID:
+        if father_id in Samples_ID:
             continue
-        if '03' in Samples_ID:
+        if mother_id in Samples_ID:
             continue
 
         # now we should have only single sample hits, removing anything in either parent
@@ -36,8 +39,8 @@ def FilterAnnotSV(inputfile,outputfile):
 
 def Main():
     print("hey buddy")
-    inputfilename,outputfilename = GetOptions()
-    FilterAnnotSV(inputfilename,outputfilename)
+    inputfilename,outputfilename,father_id,mother_id,proband_id = GetOptions()
+    FilterAnnotSV(inputfilename,outputfilename,father_id,mother_id,proband_id)
 
     sys.exit()
 
