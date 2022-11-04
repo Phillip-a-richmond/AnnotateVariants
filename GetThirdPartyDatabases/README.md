@@ -83,7 +83,7 @@ Found here:
 wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToBedGraph
 
 
-H) Prepare in-house variant database
+##### H) Prepare in-house variant database
 + For instructions see: https://github.com/Phillip-a-richmond/BuildInHouseDB
 
 

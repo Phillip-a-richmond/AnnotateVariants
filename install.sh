@@ -46,22 +46,32 @@ echo "Databases will be installed in: $DB_DIR";
 # ARGS This function doesnt require any arguments
 # RSLT Downloads all necessary tools (except java jdk and other tools listed below) into opt/AnnotateVariants
 ##########################################
+function buildMiniConda3() 
+{
+        DIR=$PWD
+        MINI_CONDA_INSTALL_DIR=$DIR/miniconda3
+
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        bash Miniconda3-latest-Linux-x86_64.sh -b -p $MINI_CONDA_INSTALL_DIR
+
+        source ${MINI_CONDA_INSTALL_DIR}/etc/profile.d/conda.sh
+        cd $DIR
+	conda --help
+	rm Miniconda3-latest-Linux-x86_64.sh
+}
+buildMiniConda3
+
 function buildAnnotateVariants() 
 {
-	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	OPT_DIR=${DIR}/opt
-	mkdir -p ${OPT_DIR}
-	pushd ${OPT_DIR}
-	MINI_CONDA_INSTALL_DIR=$OPT_DIR/miniconda3
-
-	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-	bash Miniconda3-latest-Linux-x86_64.sh -b -p $MINI_CONDA_INSTALL_DIR 
+        DIR=$PWD
+	MINI_CONDA_INSTALL_DIR=$DIR/miniconda3
 
 	source ${MINI_CONDA_INSTALL_DIR}/etc/profile.d/conda.sh
-	conda env create --prefix ${OPT_DIR}/AnnotateVariantsEnvironment  -f $DIR/AnnotateVariants_CondaEnv.yml 
+	conda env create -f $DIR/AnnotateVariants_CondaEnv.yml 
 	cd $DIR
-	conda activate opt/AnnotateVariantsEnvironment
+	conda activate AnnotateVariantsEnvironment
 }
+buildAnnotateVariants
 
 
 function createDatabaseDirectory()
@@ -102,5 +112,3 @@ function getDatabases()
 	echo "not yet"
 }
 
-buildAnnotateVariants
-#createDatabaseDirectory

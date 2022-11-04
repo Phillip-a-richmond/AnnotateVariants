@@ -7,9 +7,8 @@ Test/**
 Icon
 ._*
 ~$*
-# Ignore opt directory (where tools are installed)
-opt/
-
+# Ignore miniconda3 directory (where tools are installed)
+miniconda3/
 
 # Ignore test case1 directory (local testing)
 Test/Case1/
@@ -18,9 +17,6 @@ Test/Case1/
 *out
 *error
 *.tar.gz
-
-# Ignore miniconda deployments
-*/miniconda3/*
 
 # ignore genome deployements
 */Genomes/*
