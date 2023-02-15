@@ -61,7 +61,7 @@ analysis:
 
         GNOMAD_E_AFR,
         GNOMAD_E_AMR,
-#        GNOMAD_E_ASJ,
+        GNOMAD_E_ASJ,
         GNOMAD_E_EAS,
         GNOMAD_E_FIN,
         GNOMAD_E_NFE,
@@ -70,7 +70,7 @@ analysis:
 
         GNOMAD_G_AFR,
         GNOMAD_G_AMR,
-#        GNOMAD_G_ASJ,
+        GNOMAD_G_ASJ,
         GNOMAD_G_EAS,
         GNOMAD_G_FIN,
         GNOMAD_G_NFE,

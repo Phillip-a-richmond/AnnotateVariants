@@ -1,4 +1,4 @@
-# Rare Disease Pipeline (Non Trio)
+# Rare Disease Pipeline (Multi-sample)
 ## Author: Phillip Richmond (prichmond@bcchr.ca | phillip.a.richmond@gmail.com)
 
 ## About: This is a shell script built for WGS/WES sequencing data. 
@@ -98,8 +98,8 @@ PLUGINSDIR_VAR='\/mnt\/common\/DATABASES\/REFERENCES\/GRCh38\/VEP\/PLUGINS\/'
 MAXENTSCANDIR_VAR='\/mnt\/common\/WASSERMAN_SOFTWARE\/VEP\/fordownload\/'
 SLIVAR_VAR='\/mnt\/common\/Precision\/Slivar\/'
 GFF_VAR='\/mnt\/common\/DATABASES\/REFERENCES\/GRCh38\/GENOME\/Homo_sapiens.GRCh38.100.chr.gff3.gz'
-EXOMISER_JAR=exomiser-cli-12.1.0.jar
-EXOMISER_DIR='\/mnt\/common\/WASSERMAN_SOFTWARE\/Exomiser\/exomiser-cli-12.1.0\/'
+EXOMISER_JAR=exomiser-cli-13.1.0.jar
+EXOMISER_DIR='\/mnt\/common\/Precision\/Exomiser\/exomiser-cli-13.1.0\/'
 MELT_DIR_VAR='\/mnt\/common\/WASSERMAN_SOFTWARE\/MELTv2.2.0\/'
 PEDMAKER=$ANNOTATE_VARIANTS_DIR/PipelineScripts/MakePED.py
 EHDN_DIR_VAR='\/mnt\/common\/Precision\/ExpansionHunterDenovo\/ExpansionHunterDenovo-v0.9.0-linux_x86_64\/'
@@ -109,6 +109,8 @@ SMOOVE_SIF_VAR='\/mnt\/common\/Precision\/Smoove\/smoove_latest.sif'
 ANNOTSV_DIR_VAR='\/mnt\/common\/Precision\/AnnotSV\/'
 EH5_VAR='\/mnt\/common\/Precision\/ExpansionHunter\/ExpansionHunter-v5.0.0-linux_x86_64\/bin\/ExpansionHunter'
 EH5_CATALOG_VAR='\/mnt\/common\/Precision\/ExpansionHunter\/ExpansionHunter-v5.0.0-linux_x86_64\/variant_catalog\/hg38\/variant_catalog.json'
+DEEPVARIANT_SIF='\/mnt\/common\/Precision\/DeepVariant\/deepvariant_1.4.0.sif'
+GLNEXUS_CLI='\/mnt\/common\/Precision\/GLNexus\/glnexus_cli'
 
 # For EHdn
 MINICONDA_DIR_VAR='\/mnt\/common\/Precision\/Miniconda2\/'
@@ -242,6 +244,8 @@ cp $TEMPLATE_DIR/$STEP3_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 
 ## Edit the template
 sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
+sed -i "s/deepvariant_sif/$DEEPVARIANT_SIF/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
+sed -i "s/glnexus_cli/$GLNEXUS_CLI/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 sed -i "s/raw_dir/$RAW_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 sed -i "s/email_address/$EMAIL/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}

@@ -20,16 +20,21 @@
 
 # Load singularity
 module load singularity
-BIN_VERSION="1.1.0"
 
 # Load env for bcftools
 ANNOTATEVARIANTS_INSTALL=annotate_variants_dir
 source $ANNOTATEVARIANTS_INSTALL/opt/miniconda3/etc/profile.d/conda.sh
 conda activate $ANNOTATEVARIANTS_INSTALL/opt/AnnotateVariantsEnvironment
 
-# Pull latest version, if you already have it, this will be skipped
+# Singularity cache
+unset $PYTHONPATH
 export SINGULARITY_CACHEDIR=$PWD
-singularity pull docker://google/deepvariant:"${BIN_VERSION}"
+
+# Point to the deepvariant executable
+DeepVariant_SIF=deepvariant_sif
+
+# Point to the GLNexus_CLI
+GLNexus_CLI=glnexus_cli
 
 # Number of threads
 NSLOTS=$SLURM_CPUS_PER_TASK
@@ -37,6 +42,7 @@ NSLOTS=$SLURM_CPUS_PER_TASK
 # Go to the submission directory (where the sbatch was entered)
 cd $SLURM_SUBMIT_DIR
 WORKING_DIR=working_dir
+OUTPUT_DIR=$WORKING_DIR
 
 ## Set working space
 mkdir -p $WORKING_DIR
@@ -80,11 +86,12 @@ SIBLING_GVCF=${SIBLING_ID}.gvcf.gz
 # We always run over proband
 
 # Proband 
-singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
+singularity exec -e -c -B /usr/lib/locale/:/usr/lib/locale/ \
 	-B "${BAM_DIR}":"/bamdir" \
 	-B "${FASTA_DIR}":"/genomedir" \
 	-B "${OUTPUT_DIR}":"/output" \
-	docker://google/deepvariant:"${BIN_VERSION}" \
+	-W $OUTPUT_DIR \
+	$DeepVariant_SIF \
   /opt/deepvariant/bin/run_deepvariant \
   --model_type=WGS \
   --ref="/genomedir/$FASTA_FILE" \
@@ -99,11 +106,12 @@ singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
 # Sibling
 if [ "$SIBLING_PRESENT" = true ] ; then
 	
-	singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
+	singularity exec -e -c -B /usr/lib/locale/:/usr/lib/locale/ \
 		-B "${BAM_DIR}":"/bamdir" \
 		-B "${FASTA_DIR}":"/genomedir" \
 		-B "${OUTPUT_DIR}":"/output" \
-		docker://google/deepvariant:"${BIN_VERSION}" \
+		-W $OUTPUT_DIR \
+		$DeepVariant_SIF \
 	  /opt/deepvariant/bin/run_deepvariant \
 	  --model_type=WGS \
 	  --ref="/genomedir/$FASTA_FILE" \
@@ -117,11 +125,12 @@ fi
 # Mother
 if [ "$MOTHER_PRESENT" = true ] ; then
 	
-	singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
+	singularity exec -e -c -B /usr/lib/locale/:/usr/lib/locale/ \
 		-B "${BAM_DIR}":"/bamdir" \
 		-B "${FASTA_DIR}":"/genomedir" \
 		-B "${OUTPUT_DIR}":"/output" \
-		docker://google/deepvariant:"${BIN_VERSION}" \
+		-W $OUTPUT_DIR \
+		$DeepVariant_SIF \
 	  /opt/deepvariant/bin/run_deepvariant \
 	  --model_type=WGS \
 	  --ref="/genomedir/$FASTA_FILE" \
@@ -135,11 +144,12 @@ fi
 # Father
 if [ "$FATHER_PRESENT" = true ] ; then
 	
-	singularity run -B /usr/lib/locale/:/usr/lib/locale/ \
+	singularity exec -e -c -B /usr/lib/locale/:/usr/lib/locale/ \
 		-B "${BAM_DIR}":"/bamdir" \
 		-B "${FASTA_DIR}":"/genomedir" \
 		-B "${OUTPUT_DIR}":"/output" \
-		docker://google/deepvariant:"${BIN_VERSION}" \
+		-W $OUTPUT_DIR \
+                $DeepVariant_SIF \
 	  /opt/deepvariant/bin/run_deepvariant \
 	  --model_type=WGS \
 	  --intermediate_results_dir="/output/intermediate_results_dir" \
@@ -151,7 +161,8 @@ if [ "$FATHER_PRESENT" = true ] ; then
 fi
 
 #GLNexus
-/mnt/common/Precision/GLNexus/glnexus_cli -c DeepVariant${SEQ_TYPE} \
+$GLNexus_CLI \
+	-c DeepVariant_unfiltered \
         --threads $NSLOTS \
         *gvcf.gz \
         > ${FAMILY_ID}.glnexus.merged.bcf

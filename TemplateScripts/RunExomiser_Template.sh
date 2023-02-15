@@ -23,6 +23,16 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.error
 
+# Load java
+## change to CVMFS
+source /cm/shared/BCCHR-apps/env_vars/unset_BCM.sh
+source /cvmfs/soft.computecanada.ca/config/profile/bash.sh
+
+## Load StdEnv/2020, then java
+module load StdEnv/2020
+module load java/17
+
+# Set variables
 EXOMISER=exomiser_jar
 EXOMISER_DIR=exomiser_dir
 WORKING_DIR=working_dir
