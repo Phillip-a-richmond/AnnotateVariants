@@ -75,7 +75,8 @@ SMOOVE_SIF_VAR='\/mnt\/common\/Precision\/Smoove\/smoove_latest.sif'
 ANNOTSV_DIR_VAR='\/mnt\/common\/Precision\/AnnotSV\/'
 EH5_VAR='\/mnt\/common\/Precision\/ExpansionHunter\/ExpansionHunter-v5.0.0-linux_x86_64\/bin\/ExpansionHunter'
 EH5_CATALOG_VAR='\/mnt\/common\/Precision\/ExpansionHunter\/ExpansionHunter-v5.0.0-linux_x86_64\/variant_catalog\/hg38\/variant_catalog.json'
-
+DEEPVARIANT_SIF='\/mnt\/common\/Precision\/DeepVariant\/deepvariant_1.4.0.sif'
+GLNEXUS_CLI='\/mnt\/common\/Precision\/GLNexus\/glnexus_cli'
 
 # For EHdn
 MINICONDA_DIR_VAR='\/mnt\/common\/Precision\/Miniconda2\/'
@@ -144,6 +145,8 @@ cp $TEMPLATE_DIR/$STEP3_TEMPLATE ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 ## Output: Merged.vcf.gz (joint called for trio)
 
 ## Edit the template
+sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
+sed -i "s/deepvariant_sif/$DEEPVARIANT_SIF/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 sed -i "s/annotate_variants_dir/$ANNOTATE_VARIANTS_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 sed -i "s/working_dir/$WORKING_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
 sed -i "s/raw_dir/$RAW_DIR_VAR/g" ${WORKING_DIR}/${FAMILY_ID}_${STEP3_TEMPLATE}
