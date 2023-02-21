@@ -107,7 +107,11 @@ def GetHPODict(HPOFILE):
 	Gene2HPO={}
 	headerline = infile.readline()
 	for line in infile:
-		entrez,gene,pheno,hpo = line.strip('\n').split('\t')
+                cols = line.strip('\n').split('\t')
+                entrez = cols[0]
+                gene = cols[1]
+                hpo = cols[2]
+                pheno = cols[3]
 		if Gene2HPO.has_key(gene):
 			Gene2HPO[gene].append("%s|%s"%(pheno,hpo))
 		else:

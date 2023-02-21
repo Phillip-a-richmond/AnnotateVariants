@@ -8,7 +8,7 @@ mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 
 #download
-wget -c ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+wget -c -q ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
 #unzip
 gunzip $DOWNLOAD_DIR/clinvar.vcf.gz
 
@@ -22,8 +22,12 @@ bgzip -c $DOWNLOAD_DIR/clinvar.vcf > $DOWNLOAD_DIR/clinvar.vcf.gz
 tabix $DOWNLOAD_DIR/clinvar.vcf.gz
 
 # Move out of download dir into working dir
-mv $DOWNLOAD_DIR/clinvar.vcf.gz $WORKING_DIR/clinvar.vcf.gz
-mv $DOWNLOAD_DIR/clinvar.vcf.gz.tbi $WORKING_DIR/clinvar.vcf.gz.tbi
+cp $DOWNLOAD_DIR/clinvar.vcf.gz $WORKING_DIR/clinvar.vcf.gz
+cp $DOWNLOAD_DIR/clinvar.vcf.gz.tbi $WORKING_DIR/clinvar.vcf.gz.tbi
 
 #archive unzipped with date added
-mv $DOWNLOAD_DIR/clinvar.vcf $ARCHIVE_DIR/clinvar_`date '+%y%m%d'`
+cp $DOWNLOAD_DIR/clinvar.vcf $ARCHIVE_DIR/clinvar_`date '+%y%m%d'`
+
+# Clean up
+rm $DOWNLOAD_DIR/clinvar.vcf.gz
+rm $DOWNLOAD_DIR/clinvar.vcf.gz.tbi

@@ -1,29 +1,20 @@
-# gnomAD Fetch script
-# NOTE: AT the download of this database the current version is 154.
+# dbSNP Fetch script
 # September 4, 2020
 
 # RefSNP VCF files for GRC (Genome Reference Consortium) human assembly
-# 37 (GCF_000001405.25) and 38 (GCF_000001405.38).
 
 # GRCH37
 WORKING_DIR=/mnt/common/DATABASES/REFERENCES/GRCh37/DBSNP/
 mkdir -p $WORKING_DIR
 cd $WORKING_DIR
 
-wget https://ftp.ncbi.nih.gov/snp/latest_release/VCF/GCF_000001405.25.gz
-wget https://ftp.ncbi.nih.gov/snp/latest_release/VCF/GCF_000001405.25.gz.tbi
-
-mv GCF_000001405.25.gz dbSNP_All_v154.vcf.gz
-mv GCF_000001405.25.gz.tbi dbSNP_All_v154.vcf.gz.tbi
+wget -c  https://ftp.ncbi.nih.gov/snp/organisms/human_9606_b151_GRCh37p13/VCF/All_20180423.vcf.gz 
+wget -c  https://ftp.ncbi.nih.gov/snp/organisms/human_9606_b151_GRCh37p13/VCF/All_20180423.vcf.gz.tbi
 
 # GRCh38
 WORKING_DIR=/mnt/common/DATABASES/REFERENCES/GRCh38/DBSNP/
 mkdir -p $WORKING_DIR
 cd $WORKING_DIR
 
-wget https://ftp.ncbi.nih.gov/snp/latest_release/VCF/GCF_000001405.38.gz
-wget https://ftp.ncbi.nih.gov/snp/latest_release/VCF/GCF_000001405.38.gz.tbi
-
-mv GCF_000001405.38.gz dbSNP_All_v154.vcf.gz
-mv GCF_000001405.38.gz.tbi dbSNP_All_v154.vcf.gz.tbi
-
+wget -c  https://ftp.ncbi.nih.gov/snp/organisms/human_9606_b151_GRCh38p7/VCF/All_20180418.vcf.gz
+wget -c  https://ftp.ncbi.nih.gov/snp/organisms/human_9606_b151_GRCh38p7/VCF/All_20180418.vcf.gz.tbi
