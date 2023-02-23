@@ -113,7 +113,7 @@ FILTER='(filter is NULL)'
 
 CADD='((cadd_v1_4 >= 20) OR (cadd_v1_4_indel >= 20) OR (cadd_v1_6 >= 20) OR (cadd_v1_6_indel >= 20)) '
 NONCODING="($CADD) AND (NOT $CODING)"
-SPLICEAI='( (vepspliceai_pred_ds_ag > 0.5) OR ( vepspliceai_pred_ds_al > 0.5 ) OR ( vepspliceai_pred_ds_dl > 0.5 ) OR ( vepspliceai_pred_ds_dg > 0.5 ) )'
+SPLICEAI='( (vepspliceai_pred_ds_ag > 0.2) OR ( vepspliceai_pred_ds_al > 0.2 ) OR ( vepspliceai_pred_ds_dl > 0.2 ) OR ( vepspliceai_pred_ds_dg > 0.2 ) )'
 STRICT_MIN_DP=15
 STRICT_MIN_GQ=30
 
