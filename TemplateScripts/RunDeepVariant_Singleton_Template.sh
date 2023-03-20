@@ -72,6 +72,7 @@ singularity exec -e -c -B /usr/lib/locale/:/usr/lib/locale/ \
 	-B "${BAM_DIR}":"/bamdir" \
 	-B "${FASTA_DIR}":"/genomedir" \
 	-B "${OUTPUT_DIR}":"/output" \
+	-W $OUTPUT_DIR \
 	$DeepVariant_SIF \
   /opt/deepvariant/bin/run_deepvariant \
   --model_type=WGS \
